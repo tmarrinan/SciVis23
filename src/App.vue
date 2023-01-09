@@ -1,15 +1,15 @@
 <script>
 import $ from 'jquery';
-import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
-import { Engine } from "@babylonjs/core/Engines/engine";
-import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { Color4 } from "@babylonjs/core/Maths/math.color";
-import { PointsCloudSystem } from "@babylonjs/core/Particles/pointsCloudSystem";
-import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
-import { Scene } from "@babylonjs/core/scene";
+import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
+import { Engine } from '@babylonjs/core/Engines/engine';
+import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Color4 } from '@babylonjs/core/Maths/math.color';
+import { PointsCloudSystem } from '@babylonjs/core/Particles/pointsCloudSystem';
+import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
+import { Scene } from '@babylonjs/core/scene';
 
-import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
+import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 
 export default {
     data() {
@@ -102,11 +102,11 @@ export default {
     },
     mounted() {
         // Get the canvas element from the DOM.
-        const canvas = document.getElementById("renderCanvas");
+        const canvas = document.getElementById('renderCanvas');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         
-        window.addEventListener("resize", (event) => {
+        window.addEventListener('resize', (event) => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         });
@@ -118,13 +118,13 @@ export default {
         let scene = new Scene(engine);
 
         // This creates and positions an arc rotate camera (non-mesh)
-        let camera = new ArcRotateCamera("camera1", -Math.PI / 2.0, Math.PI / 3.0, 12.0, new Vector3(0, 0, 0), scene);
+        let camera = new ArcRotateCamera('camera1', -Math.PI / 2.0, Math.PI / 3.0, 12.0, new Vector3(0, 0, 0), scene);
 
         // This attaches the camera to the canvas
         camera.attachControl(canvas, true);
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-        let light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
+        let light = new HemisphericLight('light1', new Vector3(0, 1, 0), scene);
 
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.7;
@@ -141,9 +141,9 @@ export default {
                 neuron_positions[index][3] = parseInt(neuron_positions[index][3]);
             });
         
-            let pcs = new PointsCloudSystem("pcs", 3, scene);
+            let pcs = new PointsCloudSystem('pcs', 3, scene);
             pcs.addPoints(neuron_positions.length, (particle, i, s) => {
-            let area_idx = neuron_positions[s][3];
+                let area_idx = neuron_positions[s][3];
                 particle.position = new Vector3(neuron_positions[s][0],
                                                 neuron_positions[s][1], 
                                                 neuron_positions[s][2]);
@@ -164,10 +164,10 @@ export default {
 
 
         // Create a grid material
-        let material = new GridMaterial("grid", scene);
+        let material = new GridMaterial('grid', scene);
 
         // Built-in 'ground' shape.
-        let ground = CreateGround("ground1", { width: 6, height: 6, subdivisions: 2 }, scene);
+        let ground = CreateGround('ground1', { width: 6, height: 6, subdivisions: 2 }, scene);
 
         // Affect a material
         ground.material = material;
@@ -183,5 +183,5 @@ export default {
 </script>
 
 <template>
-    <canvas id="renderCanvas" touch-action="none"></canvas>
+    <canvas id='renderCanvas' touch-action='none'></canvas>
 </template>
