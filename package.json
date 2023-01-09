@@ -1,0 +1,31 @@
+{
+    "name": "scivis-23",
+    "description": "Visualization of Neuronal Network Simulations",
+    "version": "1.0.0",
+    "author": {
+        "name": "Tommy Marrinan",
+        "email: "thomas.j.marrinan@gmail.com"
+    },
+    "contributors": [
+        {
+            "name": "",
+            "email": ""
+        },
+        {
+            "name": "",
+            "email": ""
+        },
+        {
+            "name": "",
+            "email": ""
+        }
+    ],
+    "main": "server.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tmarrinan/SciVis23.git"
+    },
+    "dependencies": {
+        "express": "^4.18.2"
+    }
+}
