@@ -1,11 +1,11 @@
 <script>
 import $ from 'jquery'
-import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { PointsCloudSystem } from "@babylonjs/core/Particles/pointsCloudSystem";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
-import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import { Scene } from "@babylonjs/core/scene";
 
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
@@ -30,6 +30,24 @@ export default {
                     }
                 });
             });
+        },
+        
+        getCSV(url) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    dataType: 'text',
+                    url: url,
+                    success: (response) => {
+                        //console.log(response);
+                        let csv = response.split(/\r?\n/).filter(el => el.length !== 0)
+                                          .map(line => line.split(',').map(x => parseFloat(x)));
+                        resolve(csv);
+                    },
+                    error: (status, message) => {
+                        reject({status: status.status, message: status.statusText});
+                    }
+                });
+            });
         }
     },
     mounted() {
@@ -47,40 +65,58 @@ export default {
         const engine = new Engine(canvas);
 
         // Create our first scene.
-        var scene = new Scene(engine);
+        let scene = new Scene(engine);
 
-        // This creates and positions a free camera (non-mesh)
-        var camera = new FreeCamera("camera1", new Vector3(0, 5, -10), scene);
-
-        // This targets the camera to scene origin
-        camera.setTarget(Vector3.Zero());
+        // This creates and positions an arc rotate camera (non-mesh)
+        let camera = new ArcRotateCamera("camera1", -Math.PI / 2.0, Math.PI / 3.0, 12.0, new Vector3(0, 0, 0), scene);
 
         // This attaches the camera to the canvas
         camera.attachControl(canvas, true);
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-        var light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
+        let light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
 
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.7;
 
+
+
+        // Download brain position data and create point cloud
+        this.getCSV('/data/viz-no-network_positions.csv')
+        .then((neuron_positions) => {
+            let pcs = new PointsCloudSystem("pcs", 3, scene);
+            pcs.addPoints(neuron_positions.length, (particle, i, s) => {
+                particle.position = new Vector3(neuron_positions[s][0],
+                                                neuron_positions[s][1], 
+                                                neuron_positions[s][2]);
+            });
+            pcs.buildMeshAsync()
+            .then((mesh) => {
+                mesh.scaling = new Vector3(0.02, 0.02, 0.02);
+                mesh.rotation.x = -Math.PI / 2.0;
+                mesh.position.x = -2.0;
+                mesh.position.z = 1.5;
+            });
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+
+
+
         // Create a grid material
-        var material = new GridMaterial("grid", scene);
+        let material = new GridMaterial("grid", scene);
 
-        // Our built-in 'sphere' shape.
-        var sphere = CreateSphere("sphere1", { segments: 16, diameter: 2 }, scene);
-
-        // Move the sphere upward 1/2 its height
-        sphere.position.y = 2;
-
-        // Affect a material
-        sphere.material = material;
-
-        // Our built-in 'ground' shape.
-        var ground = CreateGround("ground1", { width: 6, height: 6, subdivisions: 2 }, scene);
+        // Built-in 'ground' shape.
+        let ground = CreateGround("ground1", { width: 6, height: 6, subdivisions: 2 }, scene);
 
         // Affect a material
         ground.material = material;
+        
+        
+
+
+
 
         // Render every frame
         engine.runRenderLoop(() => {
