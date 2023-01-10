@@ -6,10 +6,17 @@ import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color4 } from '@babylonjs/core/Maths/math.color';
 import { PointsCloudSystem } from '@babylonjs/core/Particles/pointsCloudSystem';
+import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSystem';
+import { WebGL2ParticleSystem } from '@babylonjs/core/Particles/webgl2ParticleSystem';
+import { GPUParticleSystem } from '@babylonjs/core/Particles/gpuParticleSystem';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
+import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
 import { Scene } from '@babylonjs/core/scene';
 
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
+import { clipPlaneFragment } from '@babylonjs/core/Shaders/ShadersInclude/clipPlaneFragment';
 
 export default {
     data() {
@@ -118,7 +125,7 @@ export default {
         let scene = new Scene(engine);
 
         // This creates and positions an arc rotate camera (non-mesh)
-        let camera = new ArcRotateCamera('camera1', -Math.PI / 2.0, Math.PI / 3.0, 12.0, new Vector3(0, 0, 0), scene);
+        let camera = new ArcRotateCamera('camera1', -Math.PI / 2.0, Math.PI / 3.0, 60.0, new Vector3(0, 0, 0), scene);
 
         // This attaches the camera to the canvas
         camera.attachControl(canvas, true);
@@ -140,7 +147,10 @@ export default {
                 neuron_positions[index][2] = parseFloat(neuron_positions[index][2]);
                 neuron_positions[index][3] = parseInt(neuron_positions[index][3]);
             });
-        
+            
+            console.log(neuron_positions.length + ' points');
+            
+            // points - simple rendering, but more efficient
             let pcs = new PointsCloudSystem('pcs', 3, scene);
             pcs.addPoints(neuron_positions.length, (particle, i, s) => {
                 let area_idx = neuron_positions[s][3];
@@ -151,11 +161,37 @@ export default {
             });
             pcs.buildMeshAsync()
             .then((mesh) => {
-                mesh.scaling = new Vector3(0.02, 0.02, 0.02);
+                mesh.scaling = new Vector3(0.1, 0.1, 0.1);
                 mesh.rotation.x = -Math.PI / 2.0;
-                mesh.position.x = -2.0;
-                mesh.position.z = 1.5;
+                mesh.position.x = -10.0;
+                mesh.position.z = 7.5;
             });
+            
+            /*
+            // spheres - takes longer, uses more resources
+            let sphere = CreateSphere('sphere', {diameter: 1.0, segments: 4});
+            let sps = new SolidParticleSystem('sps', scene);
+            sps.addShape(sphere, neuron_positions.length);
+            sphere.dispose();
+            let mesh = sps.buildMesh();
+            sps.initParticles = () => {
+                $.each(sps.particles, (index) => {
+                    const particle = sps.particles[index];
+                    const area_idx = neuron_positions[index][3];
+                    particle.position = new Vector3(neuron_positions[index][0],
+                                                    neuron_positions[index][1], 
+                                                    neuron_positions[index][2]);
+                    particle.color = this.area_colors[area_idx];
+                });
+            };
+            sps.computeBoundingBox = true;
+            sps.initParticles();
+            sps.setParticles();
+            mesh.scaling = new Vector3(0.1, 0.1, 0.1);
+            mesh.rotation.x = -Math.PI / 2.0;
+            mesh.position.x = -10.0;
+            mesh.position.z = 7.5;
+            */
         })
         .catch((err) => {
             console.log(err);
@@ -167,7 +203,7 @@ export default {
         let material = new GridMaterial('grid', scene);
 
         // Built-in 'ground' shape.
-        let ground = CreateGround('ground1', { width: 6, height: 6, subdivisions: 2 }, scene);
+        let ground = CreateGround('ground1', { width: 30, height: 30, subdivisions: 2 }, scene);
 
         // Affect a material
         ground.material = material;
