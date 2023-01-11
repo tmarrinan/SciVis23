@@ -10,6 +10,7 @@ import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSyst
 import { WebGL2ParticleSystem } from '@babylonjs/core/Particles/webgl2ParticleSystem';
 import { GPUParticleSystem } from '@babylonjs/core/Particles/gpuParticleSystem';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
@@ -17,6 +18,8 @@ import { Scene } from '@babylonjs/core/scene';
 
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 import { clipPlaneFragment } from '@babylonjs/core/Shaders/ShadersInclude/clipPlaneFragment';
+import { ShaderMaterial } from '@babylonjs/core/Materials/shaderMaterial';
+import { Effect } from '@babylonjs/core/Materials/effect';
 
 export default {
     data() {
@@ -74,6 +77,177 @@ export default {
         }
     },
     methods: {
+        createPointCloudMesh(name, positions, colors, scene) {
+            let pc = new Mesh(name, scene);
+            let vertex_positions = new Array(positions.length * 12);
+            let quad_positions = new Array(positions.length * 8);
+            let vertex_colors = new Array(positions.length * 16);
+            let vertex_texcoords = new Array(positions.length * 8);
+            let vertex_indices = new Array(positions.length * 6);
+            $.each(positions, (index) => {
+                vertex_positions[12 * index +  0] = positions[index].x;
+                vertex_positions[12 * index +  1] = positions[index].y;
+                vertex_positions[12 * index +  2] = positions[index].z;
+                vertex_positions[12 * index +  3] = positions[index].x;
+                vertex_positions[12 * index +  4] = positions[index].y;
+                vertex_positions[12 * index +  5] = positions[index].z;
+                vertex_positions[12 * index +  6] = positions[index].x;
+                vertex_positions[12 * index +  7] = positions[index].y;
+                vertex_positions[12 * index +  8] = positions[index].z;
+                vertex_positions[12 * index +  9] = positions[index].x;
+                vertex_positions[12 * index + 10] = positions[index].y;
+                vertex_positions[12 * index + 11] = positions[index].z;
+
+                quad_positions[8 * index + 0] = -0.5;
+                quad_positions[8 * index + 1] = -0.5;
+                quad_positions[8 * index + 2] =  0.5;
+                quad_positions[8 * index + 3] = -0.5;
+                quad_positions[8 * index + 4] =  0.5;
+                quad_positions[8 * index + 5] =  0.5;
+                quad_positions[8 * index + 6] = -0.5;
+                quad_positions[8 * index + 7] =  0.5;
+
+                vertex_colors[16 * index +  0] = colors[index].r;
+                vertex_colors[16 * index +  1] = colors[index].g;
+                vertex_colors[16 * index +  2] = colors[index].b;
+                vertex_colors[16 * index +  3] = colors[index].a;
+                vertex_colors[16 * index +  4] = colors[index].r;
+                vertex_colors[16 * index +  5] = colors[index].g;
+                vertex_colors[16 * index +  6] = colors[index].b;
+                vertex_colors[16 * index +  7] = colors[index].a;
+                vertex_colors[16 * index +  8] = colors[index].r;
+                vertex_colors[16 * index +  9] = colors[index].g;
+                vertex_colors[16 * index + 10] = colors[index].b;
+                vertex_colors[16 * index + 11] = colors[index].a;
+                vertex_colors[16 * index + 12] = colors[index].r;
+                vertex_colors[16 * index + 13] = colors[index].g;
+                vertex_colors[16 * index + 14] = colors[index].b;
+                vertex_colors[16 * index + 15] = colors[index].a;
+
+                vertex_texcoords[8 * index + 0] = 0.0;
+                vertex_texcoords[8 * index + 1] = 0.0;
+                vertex_texcoords[8 * index + 2] = 1.0;
+                vertex_texcoords[8 * index + 3] = 0.0;
+                vertex_texcoords[8 * index + 4] = 1.0;
+                vertex_texcoords[8 * index + 5] = 1.0;
+                vertex_texcoords[8 * index + 6] = 0.0;
+                vertex_texcoords[8 * index + 7] = 1.0;
+
+                vertex_indices[6 * index + 0] = (4 * index);
+                vertex_indices[6 * index + 1] = (4 * index) + 1;
+                vertex_indices[6 * index + 2] = (4 * index) + 2;
+                vertex_indices[6 * index + 3] = (4 * index);
+                vertex_indices[6 * index + 4] = (4 * index) + 2;
+                vertex_indices[6 * index + 5] = (4 * index) + 3;
+            });
+
+            let vertex_data = new VertexData();
+            vertex_data.positions = vertex_positions;
+            vertex_data.colors = vertex_colors;
+            vertex_data.uvs = vertex_texcoords;
+            vertex_data.uvs2 = quad_positions;
+            vertex_data.indices = vertex_indices;
+
+            vertex_data.applyToMesh(pc);
+
+            return pc;
+        },
+
+        createPointCloudShaderMaterial(scene) {
+            Effect.ShadersStore['pointcloudVertexShader'] =
+                '#version 300 es\r\n'+
+                'precision highp float;\r\n'+
+                '\r\n'+
+                '// Attributes\r\n'+
+                'in vec3 position;\r\n'+
+                'in vec4 color;\r\n'+
+                'in vec2 uv;\r\n'+
+                'in vec2 uv2;\r\n'+
+                '\r\n'+
+                '// Uniforms\r\n'+
+                'uniform vec3 camera_position;\r\n'+
+                'uniform vec3 camera_up;\r\n'+
+                'uniform float point_size;\r\n'+
+                'uniform mat4 world;\r\n'+
+                'uniform mat4 view;\r\n'+
+                'uniform mat4 projection;\r\n'+
+                '\r\n'+
+                '// Output\r\n'+
+                'out vec3 world_position;\r\n'+
+                'out mat3 world_normal_mat;\r\n'+
+                'out vec3 model_center;\r\n'+
+                'out vec4 model_color;\r\n'+
+                'out vec2 model_texcoord;\r\n'+
+                '\r\n'+
+                'void main() {\r\n'+
+                //'    vec4 p = world * vec4(position + vec3(uv2, 1.0), 1.0);\r\n'+
+                '    vec3 world_point = (world * vec4(position, 1.0)).xyz;\r\n'+
+                '    vec3 vertex_direction = normalize(world_point - camera_position);\r\n'+
+                '    vec3 cam_right = normalize(cross(vertex_direction, camera_up));\r\n'+
+                '    vec3 cam_up = cross(cam_right, vertex_direction);\r\n'+
+                '\r\n'+
+                '    world_position = world_point + (cam_right * uv2.x * point_size) +\r\n'+
+                '                                   (cam_up * uv2.y * point_size);\r\n'+
+                '\r\n'+
+                '    vec3 n = -vertex_direction;\r\n'+
+                '    vec3 u = normalize(cross(cam_up, n));\r\n'+ // camera_up?
+                '    vec3 v = cross(n, u);\r\n'+
+                '    world_normal_mat = mat3(u, v, n);\r\n'+
+                '\r\n'+
+                '    model_center = world_point;\r\n'+
+                '    model_color = color;\r\n'+
+                '    model_texcoord = uv;\r\n'+
+                '\r\n'+
+                '    gl_Position = projection * view * vec4(world_position, 1.0);\r\n'+
+                '}\r\n';
+
+
+            Effect.ShadersStore['pointcloudFragmentShader'] =
+                '#version 300 es\r\n'+
+                'precision mediump float;\r\n'+
+                '\r\n'+
+                '// Input\r\n'+
+                'in vec3 world_position;\r\n'+
+                'in mat3 world_normal_mat;\r\n'+
+                'in vec3 model_center;\r\n'+
+                'in vec4 model_color;\r\n'+
+                'in vec2 model_texcoord;\r\n'+
+                '\r\n'+
+                '// Uniforms\r\n'+
+                'uniform float point_size;\r\n'+
+                '\r\n'+
+                '// Output\r\n'+
+                'out vec4 FragColor;\r\n'+
+                '\r\n'+
+                'void main() {\r\n'+
+                '    vec2 norm_texcoord = (2.0 * model_texcoord) - vec2(1.0, 1.0);\r\n'+
+                '    float magnitude = dot(norm_texcoord, norm_texcoord);\r\n'+
+                '    if (magnitude > 1.0) {\r\n'+
+                '        discard;\r\n'+
+                '    }\r\n'+
+                '\r\n'+
+                '    FragColor = model_color;\r\n'+
+                '}\r\n';
+            let shader_material = new ShaderMaterial(
+                'pointcloud_shader',
+                scene,
+                {
+                    vertex: 'pointcloud',
+                    fragment: 'pointcloud'
+                },
+                {
+                    attributes: ['position', 'color', 'uv', 'uv2'],
+                    uniforms: ['world', 'worldView', 'worldViewProjection', 'view', 'projection']
+                }
+            );
+
+            shader_material.backFaceCulling = false;
+            shader_material.setVector3('camera_position', new Vector3(0.0, 0.0, 0.0));
+            shader_material.setVector3('camera_up', new Vector3(0.0, 1.0, 0.0));
+
+            return shader_material;
+        },
+
         getJSON(url) {
             return new Promise((resolve, reject) => {
                 $.ajax({
@@ -126,6 +300,7 @@ export default {
 
         // This creates and positions an arc rotate camera (non-mesh)
         let camera = new ArcRotateCamera('camera1', -Math.PI / 2.0, Math.PI / 3.0, 60.0, new Vector3(0, 0, 0), scene);
+        camera.updateUpVectorFromRotation = true;
 
         // This attaches the camera to the canvas
         camera.attachControl(canvas, true);
@@ -138,26 +313,30 @@ export default {
 
 
 
+        // Create custom point cloud shader material
+        let pc_material = this.createPointCloudShaderMaterial(scene);
+        pc_material.setFloat('point_size', 0.2);
+
         // Download brain position data and create point cloud
         this.getCSV('/data/viz-no-network_positions.csv')
-        .then((neuron_positions) => {
-            $.each(neuron_positions, (index) => {
-                neuron_positions[index][0] = parseFloat(neuron_positions[index][0]);
-                neuron_positions[index][1] = parseFloat(neuron_positions[index][1]);
-                neuron_positions[index][2] = parseFloat(neuron_positions[index][2]);
-                neuron_positions[index][3] = parseInt(neuron_positions[index][3]);
+        .then((neurons) => {
+            let neuron_positions = new Array(neurons.length);
+            let neuron_colors = new Array(neurons.length)
+            $.each(neurons, (index) => {
+                neuron_positions[index] = new Vector3(parseFloat(neurons[index][0]),
+                                                      parseFloat(neurons[index][1]),
+                                                      parseFloat(neurons[index][2]));
+                neuron_colors[index] = this.area_colors[parseInt(neurons[index][3])];
             });
             
-            console.log(neuron_positions.length + ' points');
+            console.log(neurons.length + ' points');
             
+            /*
             // points - simple rendering, but more efficient
             let pcs = new PointsCloudSystem('pcs', 3, scene);
-            pcs.addPoints(neuron_positions.length, (particle, i, s) => {
-                let area_idx = neuron_positions[s][3];
-                particle.position = new Vector3(neuron_positions[s][0],
-                                                neuron_positions[s][1], 
-                                                neuron_positions[s][2]);
-                particle.color = this.area_colors[area_idx];
+            pcs.addPoints(neurons.length, (particle, i, s) => {
+                particle.position = neuron_positions[s];
+                particle.color = neuron_colors[s];
             });
             pcs.buildMeshAsync()
             .then((mesh) => {
@@ -166,7 +345,7 @@ export default {
                 mesh.position.x = -10.0;
                 mesh.position.z = 7.5;
             });
-            
+            */
             /*
             // spheres - takes longer, uses more resources
             let sphere = CreateSphere('sphere', {diameter: 1.0, segments: 4});
@@ -177,11 +356,8 @@ export default {
             sps.initParticles = () => {
                 $.each(sps.particles, (index) => {
                     const particle = sps.particles[index];
-                    const area_idx = neuron_positions[index][3];
-                    particle.position = new Vector3(neuron_positions[index][0],
-                                                    neuron_positions[index][1], 
-                                                    neuron_positions[index][2]);
-                    particle.color = this.area_colors[area_idx];
+                    particle.position = neuron_positions[index];
+                    particle.color = neuron_colors[index];
                 });
             };
             sps.computeBoundingBox = true;
@@ -192,6 +368,14 @@ export default {
             mesh.position.x = -10.0;
             mesh.position.z = 7.5;
             */
+
+            // custom point cloud (imposter spheres)
+            let point_cloud = this.createPointCloudMesh('pc', neuron_positions, neuron_colors, scene);
+            point_cloud.material = pc_material;
+            point_cloud.scaling = new Vector3(0.1, 0.1, 0.1);
+            point_cloud.rotation.x = -Math.PI / 2.0;
+            point_cloud.position.x = -10.0;
+            point_cloud.position.z = 7.5;
         })
         .catch((err) => {
             console.log(err);
@@ -212,7 +396,9 @@ export default {
 
         // Render every frame
         engine.runRenderLoop(() => {
-          scene.render();
+            pc_material.setVector3('camera_position', camera.position);
+            pc_material.setVector3('camera_up', camera.upVector);
+            scene.render();
         });
     }
 }
