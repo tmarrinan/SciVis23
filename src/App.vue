@@ -154,6 +154,7 @@ export default {
         },
 
         createPointCloudShaderMaterial(scene) {
+            // TODO: use babylon lights rather than custom uniform
             Effect.ShadersStore['pointcloudVertexShader'] =
                 '#version 300 es\r\n'+
                 'precision highp float;\r\n'+
@@ -189,7 +190,7 @@ export default {
                 '                                   (cam_up * uv2.y * point_size);\r\n'+
                 '\r\n'+
                 '    vec3 n = -vertex_direction;\r\n'+
-                '    vec3 u = normalize(cross(cam_up, n));\r\n'+ // camera_up?
+                '    vec3 u = normalize(cross(camera_up, n));\r\n'+ // cam_up?
                 '    vec3 v = cross(n, u);\r\n'+
                 '    world_normal_mat = mat3(u, v, n);\r\n'+
                 '\r\n'+
@@ -218,8 +219,11 @@ export default {
                 'uniform float point_size;\r\n'+
                 'uniform int num_lights;\r\n'+
                 'uniform vec3 light_ambient;\r\n'+
-                'uniform vec3 light_position[8];\r\n'+
-                'uniform vec3 light_color[8];\r\n'+
+                'uniform vec3 hemispheric_light_direction;\r\n'+
+                'uniform vec3 hemispheric_light_sky_color;\r\n'+
+                'uniform vec3 hemispheric_light_ground_color;\r\n'+
+                'uniform vec3 point_light_position[8];\r\n'+
+                'uniform vec3 point_light_color[8];\r\n'+
                 '\r\n'+
                 '// Output\r\n'+
                 'out vec4 FragColor;\r\n'+
@@ -236,16 +240,17 @@ export default {
                 '    float sphere_radius = point_size / 2.0;\r\n'+
                 '    vec3 sphere_position = (sphere_normal * sphere_radius) + model_center;\r\n'+
                 '\r\n'+
-                '    vec3 light_diffuse = vec3(0.0, 0.0, 0.0);\r\n'+
+                '    float hemi_weight = 0.5 + 0.5 * dot(sphere_normal, hemispheric_light_direction);\r\n'+
+                '    vec3 light_diffuse = mix(hemispheric_light_ground_color, hemispheric_light_sky_color, hemi_weight);\r\n'+
                 '    for (int i = 0; i < num_lights; i++) {\r\n'+
-                '        vec3 light_direction = normalize(light_position[i] - sphere_position);\r\n'+
+                '        vec3 light_direction = normalize(point_light_position[i] - sphere_position);\r\n'+
                 '        float n_dot_l = max(dot(sphere_normal, light_direction), 0.0);\r\n'+
-                '        light_diffuse += light_color[i] * n_dot_l;\r\n'+
+                '        light_diffuse += point_light_color[i] * n_dot_l;\r\n'+
                 '    }\r\n'+
                 '    vec3 final_color = min((light_ambient * model_color.rgb) + (light_diffuse * model_color.rgb), 1.0);\r\n'+
                 '\r\n'+
                 '    // Color\r\n'+
-                '    FragColor = vec4(final_color, 1.0);\r\n'+
+                '    FragColor = vec4(final_color, model_color.a);\r\n'+
                 '\r\n'+
                 '    // Depth\r\n'+
                 '    float near = clip_z.x;\r\n'+
@@ -335,9 +340,10 @@ export default {
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         let light = new HemisphericLight('light1', new Vector3(0, 1, 0), scene);
+        console.log(light.direction, light.diffuse, light.groundColor);
 
         // Default intensity is 1. Let's dim the light a small amount
-        light.intensity = 0.7;
+        light.intensity = 0.85;
 
 
 
@@ -345,10 +351,17 @@ export default {
         let pc_material = this.createPointCloudShaderMaterial(scene);
         pc_material.setVector2('clip_z', new Vector2(camera.minZ, camera.maxZ));
         pc_material.setFloat('point_size', 0.2);
-        pc_material.setInt('num_lights', 1);
-        pc_material.setVector3('light_ambient', new Vector3(0.2, 0.2, 0.2));
-        pc_material.setVector3('light_position[0]', new Vector3(20.0, 80.0, 40.0));
-        pc_material.setVector3('light_color[0]', new Vector3(1.0, 1.0, 1.0));
+        pc_material.setInt('num_lights', 0);
+        pc_material.setVector3('light_ambient', new Vector3(0.0, 0.0, 0.0));
+        pc_material.setVector3('hemispheric_light_direction', light.direction);
+        pc_material.setVector3('hemispheric_light_sky_color', new Vector3(light.diffuse.r * light.intensity,
+                                                                          light.diffuse.g * light.intensity, 
+                                                                          light.diffuse.b * light.intensity));
+        pc_material.setVector3('hemispheric_light_ground_color', new Vector3(light.groundColor.r * light.intensity,
+                                                                             light.groundColor.g * light.intensity,
+                                                                             light.groundColor.b * light.intensity));
+        //pc_material.setVector3('light_position[0]', new Vector3(20.0, 80.0, 40.0));
+        //pc_material.setVector3('light_color[0]', new Vector3(1.0, 1.0, 1.0));
 
         // Download brain position data and create point cloud
         this.getCSV('/data/viz-no-network_positions.csv')
@@ -433,6 +446,7 @@ export default {
         engine.runRenderLoop(() => {
             pc_material.setVector3('camera_position', camera.position);
             pc_material.setVector3('camera_up', camera.upVector);
+            pc_material.setVector3('hemispheric_light_direction', light.direction);
             scene.render();
         });
     }
