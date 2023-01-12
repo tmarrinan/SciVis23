@@ -154,120 +154,14 @@ export default {
         },
 
         createPointCloudShaderMaterial(scene) {
-            // TODO: use babylon lights rather than custom uniform
-            Effect.ShadersStore['pointcloudVertexShader'] =
-                '#version 300 es\r\n'+
-                'precision highp float;\r\n'+
-                '\r\n'+
-                '// Attributes\r\n'+
-                'in vec3 position;\r\n'+
-                'in vec4 color;\r\n'+
-                'in vec2 uv;\r\n'+
-                'in vec2 uv2;\r\n'+
-                '\r\n'+
-                '// Uniforms\r\n'+
-                'uniform vec3 camera_position;\r\n'+
-                'uniform vec3 camera_up;\r\n'+
-                'uniform float point_size;\r\n'+
-                'uniform mat4 world;\r\n'+
-                'uniform mat4 view;\r\n'+
-                'uniform mat4 projection;\r\n'+
-                '\r\n'+
-                '// Output\r\n'+
-                'out vec3 world_position;\r\n'+
-                'out mat3 world_normal_mat;\r\n'+
-                'out vec3 model_center;\r\n'+
-                'out vec4 model_color;\r\n'+
-                'out vec2 model_texcoord;\r\n'+
-                '\r\n'+
-                'void main() {\r\n'+
-                '    vec3 world_point = (world * vec4(position, 1.0)).xyz;\r\n'+
-                '    vec3 vertex_direction = normalize(world_point - camera_position);\r\n'+
-                '    vec3 cam_right = normalize(cross(vertex_direction, camera_up));\r\n'+
-                '    vec3 cam_up = cross(cam_right, vertex_direction);\r\n'+
-                '\r\n'+
-                '    world_position = world_point + (cam_right * uv2.x * point_size) +\r\n'+
-                '                                   (cam_up * uv2.y * point_size);\r\n'+
-                '\r\n'+
-                '    vec3 n = -vertex_direction;\r\n'+
-                '    vec3 u = normalize(cross(camera_up, n));\r\n'+ // cam_up?
-                '    vec3 v = cross(n, u);\r\n'+
-                '    world_normal_mat = mat3(u, v, n);\r\n'+
-                '\r\n'+
-                '    model_center = world_point;\r\n'+
-                '    model_color = color;\r\n'+
-                '    model_texcoord = uv;\r\n'+
-                '\r\n'+
-                '    gl_Position = projection * view * vec4(world_position, 1.0);\r\n'+
-                '}\r\n';
-
-
-            Effect.ShadersStore['pointcloudFragmentShader'] =
-                '#version 300 es\r\n'+
-                'precision highp float;\r\n'+
-                '\r\n'+
-                '// Input\r\n'+
-                'in vec3 world_position;\r\n'+
-                'in mat3 world_normal_mat;\r\n'+
-                'in vec3 model_center;\r\n'+
-                'in vec4 model_color;\r\n'+
-                'in vec2 model_texcoord;\r\n'+
-                '\r\n'+
-                '// Uniforms\r\n'+
-                'uniform vec3 camera_position;\r\n'+
-                'uniform vec2 clip_z;\r\n'+
-                'uniform float point_size;\r\n'+
-                'uniform int num_lights;\r\n'+
-                'uniform vec3 light_ambient;\r\n'+
-                'uniform vec3 hemispheric_light_direction;\r\n'+
-                'uniform vec3 hemispheric_light_sky_color;\r\n'+
-                'uniform vec3 hemispheric_light_ground_color;\r\n'+
-                'uniform vec3 point_light_position[8];\r\n'+
-                'uniform vec3 point_light_color[8];\r\n'+
-                '\r\n'+
-                '// Output\r\n'+
-                'out vec4 FragColor;\r\n'+
-                '\r\n'+
-                'void main() {\r\n'+
-                '    vec2 norm_texcoord = (2.0 * model_texcoord) - vec2(1.0, 1.0);\r\n'+
-                '    float magnitude = dot(norm_texcoord, norm_texcoord);\r\n'+
-                '    if (magnitude > 1.0) {\r\n'+
-                '        discard;\r\n'+
-                '    }\r\n'+
-                '\r\n'+
-                '    vec3 sphere_normal = vec3(norm_texcoord, sqrt(1.0 - magnitude));\r\n'+
-                '    sphere_normal = normalize(world_normal_mat * sphere_normal);\r\n'+
-                '    float sphere_radius = point_size / 2.0;\r\n'+
-                '    vec3 sphere_position = (sphere_normal * sphere_radius) + model_center;\r\n'+
-                '\r\n'+
-                '    float hemi_weight = 0.5 + 0.5 * dot(sphere_normal, hemispheric_light_direction);\r\n'+
-                '    vec3 light_diffuse = mix(hemispheric_light_ground_color, hemispheric_light_sky_color, hemi_weight);\r\n'+
-                '    for (int i = 0; i < num_lights; i++) {\r\n'+
-                '        vec3 light_direction = normalize(point_light_position[i] - sphere_position);\r\n'+
-                '        float n_dot_l = max(dot(sphere_normal, light_direction), 0.0);\r\n'+
-                '        light_diffuse += point_light_color[i] * n_dot_l;\r\n'+
-                '    }\r\n'+
-                '    vec3 final_color = min((light_ambient * model_color.rgb) + (light_diffuse * model_color.rgb), 1.0);\r\n'+
-                '\r\n'+
-                '    // Color\r\n'+
-                '    FragColor = vec4(final_color, model_color.a);\r\n'+
-                '\r\n'+
-                '    // Depth\r\n'+
-                '    float near = clip_z.x;\r\n'+
-                '    float far = clip_z.y;\r\n'+
-                '    float dist = length(sphere_position - camera_position);\r\n'+
-                '    gl_FragDepth = (dist - near) / (far - near);\r\n'+
-                '}\r\n';
+            // TODO: use babylon lights rather than manually passing data to custom uniforms?
             let shader_material = new ShaderMaterial(
                 'pointcloud_shader',
                 scene,
-                {
-                    vertex: 'pointcloud',
-                    fragment: 'pointcloud'
-                },
+                '/shaders/imposterspheres',
                 {
                     attributes: ['position', 'color', 'uv', 'uv2'],
-                    uniforms: ['world', 'worldView', 'worldViewProjection', 'view', 'projection']
+                    uniforms: ['world', 'view', 'projection']
                 }
             );
 
@@ -340,12 +234,9 @@ export default {
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         let light = new HemisphericLight('light1', new Vector3(0, 1, 0), scene);
-        console.log(light.direction, light.diffuse, light.groundColor);
 
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.85;
-
-
 
         // Create custom point cloud shader material
         let pc_material = this.createPointCloudShaderMaterial(scene);
