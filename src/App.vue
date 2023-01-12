@@ -3,7 +3,7 @@ import $ from 'jquery';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
-import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color4 } from '@babylonjs/core/Maths/math.color';
 import { PointsCloudSystem } from '@babylonjs/core/Particles/pointsCloudSystem';
 import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSystem';
@@ -180,7 +180,6 @@ export default {
                 'out vec2 model_texcoord;\r\n'+
                 '\r\n'+
                 'void main() {\r\n'+
-                //'    vec4 p = world * vec4(position + vec3(uv2, 1.0), 1.0);\r\n'+
                 '    vec3 world_point = (world * vec4(position, 1.0)).xyz;\r\n'+
                 '    vec3 vertex_direction = normalize(world_point - camera_position);\r\n'+
                 '    vec3 cam_right = normalize(cross(vertex_direction, camera_up));\r\n'+
@@ -204,7 +203,7 @@ export default {
 
             Effect.ShadersStore['pointcloudFragmentShader'] =
                 '#version 300 es\r\n'+
-                'precision mediump float;\r\n'+
+                'precision highp float;\r\n'+
                 '\r\n'+
                 '// Input\r\n'+
                 'in vec3 world_position;\r\n'+
@@ -214,7 +213,13 @@ export default {
                 'in vec2 model_texcoord;\r\n'+
                 '\r\n'+
                 '// Uniforms\r\n'+
+                'uniform vec3 camera_position;\r\n'+
+                'uniform vec2 clip_z;\r\n'+
                 'uniform float point_size;\r\n'+
+                'uniform int num_lights;\r\n'+
+                'uniform vec3 light_ambient;\r\n'+
+                'uniform vec3 light_position[8];\r\n'+
+                'uniform vec3 light_color[8];\r\n'+
                 '\r\n'+
                 '// Output\r\n'+
                 'out vec4 FragColor;\r\n'+
@@ -226,7 +231,27 @@ export default {
                 '        discard;\r\n'+
                 '    }\r\n'+
                 '\r\n'+
-                '    FragColor = model_color;\r\n'+
+                '    vec3 sphere_normal = vec3(norm_texcoord, sqrt(1.0 - magnitude));\r\n'+
+                '    sphere_normal = normalize(world_normal_mat * sphere_normal);\r\n'+
+                '    float sphere_radius = point_size / 2.0;\r\n'+
+                '    vec3 sphere_position = (sphere_normal * sphere_radius) + model_center;\r\n'+
+                '\r\n'+
+                '    vec3 light_diffuse = vec3(0.0, 0.0, 0.0);\r\n'+
+                '    for (int i = 0; i < num_lights; i++) {\r\n'+
+                '        vec3 light_direction = normalize(light_position[i] - sphere_position);\r\n'+
+                '        float n_dot_l = max(dot(sphere_normal, light_direction), 0.0);\r\n'+
+                '        light_diffuse += light_color[i] * n_dot_l;\r\n'+
+                '    }\r\n'+
+                '    vec3 final_color = min((light_ambient * model_color.rgb) + (light_diffuse * model_color.rgb), 1.0);\r\n'+
+                '\r\n'+
+                '    // Color\r\n'+
+                '    FragColor = vec4(final_color, 1.0);\r\n'+
+                '\r\n'+
+                '    // Depth\r\n'+
+                '    float near = clip_z.x;\r\n'+
+                '    float far = clip_z.y;\r\n'+
+                '    float dist = length(sphere_position - camera_position);\r\n'+
+                '    gl_FragDepth = (dist - near) / (far - near);\r\n'+
                 '}\r\n';
             let shader_material = new ShaderMaterial(
                 'pointcloud_shader',
@@ -301,6 +326,9 @@ export default {
         // This creates and positions an arc rotate camera (non-mesh)
         let camera = new ArcRotateCamera('camera1', -Math.PI / 2.0, Math.PI / 3.0, 60.0, new Vector3(0, 0, 0), scene);
         camera.updateUpVectorFromRotation = true;
+        camera.minZ = 0.1;
+        camera.maxZ = 500.0;
+        console.log(camera.minZ, camera.maxZ);
 
         // This attaches the camera to the canvas
         camera.attachControl(canvas, true);
@@ -315,7 +343,12 @@ export default {
 
         // Create custom point cloud shader material
         let pc_material = this.createPointCloudShaderMaterial(scene);
+        pc_material.setVector2('clip_z', new Vector2(camera.minZ, camera.maxZ));
         pc_material.setFloat('point_size', 0.2);
+        pc_material.setInt('num_lights', 1);
+        pc_material.setVector3('light_ambient', new Vector3(0.2, 0.2, 0.2));
+        pc_material.setVector3('light_position[0]', new Vector3(20.0, 80.0, 40.0));
+        pc_material.setVector3('light_color[0]', new Vector3(1.0, 1.0, 1.0));
 
         // Download brain position data and create point cloud
         this.getCSV('/data/viz-no-network_positions.csv')
@@ -346,6 +379,7 @@ export default {
                 mesh.position.z = 7.5;
             });
             */
+            
             /*
             // spheres - takes longer, uses more resources
             let sphere = CreateSphere('sphere', {diameter: 1.0, segments: 4});
@@ -368,7 +402,7 @@ export default {
             mesh.position.x = -10.0;
             mesh.position.z = 7.5;
             */
-
+            
             // custom point cloud (imposter spheres)
             let point_cloud = this.createPointCloudMesh('pc', neuron_positions, neuron_colors, scene);
             point_cloud.material = pc_material;
@@ -376,6 +410,7 @@ export default {
             point_cloud.rotation.x = -Math.PI / 2.0;
             point_cloud.position.x = -10.0;
             point_cloud.position.z = 7.5;
+            
         })
         .catch((err) => {
             console.log(err);
