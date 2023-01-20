@@ -8,7 +8,7 @@ in vec3 model_center;
 in vec4 model_color;
 in vec2 model_texcoord;
 
-// Uniforms\r\n'+
+// Uniforms
 uniform vec3 camera_position;
 uniform vec2 clip_z;
 uniform float point_size;

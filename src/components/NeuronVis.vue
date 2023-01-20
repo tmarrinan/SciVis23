@@ -58,7 +58,7 @@ export default {
         light.intensity = 0.85;
 
         // Create custom point cloud shader material
-        let pc_material = imposterSpheres.CreateImposterSphereShaderMaterial(scene);//this.createPointCloudShaderMaterial(scene);
+        let pc_material = imposterSpheres.CreateImposterSphereShaderMaterial(scene);
         pc_material.setVector2('clip_z', new Vector2(camera.minZ, camera.maxZ));
         pc_material.setFloat('point_size', 0.2);
         pc_material.setInt('num_lights', 0);
@@ -127,12 +127,13 @@ export default {
             */
             
             // custom point cloud (imposter spheres)
-            let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, neuron_colors, scene); //this.createPointCloudMesh('pc', neuron_positions, neuron_colors, scene);
+            let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, neuron_colors, scene);
             point_cloud.material = pc_material;
             point_cloud.scaling = new Vector3(0.1, 0.1, 0.1);
             point_cloud.rotation.x = -Math.PI / 2.0;
             point_cloud.position.x = -10.0;
             point_cloud.position.z = 7.5;
+            
             
         })
         .catch((err) => {
