@@ -30,6 +30,7 @@ const vertex_shader_src =
 'out vec3 model_center;\n' +
 'out vec4 model_color;\n' +
 'out vec2 model_texcoord;\n' +
+'out float model_size;\n' +
 '\n' +
 'void main() {\n' +
 '    vec3 world_point = (world * vec4(position, 1.0)).xyz;\n' +
@@ -37,8 +38,10 @@ const vertex_shader_src =
 '    vec3 cam_right = normalize(cross(vertex_direction, camera_up));\n' +
 '    vec3 cam_up = cross(cam_right, vertex_direction);\n' +
 '\n' +
-'    world_position = world_point + (cam_right * uv2.x * point_size) +\n' +
-'                                   (cam_up * uv2.y * point_size);\n' +
+'    float dist_scale = clamp(0.15 * length(camera_position - world_point), 0.05, 1.0);\n' + // make this variable somehow?
+'    model_size = dist_scale * point_size;\n' +
+'    world_position = world_point + (cam_right * uv2.x * model_size) +\n' +
+'                                   (cam_up * uv2.y * model_size);\n' +
 '\n' +
 '    vec3 n = -vertex_direction;\n' +
 '    vec3 u = normalize(cross(camera_up, n)); // cam_up?\n' +
@@ -62,11 +65,12 @@ const fragment_shader_src =
 'in vec3 model_center;\n' +
 'in vec4 model_color;\n' +
 'in vec2 model_texcoord;\n' +
+'in float model_size;\n' +
 '\n' +
 '// Uniforms\n' +
 'uniform vec3 camera_position;\n' +
 'uniform vec2 clip_z;\n' +
-'uniform float point_size;\n' +
+//'uniform float point_size;\n' +
 'uniform int num_lights;\n' +
 'uniform vec3 light_ambient;\n' +
 'uniform vec3 hemispheric_light_direction;\n' +
@@ -87,7 +91,7 @@ const fragment_shader_src =
 '\n' +
 '    vec3 sphere_normal = vec3(norm_texcoord, sqrt(1.0 - magnitude));\n' +
 '    sphere_normal = normalize(world_normal_mat * sphere_normal);\n' +
-'    float sphere_radius = point_size / 2.0;\n' +
+'    float sphere_radius = model_size / 2.0;\n' +
 '    vec3 sphere_position = (sphere_normal * sphere_radius) + model_center;\n' +
 '\n' +
 '    float hemi_weight = 0.5 + 0.5 * dot(sphere_normal, hemispheric_light_direction);\n' +

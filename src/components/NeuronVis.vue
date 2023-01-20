@@ -127,6 +127,14 @@ export default {
             */
             
             // custom point cloud (imposter spheres)
+            // TODO - test dynamic LOD
+            //    * boolean: master point per "mini-cluster" (one 'yes', rest 'no')
+            //    * if distance to point < threshold:
+            //        * show, but make radius small (enable each point in the cluster to be viewed)
+            //        * [X] perhaps make radius a function of distance (i.e. radius gradually gets smaller as you get closer)
+            //    * if distance > threshold:
+            //        * discard everyone except the master (i.e. only draw 1 sphere per "mini-cluster")
+
             let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, neuron_colors, scene);
             point_cloud.material = pc_material;
             point_cloud.scaling = new Vector3(0.1, 0.1, 0.1);
