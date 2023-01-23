@@ -7,7 +7,7 @@ in vec4 color;
 in vec2 uv;
 in vec2 uv2;
 
-// Uniforms\r\n'+
+// Uniforms
 uniform vec3 camera_position;
 uniform vec3 camera_up;
 uniform float point_size;
