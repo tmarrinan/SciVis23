@@ -8,7 +8,9 @@ import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { PointsCloudSystem } from '@babylonjs/core/Particles/pointsCloudSystem';
 import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSystem';
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
+import { CreateTube } from '@babylonjs/core/Meshes/Builders/tubeBuilder';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 
@@ -18,11 +20,30 @@ import imposterSpheres from './imposterSpheres'
 export default {
     data() {
         return {
-            area_colors: uniqueColors
+            area_colors: uniqueColors,
+            brain_center: new Vector3(0.0, 0.0, 0.0)
         }
     },
     methods: {
-        
+        createBezierTube(start_pt, end_pt, num_divisions, scene) {
+            let ctrl_point1 = start_pt.add(this.brain_center.subtract(start_pt).scale(0.67));
+            let ctrl_point2 = end_pt.add(this.brain_center.subtract(end_pt).scale(0.67));
+            let path = [];
+            for (let i = 0; i < num_divisions; i++) {
+                let t = (i / (num_divisions - 1));
+                let one_minus_t = 1.0 - t;
+                console.log(t, one_minus_t);
+                let x = (one_minus_t * one_minus_t * one_minus_t * start_pt.x) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.x) +
+                        (3 * one_minus_t * t * t * ctrl_point2.x) + (t * t * t * end_pt.x);
+                let y = (one_minus_t * one_minus_t * one_minus_t * start_pt.y) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.y) +
+                        (3 * one_minus_t * t * t * ctrl_point2.y) + (t * t * t * end_pt.y);
+                let z = (one_minus_t * one_minus_t * one_minus_t * start_pt.z) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.z) +
+                        (3 * one_minus_t * t * t * ctrl_point2.z) + (t * t * t * end_pt.z);
+                path.push(new Vector3(x, y, z));
+            }
+            let tube = CreateTube('tube', {path: path, radius: 1.0, tessellation: 12, sideOrientation: Mesh.DOUBLESIDE}, scene);
+            return tube;
+        }
     },
     mounted() {
         // Get the canvas element from the DOM.
@@ -59,7 +80,6 @@ export default {
 
         // Create custom point cloud shader material
         let pc_material = imposterSpheres.CreateImposterSphereShaderMaterial(scene);
-        pc_material.setVector2('clip_z', new Vector2(camera.minZ, camera.maxZ));
         pc_material.setFloat('point_size', 0.2);
         pc_material.setInt('num_lights', 0);
         pc_material.setVector3('light_ambient', new Vector3(0.0, 0.0, 0.0));
@@ -74,7 +94,8 @@ export default {
         //pc_material.setVector3('light_color[0]', new Vector3(1.0, 1.0, 1.0));
 
         // Download brain position data and create point cloud
-        this.getCSV('/data/viz-no-network_positions.csv')
+        //this.getCSV('/data/viz-no-network_positions.csv')
+        this.getCSV('/data/viz-stimulus_positions.csv')
         .then((neurons) => {
             let neuron_positions = new Array(neurons.length);
             let neuron_colors = new Array(neurons.length)
@@ -142,7 +163,26 @@ export default {
             point_cloud.position.x = -10.0;
             point_cloud.position.z = 7.5;
             
-            
+            this.brain_center = point_cloud.getBoundingInfo().boundingBox.center;
+
+            // TEST - connections
+            let tube1 = this.createBezierTube(neuron_positions[1234], neuron_positions[40000], 16);
+            tube1.scaling = new Vector3(0.1, 0.1, 0.1);
+            tube1.rotation.x = -Math.PI / 2.0;
+            tube1.position.x = -10.0;
+            tube1.position.z = 7.5;
+
+            let tube2 = this.createBezierTube(neuron_positions[7], neuron_positions[26500], 16);
+            tube2.scaling = new Vector3(0.1, 0.1, 0.1);
+            tube2.rotation.x = -Math.PI / 2.0;
+            tube2.position.x = -10.0;
+            tube2.position.z = 7.5;
+
+            let tube3 = this.createBezierTube(neuron_positions[9000], neuron_positions[35678], 16);
+            tube3.scaling = new Vector3(0.1, 0.1, 0.1);
+            tube3.rotation.x = -Math.PI / 2.0;
+            tube3.position.x = -10.0;
+            tube3.position.z = 7.5;
         })
         .catch((err) => {
             console.log(err);
