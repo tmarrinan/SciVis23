@@ -14,17 +14,27 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 
+import UserInterface from './UserInterface.vue'
+
 import uniqueColors from './uniqueColors'
 import imposterSpheres from './imposterSpheres'
 
 export default {
     data() {
         return {
+            camera: null,
             area_colors: uniqueColors,
             brain_center: new Vector3(0.0, 0.0, 0.0)
         }
     },
+    components: {
+        UserInterface
+    },
     methods: {
+        updateNearClip(value) {
+            this.camera.minZ = value;
+        },
+
         createBezierTube(start_pt, end_pt, num_divisions, scene) {
             let ctrl_point1 = start_pt.add(this.brain_center.subtract(start_pt).scale(0.67));
             let ctrl_point2 = end_pt.add(this.brain_center.subtract(end_pt).scale(0.67));
@@ -32,7 +42,6 @@ export default {
             for (let i = 0; i < num_divisions; i++) {
                 let t = (i / (num_divisions - 1));
                 let one_minus_t = 1.0 - t;
-                console.log(t, one_minus_t);
                 let x = (one_minus_t * one_minus_t * one_minus_t * start_pt.x) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.x) +
                         (3 * one_minus_t * t * t * ctrl_point2.x) + (t * t * t * end_pt.x);
                 let y = (one_minus_t * one_minus_t * one_minus_t * start_pt.y) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.y) +
@@ -63,14 +72,14 @@ export default {
         let scene = new Scene(engine);
 
         // This creates and positions an arc rotate camera (non-mesh)
-        let camera = new ArcRotateCamera('camera1', -Math.PI / 2.0, Math.PI / 3.0, 60.0, new Vector3(0, 0, 0), scene);
-        camera.updateUpVectorFromRotation = true;
-        camera.minZ = 0.1;
-        camera.maxZ = 500.0;
-        console.log(camera.minZ, camera.maxZ);
+        this.camera = new ArcRotateCamera('camera1', -Math.PI / 2.0, Math.PI / 3.0, 60.0, new Vector3(0, 0, 0), scene);
+        this.camera.updateUpVectorFromRotation = true;
+        this.camera.minZ = 0.1;
+        this.camera.maxZ = 500.0;
+        console.log(this.camera.minZ, this.camera.maxZ);
 
         // This attaches the camera to the canvas
-        camera.attachControl(canvas, true);
+        this.camera.attachControl(canvas, true);
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         let light = new HemisphericLight('light1', new Vector3(0, 1, 0), scene);
@@ -94,8 +103,8 @@ export default {
         //pc_material.setVector3('light_color[0]', new Vector3(1.0, 1.0, 1.0));
 
         // Download brain position data and create point cloud
-        //this.getCSV('/data/viz-no-network_positions.csv')
-        this.getCSV('/data/viz-stimulus_positions.csv')
+        this.getCSV('/data/viz-no-network_positions.csv')
+        //this.getCSV('/data/viz-stimulus_positions.csv')
         .then((neurons) => {
             let neuron_positions = new Array(neurons.length);
             let neuron_colors = new Array(neurons.length)
@@ -203,8 +212,8 @@ export default {
 
         // Render every frame
         engine.runRenderLoop(() => {
-            pc_material.setVector3('camera_position', camera.position);
-            pc_material.setVector3('camera_up', camera.upVector);
+            pc_material.setVector3('camera_position', this.camera.position);
+            pc_material.setVector3('camera_up', this.camera.upVector);
             pc_material.setVector3('hemispheric_light_direction', light.direction);
             scene.render();
         });
@@ -214,6 +223,7 @@ export default {
 
 <template>
     <canvas id="renderCanvas" touch-action="none"></canvas>
+    <UserInterface @update-near-clip="updateNearClip"/>
 </template>
 
 <style scoped>
