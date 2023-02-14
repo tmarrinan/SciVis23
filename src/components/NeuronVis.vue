@@ -117,7 +117,7 @@ export default {
             
             console.log(neurons.length + ' points');
 
-            // area centroid - precalculate this in future and load from file
+            // BEGIN area centroid - precalculate this in future and load from file
             let area_centroids = new Array(48);
             let area_centroid_minval = new Array(48).fill(9.9e12);
             let neuron_dists = new Array(neurons.length).fill(0);
@@ -129,7 +129,6 @@ export default {
                     }
                 });
             });
-            //console.log(neuron_dists);
             for (let i = 0; i < neurons.length; i++) {
                 let area = parseInt(neurons[i][3]);
                 if (neuron_dists[i] < area_centroid_minval[area]) {
@@ -148,7 +147,6 @@ export default {
                 $.each(sps.particles, (index) => {
                     const particle = sps.particles[index];
                     particle.position = area_centroids[index];
-                    //particle.color = neuron_colors[index];
                 });
             };
             sps.computeBoundingBox = true;
@@ -158,8 +156,7 @@ export default {
             mesh.rotation.x = -Math.PI / 2.0;
             mesh.position.x = -10.0;
             mesh.position.z = 7.5;
-
-            // TODO: find lowest neruon_dist in each area (make that point the centroid)
+            // END area centroid
             
             /*
             // points - simple rendering, but more efficient
