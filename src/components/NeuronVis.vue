@@ -116,6 +116,50 @@ export default {
             });
             
             console.log(neurons.length + ' points');
+
+            // area centroid - precalculate this in future and load from file
+            let area_centroids = new Array(48);
+            let area_centroid_minval = new Array(48).fill(9.9e12);
+            let neuron_dists = new Array(neurons.length).fill(0);
+            $.each(neurons, (i) => {
+                $.each(neurons, (j) => {
+                    if (neurons[i][3] === neurons[j][3]) {
+                        let dist2 = neuron_positions[i].subtract(neuron_positions[j]).lengthSquared();
+                        neuron_dists[i] += dist2;
+                    }
+                });
+            });
+            //console.log(neuron_dists);
+            for (let i = 0; i < neurons.length; i++) {
+                let area = parseInt(neurons[i][3]);
+                if (neuron_dists[i] < area_centroid_minval[area]) {
+                    area_centroid_minval[area] = neuron_dists[i];
+                    area_centroids[area] = neuron_positions[i];
+                }
+            }
+            console.log(area_centroids);
+            console.log(area_centroid_minval);
+            let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
+            let sps = new SolidParticleSystem('sps', scene);
+            sps.addShape(sphere, area_centroids.length);
+            sphere.dispose();
+            let mesh = sps.buildMesh();
+            sps.initParticles = () => {
+                $.each(sps.particles, (index) => {
+                    const particle = sps.particles[index];
+                    particle.position = area_centroids[index];
+                    //particle.color = neuron_colors[index];
+                });
+            };
+            sps.computeBoundingBox = true;
+            sps.initParticles();
+            sps.setParticles();
+            mesh.scaling = new Vector3(0.1, 0.1, 0.1);
+            mesh.rotation.x = -Math.PI / 2.0;
+            mesh.position.x = -10.0;
+            mesh.position.z = 7.5;
+
+            // TODO: find lowest neruon_dist in each area (make that point the centroid)
             
             /*
             // points - simple rendering, but more efficient
