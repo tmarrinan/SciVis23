@@ -53,6 +53,7 @@ const vertex_shader_src =
 '    model_texcoord = uv;\n' +
 '\n' +
 '    gl_Position = projection * view * vec4(world_position, 1.0);\n' +
+'    gl_Position.z = 0.0;\n' +
 '}';
 
 const fragment_shader_src =
@@ -94,6 +95,17 @@ const fragment_shader_src =
 '    float sphere_radius = model_size / 2.0;\n' +
 '    vec3 sphere_position = (sphere_normal * sphere_radius) + model_center;\n' +
 '\n' +
+'    // Depth\n' +
+'    float far = gl_DepthRange.far;\n' +
+'    float near = gl_DepthRange.near;\n' +
+'    vec4 v_clip_coord = projection * view * vec4(sphere_position, 1.0);\n' +
+'    float f_ndc_depth = v_clip_coord.z / v_clip_coord.w;\n' +
+'    float frag_depth = (((far - near) * f_ndc_depth) + far + near) * 0.5;\n' +
+'    if (frag_depth < near || frag_depth > far) {\n' +
+'        discard;\n' +
+'    }\n' +
+'    gl_FragDepth = frag_depth;\n' +
+'\n' +
 '    float hemi_weight = 0.5 + 0.5 * dot(sphere_normal, hemispheric_light_direction);\n' +
 '    vec3 light_diffuse = mix(hemispheric_light_ground_color, hemispheric_light_sky_color, hemi_weight);\n' +
 '    for (int i = 0; i < num_lights; i++) {\n' +
@@ -108,13 +120,6 @@ const fragment_shader_src =
 '\n' +
 '    // Color\n' +
 '    FragColor = vec4(final_color, model_color.a);\n' +
-'\n' +
-'    // Depth\n' +
-'    float far = gl_DepthRange.far;\n' +
-'    float near = gl_DepthRange.near;\n' +
-'    vec4 v_clip_coord = projection * view * vec4(sphere_position, 1.0);\n' +
-'    float f_ndc_depth = v_clip_coord.z / v_clip_coord.w;\n' +
-'    gl_FragDepth = (((far - near) * f_ndc_depth) + far + near) * 0.5;\n' +
 '}'
 
 export default {
