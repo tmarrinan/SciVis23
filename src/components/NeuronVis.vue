@@ -17,6 +17,7 @@ import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 import UserInterface from './UserInterface.vue'
 
 import uniqueColors from './uniqueColors'
+import areaCentroids from './areaCentroids'
 import imposterSpheres from './imposterSpheres'
 
 export default {
@@ -24,6 +25,7 @@ export default {
         return {
             camera: null,
             area_colors: uniqueColors,
+            area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0)
         }
     },
@@ -117,8 +119,30 @@ export default {
             
             console.log(neurons.length + ' points');
 
+            // BEGIN area centroid - precomputed
+            let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
+            let sps = new SolidParticleSystem('sps', scene);
+            sps.addShape(sphere, this.area_centroids.length);
+            sphere.dispose();
+            let mesh = sps.buildMesh();
+            sps.initParticles = () => {
+                $.each(sps.particles, (index) => {
+                    const particle = sps.particles[index];
+                    particle.position = neuron_positions[this.area_centroids[index]];
+                });
+            };
+            sps.computeBoundingBox = true;
+            sps.initParticles();
+            sps.setParticles();
+            mesh.scaling = new Vector3(0.1, 0.1, 0.1);
+            mesh.rotation.x = -Math.PI / 2.0;
+            mesh.position.x = -10.0;
+            mesh.position.z = 7.5;
+
+            /*
             // BEGIN area centroid - precalculate this in future and load from file
-            let area_centroids = new Array(48);
+            //let area_centroids = new Array(48);
+            let area_centroid_indices = new Array(48);
             let area_centroid_minval = new Array(48).fill(9.9e12);
             let neuron_dists = new Array(neurons.length).fill(0);
             $.each(neurons, (i) => {
@@ -133,20 +157,21 @@ export default {
                 let area = parseInt(neurons[i][3]);
                 if (neuron_dists[i] < area_centroid_minval[area]) {
                     area_centroid_minval[area] = neuron_dists[i];
-                    area_centroids[area] = neuron_positions[i];
+                    area_centroid_indices[area] = i;
+                    //area_centroids[area] = neuron_positions[i];
                 }
             }
-            console.log(area_centroids);
-            console.log(area_centroid_minval);
+            console.log(area_centroid_indices);
+            //console.log(area_centroid_minval);
             let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
             let sps = new SolidParticleSystem('sps', scene);
-            sps.addShape(sphere, area_centroids.length);
+            sps.addShape(sphere, area_centroid_indices.length);
             sphere.dispose();
             let mesh = sps.buildMesh();
             sps.initParticles = () => {
                 $.each(sps.particles, (index) => {
                     const particle = sps.particles[index];
-                    particle.position = area_centroids[index];
+                    particle.position = neuron_positions[area_centroid_indices[index]];//area_centroids[index];
                 });
             };
             sps.computeBoundingBox = true;
@@ -157,6 +182,7 @@ export default {
             mesh.position.x = -10.0;
             mesh.position.z = 7.5;
             // END area centroid
+            */
             
             /*
             // points - simple rendering, but more efficient
