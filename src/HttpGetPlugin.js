@@ -2,10 +2,6 @@ import $ from 'jquery';
 
 export default {
     install: (app, options) => {
-        app.config.globalProperties.testFunc = () => {
-            console.log('Test sucess');
-        };
-
         app.config.globalProperties.getJSON = (url) => {
             return new Promise((resolve, reject) => {
                 $.ajax({
