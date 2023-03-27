@@ -74,10 +74,12 @@ export default {
         let scene = new Scene(engine);
 
         // This creates and positions an arc rotate camera (non-mesh)
-        this.camera = new ArcRotateCamera('camera1', -Math.PI / 2.0, Math.PI / 3.0, 60.0, new Vector3(0, 0, 0), scene);
+        let transformed_brain_center = new Vector3(-0.666377, 7.335706, -0.167549);
+        this.camera = new ArcRotateCamera('camera1', -Math.PI / 2.0,  3.0 * Math.PI / 8.0, 50.0, transformed_brain_center, scene);
         this.camera.updateUpVectorFromRotation = true;
         this.camera.minZ = 0.1;
         this.camera.maxZ = 500.0;
+        this.camera.wheelPrecision = 10;
         console.log(this.camera.minZ, this.camera.maxZ);
 
         // This attaches the camera to the canvas
@@ -109,14 +111,13 @@ export default {
         //this.getCSV('/data/viz-stimulus_positions.csv')
         .then((neurons) => {
             let neuron_positions = new Array(neurons.length);
-            let neuron_colors = new Array(neurons.length)
+            let neuron_colors = new Array(neurons.length);
             $.each(neurons, (index) => {
                 neuron_positions[index] = new Vector3(parseFloat(neurons[index][0]),
                                                       parseFloat(neurons[index][1]),
                                                       parseFloat(neurons[index][2]));
                 neuron_colors[index] = this.area_colors[parseInt(neurons[index][3])];
             });
-            
             console.log(neurons.length + ' points');
 
             // BEGIN area centroid - precomputed
@@ -242,19 +243,28 @@ export default {
             this.brain_center = point_cloud.getBoundingInfo().boundingBox.center;
 
             // TEST - connections
-            let tube1 = this.createBezierTube(neuron_positions[1234], neuron_positions[40000], 16);
+            let endpt1a = neuron_positions[this.area_centroids[5]];
+            let endpt1b = neuron_positions[this.area_centroids[9]];
+            //let tube1 = this.createBezierTube(neuron_positions[1234], neuron_positions[40000], 16);
+            let tube1 = this.createBezierTube(endpt1a, endpt1b, 16);
             tube1.scaling = new Vector3(0.1, 0.1, 0.1);
             tube1.rotation.x = -Math.PI / 2.0;
             tube1.position.x = -10.0;
             tube1.position.z = 7.5;
 
-            let tube2 = this.createBezierTube(neuron_positions[7], neuron_positions[26500], 16);
+            let endpt2a = neuron_positions[this.area_centroids[15]];
+            let endpt2b = neuron_positions[this.area_centroids[47]];
+            //let tube2 = this.createBezierTube(neuron_positions[7], neuron_positions[26500], 16);
+            let tube2 = this.createBezierTube(endpt2a, endpt2b, 16);
             tube2.scaling = new Vector3(0.1, 0.1, 0.1);
             tube2.rotation.x = -Math.PI / 2.0;
             tube2.position.x = -10.0;
             tube2.position.z = 7.5;
 
-            let tube3 = this.createBezierTube(neuron_positions[9000], neuron_positions[35678], 16);
+            let endpt3a = neuron_positions[this.area_centroids[14]];
+            let endpt3b = neuron_positions[this.area_centroids[31]];
+            //let tube3 = this.createBezierTube(neuron_positions[9000], neuron_positions[35678], 16);
+            let tube3 = this.createBezierTube(endpt3a, endpt3b, 16);
             tube3.scaling = new Vector3(0.1, 0.1, 0.1);
             tube3.rotation.x = -Math.PI / 2.0;
             tube3.position.x = -10.0;
