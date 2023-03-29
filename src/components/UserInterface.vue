@@ -4,7 +4,7 @@ export default {
     props: {},
     data() {
         return {
-            near_clip_slider: 1,
+            near_clip_slider: 5,
             timestep_slider: 1
         }
     },
@@ -32,7 +32,7 @@ export default {
 <template>
     <div class="user-interface">
         <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
-        <input class="slider" type="range" min="1" max="250" v-model="near_clip_slider" @input="updateNearClip"/>
+        <input class="slider" type="range" min="5" max="300" v-model="near_clip_slider" @input="updateNearClip"/>
     </div>
     <div class="user-interface timestep">
         <label>Timestep: {{ timestep }}</label><br/>
