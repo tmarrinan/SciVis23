@@ -14,3 +14,4 @@ function initializeApp() {
 }
 
 window.initializeApp = initializeApp;
+//window.onload = initializeApp;

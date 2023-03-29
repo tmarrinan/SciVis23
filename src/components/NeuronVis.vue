@@ -19,22 +19,28 @@ import UserInterface from './UserInterface.vue'
 import uniqueColors from './uniqueColors'
 import areaCentroids from './areaCentroids'
 import imposterSpheres from './imposterSpheres'
+import monitors from './monitors'
 
 export default {
-    data() {
-        return {
-            camera: null,
-            area_colors: uniqueColors,
-            area_centroids: areaCentroids,
-            brain_center: new Vector3(0.0, 0.0, 0.0)
-        }
-    },
-    components: {
-        UserInterface
-    },
+      data() {
+          return {
+              camera: null,
+              area_colors: uniqueColors,
+              area_centroids: areaCentroids,
+              brain_center: new Vector3(0.0, 0.0, 0.0),
+              monitor: null
+          }
+      },
+      components: {
+          UserInterface
+      },
     methods: {
         updateNearClip(value) {
             this.camera.minZ = value;
+        },
+
+        updateTimestep(value) {
+          this.monitor.loadMonitors(value);
         },
 
         createBezierTube(start_pt, end_pt, num_divisions, scene) {
@@ -67,6 +73,8 @@ export default {
             canvas.height = window.innerHeight;
         });
 
+        // Initialize monitors
+        this.monitor = new monitors.Monitor();
         // Associate a Babylon Engine to it.
         const engine = new Engine(canvas);
 
@@ -291,6 +299,7 @@ export default {
 <template>
     <canvas id="renderCanvas" touch-action="none"></canvas>
     <UserInterface @update-near-clip="updateNearClip"/>
+    <UserInterface @update-timestep="updateTimestep"/>
 </template>
 
 <style scoped>
