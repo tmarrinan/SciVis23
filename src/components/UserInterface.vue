@@ -4,7 +4,7 @@ export default {
     data() {
         return {
             near_clip_slider: 5,
-            timestep_slider: 1
+            timestep_slider: 0
         }
     },
     computed: {

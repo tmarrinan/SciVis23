@@ -7,24 +7,6 @@ class Timeline {
   simulation = "viz-calcium";
   idx = 0;
   constructor() {
-    this.WINDOW_SIZE = 1;
-    this.STRIDE = 100;
-
-    this.curIdx = 0;
-    this.startIdx = 0;
-    this.endIdx = this.WINDOW_SIZE;
-
-    //this.loadMonitor(0);
-    /*
-    for (let i = this.startIdx; i < this.endIdx; ++i) {
-      this.loadMonitor(i * this.STRIDE)
-        .then(function(response) {
-          console.log(response.schema.toString());
-        })
-        .catch((reason) => {
-        });
-
-    }*/
   }
 
   setTimestep(idx) {
