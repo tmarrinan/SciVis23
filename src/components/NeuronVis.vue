@@ -22,17 +22,17 @@ import imposterSpheres from './imposterSpheres'
 import timeline from './timeline'
 
 export default {
-      data() {
-          return {
-              camera: null,
-              area_colors: uniqueColors,
-              area_centroids: areaCentroids,
-              brain_center: new Vector3(0.0, 0.0, 0.0)
-          }
-      },
-      components: {
-          UserInterface
-      },
+    data() {
+        return {
+            camera: null,
+            area_colors: uniqueColors,
+            area_centroids: areaCentroids,
+            brain_center: new Vector3(0.0, 0.0, 0.0)
+        }
+    },
+    components: {
+        UserInterface
+    },
     methods: {
         updateNearClip(value) {
             this.camera.minZ = value;
