@@ -19,7 +19,7 @@ import UserInterface from './UserInterface.vue'
 import uniqueColors from './uniqueColors'
 import areaCentroids from './areaCentroids'
 import imposterSpheres from './imposterSpheres'
-import monitors from './monitors'
+import timeline from './timeline'
 
 export default {
       data() {
@@ -27,8 +27,7 @@ export default {
               camera: null,
               area_colors: uniqueColors,
               area_centroids: areaCentroids,
-              brain_center: new Vector3(0.0, 0.0, 0.0),
-              monitor: null
+              brain_center: new Vector3(0.0, 0.0, 0.0)
           }
       },
       components: {
@@ -40,7 +39,13 @@ export default {
         },
 
         updateTimestep(value) {
-          this.monitor.loadMonitors(value);
+          this.timeline.updateIndex(value)
+            .then(function(data) {
+              console.log(data.schema.toString());
+            }).
+            catch((reason) => {
+              console.log(reason);
+            });
         },
 
         createBezierTube(start_pt, end_pt, num_divisions, scene) {
@@ -73,8 +78,21 @@ export default {
             canvas.height = window.innerHeight;
         });
 
-        // Initialize monitors
-        this.monitor = new monitors.Monitor();
+        this.timeline = new timeline.Timeline();
+        this.timeline.updateIndex(0)
+          .then(function(table) {
+            /**
+              * This will return a Table object
+              * https://arrow.apache.org/docs/js/classes/Arrow_dom.Table.html
+              * This Table will contain all 50,000 neurons for a given timestep idx
+              */
+            console.log(`Number of rows: ${table.numRows}`);
+            console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
+            console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
+          })
+          .catch((reason) => {
+            console.error(reason);
+          });
         // Associate a Babylon Engine to it.
         const engine = new Engine(canvas);
 
