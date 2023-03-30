@@ -1,5 +1,4 @@
 <script>
-  /** import { Rectangle } from '@babylonjs/gui/2D/controls/rectangle'; */
 export default {
     props: {},
     data() {
@@ -24,6 +23,10 @@ export default {
 
         updateTimestep(event) {
              this.$emit('update-timestep', this.timestep);
+        },
+
+        updateSimulationStimulus(event) {
+              this.$emit('update-simulation-selection', event.srcElement.value);
         }
     }
 }
@@ -37,6 +40,19 @@ export default {
     <div class="user-interface timestep">
         <label>Timestep: {{ timestep }}</label><br/>
         <input class="slider" type="range" min="0" max="1000" v-model="timestep_slider" @input="updateTimestep"/>
+    </div>
+    <div class="user-interface simulation">
+        <label>Simulation: {{ simulation }}</label><br/>
+        <section>
+          <input class="radio" value="viz-calcium" type="radio" name="simulationRadio" checked="checked" @input="updateSimulationStimulus">
+          viz-calcium
+          <input class="radio" value="viz-disable" type="radio" name="simulationRadio" @input="updateSimulationStimulus">
+          viz-disable
+          <input class="radio" value="viz-no-network" type="radio" name="simulationRadio" @input="updateSimulationStimulus">
+          viz-no-network
+          <input class="radio" value="viz-stimulus" type="radio" name="simulationRadio" @input="updateSimulationStimulus">
+          viz-stimulus
+        </section>
     </div>
 </template>
 
@@ -58,5 +74,9 @@ export default {
 
 .slider {
     width: 16rem;
+}
+
+.simulation {
+  top: 12rem;
 }
 </style>

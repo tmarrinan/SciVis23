@@ -4,6 +4,8 @@ import { readParquet } from "parquet-wasm";
 
 class Timeline {
 
+  simulation = "viz-calcium";
+  idx = 0;
   constructor() {
     this.WINDOW_SIZE = 1;
     this.STRIDE = 100;
@@ -25,26 +27,18 @@ class Timeline {
     }*/
   }
 
-  // XXX update to support sliding window
-  updateIndex(idx) {
-    console.log("New value: " + new String(idx));
-    this.curIdx = idx;
-    return new Promise((resolve, reject) => {
-      this.loadMonitor(idx)
-        .then(function(data) {
-          resolve(data);
-        })
-        .catch((reason) => {
-          console.error(`Could not load ${DATA_FILE_URL}`);
-          console.error(`Reason: ${reason}`);
-          reject(reason);
-        });
-    });
+  setTimestep(idx) {
+    this.idx = idx;
   }
 
-  loadMonitor(idx) {
+  setSimulation(simulation) {
+    this.simulation = simulation;
+  }
+
+  // XXX update to support sliding window
+  getTimestep() {
     const BASE_URL = "http://tatooine.cels.anl.gov/~vmateevitsi/data/";
-    const DATA_FILE_URL = BASE_URL + idx.toString().padStart(4, '0') + ".gzip";
+    const DATA_FILE_URL = BASE_URL + this.simulation + "/monitors/" + this.idx.toString().padStart(6, '0') + ".gzip";
     
     return new Promise((resolve, reject) => {
       fetch(DATA_FILE_URL)
