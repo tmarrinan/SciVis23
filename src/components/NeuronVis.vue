@@ -58,13 +58,16 @@ export default {
     },
     mounted() {
         // Get the canvas element from the DOM.
-        const canvas = document.getElementById('renderCanvas');
+        const canvas = document.getElementById('render-canvas');
+        const parent = canvas.parentElement;
         canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.height = parent.offsetHeight;
         
         window.addEventListener('resize', (event) => {
+            console.log(window.innerWidth, parent.offsetHeight);
             canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            canvas.height = 100;
+            canvas.height = parent.offsetHeight;
         });
 
         // Associate a Babylon Engine to it.
@@ -299,15 +302,26 @@ export default {
 </script>
 
 <template>
-    <canvas id="renderCanvas" touch-action="none"></canvas>
-    <UserInterface @update-near-clip="updateNearClip"/>
+    <div id="canvas-container">
+        <!-- TODO: make id based on prop; change 'render-canvas' to a class -->
+        <canvas id="render-canvas" touch-action="none" tabindex="-1"></canvas>
+        <UserInterface @update-near-clip="updateNearClip"/>
+    </div>
 </template>
 
 <style scoped>
-#renderCanvas {
-    position: absolute;
+#canvas-container {
+    position: relative;
     left: 0px;
     top: 0px;
+    height: 100%;
+}
+
+#render-canvas {
     z-index: 1;
+}
+
+#render-canvas:focus {
+    outline-width: 0;
 }
 </style>
