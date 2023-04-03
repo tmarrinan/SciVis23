@@ -19,7 +19,7 @@ class Timeline {
 
   // XXX update to support sliding window
   getTimestep() {
-    const BASE_URL = "http://tatooine.cels.anl.gov/~vmateevitsi/data/";
+    const BASE_URL = "https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/";
     const DATA_FILE_URL = BASE_URL + this.simulation + "/monitors/" + this.idx.toString().padStart(6, '0') + ".gzip";
     
     return new Promise((resolve, reject) => {

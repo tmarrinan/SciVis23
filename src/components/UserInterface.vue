@@ -16,6 +16,7 @@ export default {
             return this.timestep_slider;
         }
     },
+    emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection'],
     methods: {
         updateNearClip(event) {
             this.$emit('update-near-clip', this.near_clip);
@@ -42,7 +43,7 @@ export default {
         <input class="slider" type="range" min="0" max="1000" v-model="timestep_slider" @input="updateTimestep"/>
     </div>
     <div class="user-interface simulation">
-        <label>Simulation: {{ simulation }}</label><br/>
+        <label>Simulation:</label><br/>
         <section>
           <input class="radio" value="viz-calcium" type="radio" name="simulationRadio" checked="checked" @input="updateSimulationStimulus">
           viz-calcium

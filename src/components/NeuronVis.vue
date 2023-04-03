@@ -35,6 +35,7 @@ export default {
     },
     methods: {
         updateNearClip(value) {
+          console.log(value);
             this.camera.minZ = value;
         },
 
@@ -46,7 +47,6 @@ export default {
         },
 
         updateSimulationSelection(value) {
-          console.log(value);
           this.timeline.setSimulation(value);
           this.timeline.getTimestep()
             .then(this.updateMonitorViz)
