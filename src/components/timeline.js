@@ -7,10 +7,11 @@ class Timeline {
   simulation = "viz-calcium";
   idx = 0;
   constructor() {
+    this.STRIDE = 100;
   }
 
   setTimestep(idx) {
-    this.idx = idx;
+    this.idx = idx * this.STRIDE;
   }
 
   setSimulation(simulation) {
