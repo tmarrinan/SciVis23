@@ -12,7 +12,11 @@ export default {
     },
     methods: {
         updateNumViews(value) {
-            console.log('updateNumViews():' + value);
+            console.log('updateNumViews(): ' + value);
+        },
+
+        updateDataUrl(value) {
+            console.log('updateDataUrl(): ' + value);
         }
     }
 }
@@ -21,7 +25,7 @@ export default {
 <template>
     <div class="box">
         <div class="row header">
-            <GlobalGui @update-num-views="updateNumViews"/>
+            <GlobalGui @update-num-views="updateNumViews" @update-data-url="updateDataUrl"/>
         </div>
         <div class="row content">
             <NeuronVis/>
