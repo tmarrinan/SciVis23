@@ -352,6 +352,7 @@ export default {
         <!-- TODO: make id based on prop; change 'render-canvas' to a class -->
         <canvas id="render-canvas" touch-action="none" tabindex="-1"></canvas>
         <div v-for="col in (view_columns - 1)" class="vertical-bar" :style="'left: ' + (100 * col / view_columns) + '%;'"></div>
+        <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>
         <UserInterface @update-near-clip="updateNearClip" @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"/>
     </div>
 </template>
@@ -373,11 +374,21 @@ export default {
     outline-width: 0;
 }
 
+.horizontal-bar {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    border-top: 4px solid #FFFFFF;
+    margin-top: -2px;
+    z-index: 2;
+}
+
 .vertical-bar {
     position: absolute;
     top: 0;
     height: 100%;
     border-left: 4px solid #FFFFFF;
     margin-left: -2px;
+    z-index: 2;
 }
 </style>

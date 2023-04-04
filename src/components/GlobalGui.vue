@@ -15,12 +15,17 @@ export default {
     emits: ['update-num-views', 'update-data-url'],
     methods: {
         updateNumViews(event) {
-            if (this.num_views === 3 || this.num_views === 5 || this.num_views === 7) {
+            if ([3, 5, 7].includes(this.num_views)) {
                 if (this.prev_views < this.num_views) this.num_views++;
                 else this.num_views--;
             }
+            else if (![1, 2, 4, 6, 8].includes(this.num_views)) {
+                this.num_views = 1;
+            }
+            if (this.num_views !== this.prev_views) {
+                this.$emit('update-num-views', this.num_views);
+            }
             this.prev_views = this.num_views;
-            this.$emit('update-num-views', this.num_views);
         },
 
         updateDataUrl(event) {
