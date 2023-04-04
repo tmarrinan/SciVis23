@@ -22,12 +22,26 @@ import imposterSpheres from './imposterSpheres'
 import timeline from './timeline'
 
 export default {
+    props: {
+        num_views: {type: Number},
+        data_url: {type: String}
+    },
     data() {
         return {
             camera: null,
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0)
+        }
+    },
+    computed: {
+        view_rows() {
+            return (this.num_views > 2) ? 2 : 1;
+        },
+
+        view_columns() {
+            let rows = (this.num_views > 2) ? 2 : 1;
+            return this.num_views / rows;
         }
     },
     components: {
@@ -337,6 +351,7 @@ export default {
     <div id="canvas-container">
         <!-- TODO: make id based on prop; change 'render-canvas' to a class -->
         <canvas id="render-canvas" touch-action="none" tabindex="-1"></canvas>
+        <div v-for="col in (view_columns - 1)" class="vertical-bar" :style="'left: ' + (100 * col / view_columns) + '%;'"></div>
         <UserInterface @update-near-clip="updateNearClip" @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"/>
     </div>
 </template>
@@ -346,6 +361,7 @@ export default {
     position: relative;
     left: 0px;
     top: 0px;
+    width: 100%;
     height: 100%;
 }
 
@@ -355,5 +371,13 @@ export default {
 
 #render-canvas:focus {
     outline-width: 0;
+}
+
+.vertical-bar {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-left: 4px solid #FFFFFF;
+    margin-left: -2px;
 }
 </style>

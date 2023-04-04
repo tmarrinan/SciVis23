@@ -4,7 +4,10 @@ import NeuronVis from './components/NeuronVis.vue'
 
 export default {
     data() {
-        return {}
+        return {
+            num_views: 1,
+            data_url: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/'
+        }
     },
     components: {
         GlobalGui,
@@ -13,10 +16,12 @@ export default {
     methods: {
         updateNumViews(value) {
             console.log('updateNumViews(): ' + value);
+            this.num_views = value;
         },
 
         updateDataUrl(value) {
             console.log('updateDataUrl(): ' + value);
+            this.data_url = value;
         }
     }
 }
@@ -28,7 +33,7 @@ export default {
             <GlobalGui @update-num-views="updateNumViews" @update-data-url="updateDataUrl"/>
         </div>
         <div class="row content">
-            <NeuronVis/>
+            <NeuronVis :num_views="num_views" :data_url="data_url"/>
         </div>
     </div>
 </template>

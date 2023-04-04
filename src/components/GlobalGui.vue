@@ -4,6 +4,7 @@ export default {
     data() {
         return {
             num_views: 1,
+            prev_views: 1,
             data_url: 'stthomas',
             data_url_list: {
                 stthomas: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
@@ -14,6 +15,11 @@ export default {
     emits: ['update-num-views', 'update-data-url'],
     methods: {
         updateNumViews(event) {
+            if (this.num_views === 3 || this.num_views === 5 || this.num_views === 7) {
+                if (this.prev_views < this.num_views) this.num_views++;
+                else this.num_views--;
+            }
+            this.prev_views = this.num_views;
             this.$emit('update-num-views', this.num_views);
         },
 
