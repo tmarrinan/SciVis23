@@ -11,6 +11,7 @@ export default {
             }
         }
     },
+    emits: ['update-num-views', 'update-data-url'],
     methods: {
         updateNumViews(event) {
             this.$emit('update-num-views', this.num_views);

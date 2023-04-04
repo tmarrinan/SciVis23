@@ -1,0 +1,11 @@
+name: scivis23-cooley
+channels:
+  - https://conda.anaconda.org/conda-forge/
+dependencies:
+  - python=3.10.9
+  - parquet-cpp=1.5.1
+  - pandas=1.5.3
+  - pyarrow=11.0.0
+  - natsort
+  - fastparquet=2023.2.0
+prefix: /lus/grand/projects/visualization/mvictoras/projects/SciVis23/miniconda/envs/scivis23-cooley

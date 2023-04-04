@@ -19,6 +19,7 @@ import UserInterface from './UserInterface.vue'
 import uniqueColors from './uniqueColors'
 import areaCentroids from './areaCentroids'
 import imposterSpheres from './imposterSpheres'
+import timeline from './timeline'
 
 export default {
     data() {
@@ -35,6 +36,20 @@ export default {
     methods: {
         updateNearClip(value) {
             this.camera.minZ = value;
+        },
+
+        updateTimestep(value) {
+          this.timeline.setTimestep(value);
+          this.timeline.getTimestep()
+            .then(this.updateMonitorViz)
+            .catch((reason) => { console.error(reason); });
+        },
+
+        updateSimulationSelection(value) {
+          this.timeline.setSimulation(value);
+          this.timeline.getTimestep()
+            .then(this.updateMonitorViz)
+            .catch((reason) => { console.error(reason); });
         },
 
         createBezierTube(start_pt, end_pt, num_divisions, scene) {
@@ -54,7 +69,20 @@ export default {
             }
             let tube = CreateTube('tube', {path: path, radius: 1.0, tessellation: 12, sideOrientation: Mesh.DOUBLESIDE}, scene);
             return tube;
-        }
+        },
+
+        /**
+          * Takes a Table as an argumenent
+          * https://arrow.apache.org/docs/js/classes/Arrow_dom.Table.html
+          * This Table will contain all 50,000 neurons for a given timestep idx
+          * XXX - Tommy: This is where you need to inject the code to color the 
+          * neuron particles
+          */
+          updateMonitorViz(table) {
+            console.log(`Number of rows: ${table.numRows}`);
+            console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
+            console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
+          }
     },
     mounted() {
         // Get the canvas element from the DOM.
@@ -70,6 +98,10 @@ export default {
             canvas.height = parent.offsetHeight;
         });
 
+        this.timeline = new timeline.Timeline();
+        this.timeline.getTimestep()
+          .then(this.updateMonitorViz)
+          .catch((reason) => { console.error(reason); });
         // Associate a Babylon Engine to it.
         const engine = new Engine(canvas);
 
@@ -305,7 +337,7 @@ export default {
     <div id="canvas-container">
         <!-- TODO: make id based on prop; change 'render-canvas' to a class -->
         <canvas id="render-canvas" touch-action="none" tabindex="-1"></canvas>
-        <UserInterface @update-near-clip="updateNearClip"/>
+        <UserInterface @update-near-clip="updateNearClip" @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"/>
     </div>
 </template>
 

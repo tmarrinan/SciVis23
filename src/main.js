@@ -15,9 +15,6 @@ function initializeApp() {
 }
 */
 
-//window.initializeApp = initializeApp;
-//document.body.onload = initializeApp;
-
 let app = createApp(App);
 app.use(HttpGetPlugin, {});
 app.mount('#app');
