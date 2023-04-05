@@ -30,7 +30,8 @@ export default {
     },
     data() {
         return {
-            camera: null,
+            scene: null,
+            cameras: [],
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0)
@@ -53,7 +54,15 @@ export default {
         num_views(new_num, old_num) {
             let rows = (new_num > 2) ? 2 : 1;
             let cols = new_num / rows;
-            this.camera.viewport = new Viewport(0.0, 0.0, 1.0 / cols, 1.0 / rows);
+            let w = 1.0 / cols;
+            let h = 1.0 / rows;
+            let cam_list = this.cameras.slice(0, new_num);
+            cam_list.forEach((cam, idx) => {
+                let x = idx % cols;
+                let y = (rows - 1) - (~~(idx / cols));
+                cam.viewport = new Viewport(x * w, y * h, w, h);
+            });
+            this.scene.activeCameras = cam_list;
         }
     },
     methods: {
@@ -129,28 +138,31 @@ export default {
         const engine = new Engine(canvas);
 
         // Create our first scene.
-        let scene = new Scene(engine);
+        this.scene = new Scene(engine);
 
         // This creates and positions an arc rotate camera (non-mesh)
         let transformed_brain_center = new Vector3(-0.666377, 7.335706, -0.167549);
-        this.camera = new ArcRotateCamera('camera1', -Math.PI / 2.0,  3.0 * Math.PI / 8.0, 50.0, transformed_brain_center, scene);
-        this.camera.updateUpVectorFromRotation = true;
-        this.camera.minZ = 0.1;
-        this.camera.maxZ = 500.0;
-        this.camera.wheelPrecision = 10;
-        console.log(this.camera.minZ, this.camera.maxZ);
-
-        // This attaches the camera to the canvas
-        this.camera.attachControl(canvas, true);
+        for (let i = 0; i < 8; i++) {
+            let cam = new ArcRotateCamera('camera' + (i+1).toString(), -Math.PI / 2.0,  3.0 * Math.PI / 8.0, 50.0, transformed_brain_center, this.scene);
+            cam.updateUpVectorFromRotation = true;
+            cam.minZ = 0.5;
+            cam.maxZ = 500.0;
+            cam.wheelPrecision = 10;
+            cam.layerMask = Math.pow(2, i);
+            cam.attachControl(canvas, true);
+            if (i === 0) this.scene.activeCameras.push(cam);
+            this.cameras.push(cam);
+        }
+        console.log(this.cameras[0].minZ, this.cameras[1].maxZ);
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-        let light = new HemisphericLight('light1', new Vector3(0, 1, 0), scene);
+        let light = new HemisphericLight('light1', new Vector3(0, 1, 0), this.scene);
 
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.85;
 
         // Create custom point cloud shader material
-        let pc_material = imposterSpheres.CreateImposterSphereShaderMaterial(scene);
+        let pc_material = imposterSpheres.CreateImposterSphereShaderMaterial(this.scene);
         pc_material.setFloat('point_size', 0.2);
         pc_material.setInt('num_lights', 0);
         pc_material.setVector3('light_ambient', new Vector3(0.0, 0.0, 0.0));
@@ -180,7 +192,7 @@ export default {
 
             // BEGIN area centroid - precomputed
             let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
-            let sps = new SolidParticleSystem('sps', scene);
+            let sps = new SolidParticleSystem('sps', this.scene);
             sps.addShape(sphere, this.area_centroids.length);
             sphere.dispose();
             let mesh = sps.buildMesh();
@@ -291,7 +303,7 @@ export default {
             //    * if distance > threshold:
             //        * discard everyone except the master (i.e. only draw 1 sphere per "mini-cluster")
 
-            let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, neuron_colors, scene);
+            let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, neuron_colors, this.scene);
             point_cloud.material = pc_material;
             point_cloud.scaling = new Vector3(0.1, 0.1, 0.1);
             point_cloud.rotation.x = -Math.PI / 2.0;
@@ -335,10 +347,10 @@ export default {
 
 
         // Create a grid material
-        let material = new GridMaterial('grid', scene);
+        let material = new GridMaterial('grid', this.scene);
 
         // Built-in 'ground' shape.
-        let ground = CreateGround('ground1', { width: 30, height: 30, subdivisions: 2 }, scene);
+        let ground = CreateGround('ground1', { width: 30, height: 30, subdivisions: 2 }, this.scene);
 
         // Affect a material
         ground.material = material;
@@ -347,10 +359,10 @@ export default {
 
         // Render every frame
         engine.runRenderLoop(() => {
-            pc_material.setVector3('camera_position', this.camera.position);
-            pc_material.setVector3('camera_up', this.camera.upVector);
+            pc_material.setVector3('camera_position', this.cameras[0].position);
+            pc_material.setVector3('camera_up', this.cameras[0].upVector);
             pc_material.setVector3('hemispheric_light_direction', light.direction);
-            scene.render();
+            this.scene.render();
         });
     }
 }
