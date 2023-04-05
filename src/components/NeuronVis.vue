@@ -209,6 +209,10 @@ export default {
             mesh.rotation.x = -Math.PI / 2.0;
             mesh.position.x = -10.0;
             mesh.position.z = 7.5;
+            mesh.layerMask = 1;
+            mesh.onBeforeRenderObservable.add(() => {
+                //console.log('About to render AREA CENTROIDS');
+            });
 
             /*
             // BEGIN area centroid - precalculate this in future and load from file
@@ -309,6 +313,9 @@ export default {
             point_cloud.rotation.x = -Math.PI / 2.0;
             point_cloud.position.x = -10.0;
             point_cloud.position.z = 7.5;
+            point_cloud.onBeforeRenderObservable.add(() => {
+                //console.log('About to render NEURONS');
+            });
             
             this.brain_center = point_cloud.getBoundingInfo().boundingBox.center;
 
