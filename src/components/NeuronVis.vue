@@ -5,6 +5,7 @@ import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Viewport } from '@babylonjs/core/Maths/math.viewport';
 import { PointsCloudSystem } from '@babylonjs/core/Particles/pointsCloudSystem';
 import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSystem';
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
@@ -20,6 +21,7 @@ import uniqueColors from './uniqueColors'
 import areaCentroids from './areaCentroids'
 import imposterSpheres from './imposterSpheres'
 import timeline from './timeline'
+
 
 export default {
     props: {
@@ -46,6 +48,13 @@ export default {
     },
     components: {
         UserInterface
+    },
+    watch: {
+        num_views(new_num, old_num) {
+            let rows = (new_num > 2) ? 2 : 1;
+            let cols = new_num / rows;
+            this.camera.viewport = new Viewport(0.0, 0.0, 1.0 / cols, 1.0 / rows);
+        }
     },
     methods: {
         updateNearClip(value) {
@@ -349,7 +358,6 @@ export default {
 
 <template>
     <div id="canvas-container">
-        <!-- TODO: make id based on prop; change 'render-canvas' to a class -->
         <canvas id="render-canvas" touch-action="none" tabindex="-1"></canvas>
         <div v-for="col in (view_columns - 1)" class="vertical-bar" :style="'left: ' + (100 * col / view_columns) + '%;'"></div>
         <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>

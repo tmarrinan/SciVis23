@@ -15,12 +15,10 @@ export default {
     },
     methods: {
         updateNumViews(value) {
-            console.log('updateNumViews(): ' + value);
             this.num_views = value;
         },
 
         updateDataUrl(value) {
-            console.log('updateDataUrl(): ' + value);
             this.data_url = value;
         }
     }
