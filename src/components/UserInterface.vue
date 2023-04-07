@@ -42,7 +42,7 @@ export default {
         <select class="ui-element last" v-model="sim_dataset" @change="updateSimulationStimulus">
             <option value="viz-no-network">No Initial Connectivity</option>
             <option value="viz-stimulus">Stimulation / Learning</option>
-            <option value="viz-disable">Disable / Injury</option>
+            <option value="viz-disable">Disable Areas / Injury</option>
             <option value="viz-calcium">Per-Neuron Calcium Targets</option>
         </select>
     </div>

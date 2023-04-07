@@ -119,15 +119,13 @@ export default {
     mounted() {
         // Get the canvas element from the DOM.
         const canvas = document.getElementById('render-canvas');
-        const parent = canvas.parentElement;
+        const top_bar = canvas.parentElement.parentElement.previousElementSibling;
         canvas.width = window.innerWidth;
-        canvas.height = parent.offsetHeight;
+        canvas.height = window.innerHeight - top_bar.offsetHeight;
         
         window.addEventListener('resize', (event) => {
-            console.log(window.innerWidth, parent.offsetHeight);
             canvas.width = window.innerWidth;
-            canvas.height = 100;
-            canvas.height = parent.offsetHeight;
+            canvas.height = window.innerHeight - top_bar.offsetHeight;
         });
 
         this.timeline = new timeline.Timeline();
