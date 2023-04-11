@@ -32,6 +32,7 @@ export default {
         return {
             scene: null,
             cameras: [],
+            render_size: {width: 0, height: 0},
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0)
@@ -119,14 +120,22 @@ export default {
     mounted() {
         // Get the canvas element from the DOM.
         const canvas = document.getElementById('render-canvas');
-        //const top_bar = canvas.parentElement.parentElement.previousElementSibling;
         const top_bar = document.getElementById('global-gui');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - top_bar.offsetHeight;
+        this.render_size.width = window.innerWidth;
+        this.render_size.height = window.innerHeight - top_bar.offsetHeight;
+        canvas.width = this.render_size.width;
+        canvas.height = this.render_size.height;
         
         window.addEventListener('resize', (event) => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight - top_bar.offsetHeight;
+            this.render_size.width = window.innerWidth;
+            this.render_size.height = window.innerHeight - top_bar.offsetHeight;
+            canvas.width = this.render_size.width;
+            canvas.height = this.render_size.height;
+        });
+
+        canvas.addEventListener('pointerdown', (event) => {
+            console.log(event.offsetX, event.offsetY);
+            // TODO: use (event.offsetX, event.offsetY) to determine which view is clicked on
         });
 
         this.timeline = new timeline.Timeline();
@@ -393,6 +402,7 @@ export default {
 }
 
 #render-canvas {
+    position: relative;
     z-index: 1;
 }
 
