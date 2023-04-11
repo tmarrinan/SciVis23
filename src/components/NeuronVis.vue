@@ -136,6 +136,27 @@ export default {
         canvas.addEventListener('pointerdown', (event) => {
             console.log(event.offsetX, event.offsetY);
             // TODO: use (event.offsetX, event.offsetY) to determine which view is clicked on
+
+            let rows = (this.num_views > 2) ? 2 : 1;
+            let cols = this.num_views / rows;
+            let w = (1.0 / cols) * this.render_size.width;
+            let h = (1.0 / rows) * this.render_size.height;
+            this.cameras.forEach((cam, idx) => {
+                if (idx < this.num_views) {
+                    let x = idx % cols;
+                    let y = ~~(idx / cols);
+                    if (event.offsetX >= (x * w) && event.offsetX < ((x + 1) * w) &&
+                        event.offsetY >= (y * h) && event.offsetY < ((y + 1) * h)) {
+                        cam.attachControl(canvas, true);
+                    }
+                    else {
+                        cam.detachControl();
+                    }
+                }
+                else {
+                    cam.detachControl();
+                }
+            });
         });
 
         this.timeline = new timeline.Timeline();
