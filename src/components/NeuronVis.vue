@@ -119,7 +119,8 @@ export default {
     mounted() {
         // Get the canvas element from the DOM.
         const canvas = document.getElementById('render-canvas');
-        const top_bar = canvas.parentElement.parentElement.previousElementSibling;
+        //const top_bar = canvas.parentElement.parentElement.previousElementSibling;
+        const top_bar = document.getElementById('global-gui');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight - top_bar.offsetHeight;
         
