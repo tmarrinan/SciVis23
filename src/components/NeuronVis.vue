@@ -68,7 +68,7 @@ export default {
     },
     methods: {
         updateNearClip(value) {
-            this.camera.minZ = value;
+            this.cameras[0].minZ = value;
         },
 
         updateTimestep(value) {
@@ -178,8 +178,13 @@ export default {
             cam.maxZ = 500.0;
             cam.wheelPrecision = 10;
             cam.layerMask = Math.pow(2, i);
-            cam.attachControl(canvas, true);
-            if (i === 0) this.scene.activeCameras.push(cam);
+            if (i === 0) {
+                cam.attachControl(canvas, true);
+                this.scene.activeCameras.push(cam);
+            }
+            else {
+                cam.detachControl();
+            }
             this.cameras.push(cam);
         }
         console.log(this.cameras[0].minZ, this.cameras[1].maxZ);
