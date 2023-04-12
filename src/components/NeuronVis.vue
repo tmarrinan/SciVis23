@@ -172,7 +172,7 @@ export default {
         // This creates and positions an arc rotate camera (non-mesh)
         let transformed_brain_center = new Vector3(-0.666377, 7.335706, -0.167549);
         for (let i = 0; i < 8; i++) {
-            let cam = new ArcRotateCamera('camera' + (i+1).toString(), -Math.PI / 2.0,  3.0 * Math.PI / 8.0, 50.0, transformed_brain_center, this.scene);
+            let cam = new ArcRotateCamera('camera' + i.toString(), -Math.PI / 2.0,  3.0 * Math.PI / 8.0, 50.0, transformed_brain_center, this.scene);
             cam.updateUpVectorFromRotation = true;
             cam.minZ = 0.5;
             cam.maxZ = 500.0;
@@ -398,11 +398,16 @@ export default {
         
         
 
+        // Handle animation / shader uniform updates per view (prior to render)
+        this.scene.onBeforeCameraRenderObservable.add(() => {
+            let view_idx = parseInt(this.scene.activeCamera.id.substring(6));
+            pc_material.setVector3('camera_position', this.cameras[view_idx].position);
+            pc_material.setVector3('camera_up', this.cameras[view_idx].upVector);
+            pc_material.setVector3('hemispheric_light_direction', light.direction);
+        });
+
         // Render every frame
         engine.runRenderLoop(() => {
-            pc_material.setVector3('camera_position', this.cameras[0].position);
-            pc_material.setVector3('camera_up', this.cameras[0].upVector);
-            pc_material.setVector3('hemispheric_light_direction', light.direction);
             this.scene.render();
         });
     }
