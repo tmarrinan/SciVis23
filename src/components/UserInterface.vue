@@ -3,6 +3,7 @@ export default {
     props: {},
     data() {
         return {
+            show_ui: true,
             near_clip_slider: 5,
             timestep: 0,
             sim_dataset: 'viz-no-network'
@@ -15,6 +16,10 @@ export default {
     },
     emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection'],
     methods: {
+        toggleShowUi(event) {
+            this.show_ui = !this.show_ui;
+        },
+
         updateNearClip(event) {
             this.$emit('update-near-clip', this.near_clip);
         },
@@ -32,19 +37,27 @@ export default {
 
 <template>
     <div class="user-interface">
-        <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
-        <input class="ui-element" type="range" min="5" max="300" v-model="near_clip_slider" @input="updateNearClip"/>
-        <br/>
-        <label>Timestep: {{ timestep }}</label><br/>
-        <input class="ui-element" type="range" min="0" max="1000" v-model="timestep" @change="updateTimestep"/>
-        <br/>
-        <label>Simulation:</label><br/>
-        <select class="ui-element last" v-model="sim_dataset" @change="updateSimulationStimulus">
-            <option value="viz-no-network">No Initial Connectivity</option>
-            <option value="viz-stimulus">Stimulation / Learning</option>
-            <option value="viz-disable">Disable Areas / Injury</option>
-            <option value="viz-calcium">Per-Neuron Calcium Targets</option>
-        </select>
+        <div v-if="show_ui">
+            <div style="width: 16rem; text-align: right; margin-bottom: 0.5rem;">
+                <button class="show-hide-ui" type="button" @click="toggleShowUi">&lt;</button>
+            </div>
+            <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
+            <input class="ui-element" type="range" min="5" max="300" v-model="near_clip_slider" @input="updateNearClip"/>
+            <br/>
+            <label>Timestep: {{ timestep }}</label><br/>
+            <input class="ui-element" type="range" min="0" max="1000" v-model="timestep" @change="updateTimestep"/>
+            <br/>
+            <label>Simulation:</label><br/>
+            <select class="ui-element last" v-model="sim_dataset" @change="updateSimulationStimulus">
+                <option value="viz-no-network">No Initial Connectivity</option>
+                <option value="viz-stimulus">Stimulation / Learning</option>
+                <option value="viz-disable">Disable Areas / Injury</option>
+                <option value="viz-calcium">Per-Neuron Calcium Targets</option>
+            </select>
+        </div>
+        <div v-else>
+            <button class="show-hide-ui" type="button"  @click="toggleShowUi">&#8964;</button>
+        </div>
     </div>
 </template>
 
@@ -57,12 +70,16 @@ label, input, select, option {
     position: absolute;
     right: 1rem;
     top: 1rem;
-    width: 16rem;
     padding: 0.5rem;
     border-radius: 0.5rem;
     background-color: rgba(255, 255, 255, 0.8);
     color: #000000;
     z-index: 2;
+}
+
+.show-hide-ui {
+    width: 2rem;
+    height: 2rem;
 }
 
 .ui-element {
