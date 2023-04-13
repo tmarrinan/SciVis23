@@ -12,9 +12,9 @@ const vertex_shader_src =
 '\n' +
 '// Attributes\n' +
 'in vec3 position;\n' +
-'in vec4 color;\n' +
 'in vec2 uv;\n' +
 'in vec2 uv2;\n' +
+'in vec2 uv3;\n' +
 '\n' +
 '// Uniforms\n' +
 'uniform vec3 camera_position;\n' +
@@ -23,6 +23,7 @@ const vertex_shader_src =
 'uniform mat4 world;\n' +
 'uniform mat4 view;\n' +
 'uniform mat4 projection;\n' +
+'uniform sampler2D image;\n' +
 '\n' +
 '// Output\n' +
 'out vec3 world_position;\n' +
@@ -49,7 +50,9 @@ const vertex_shader_src =
 '    world_normal_mat = mat3(u, v, n);\n' +
 '\n' +
 '    model_center = world_point;\n' +
-'    model_color = color;\n' +
+'    //model_color = color;\n' +
+'    model_color = texture(image, uv3);\n' +
+'    //model_color = vec4(1.0, 0.5, 0.2, 1.0);\n' +
 '    model_texcoord = uv;\n' +
 '\n' +
 '    gl_Position = projection * view * vec4(world_position, 1.0);\n' +
@@ -123,13 +126,16 @@ const fragment_shader_src =
 '}'
 
 export default {
-    CreateImposterSphereMesh: (name, positions, colors, scene) => {
+    CreateImposterSphereMesh: (name, positions, scene) => {
         let is_mesh = new Mesh(name, scene);
         let vertex_positions = new Array(positions.length * 12);
         let quad_positions = new Array(positions.length * 8);
-        let vertex_colors = new Array(positions.length * 16);
         let vertex_texcoords = new Array(positions.length * 8);
+        let vertex_idx_uv = new Array(positions.length * 8);
         let vertex_indices = new Array(positions.length * 6);
+
+        let dims = Math.ceil(Math.sqrt(positions.length));
+
         $.each(positions, (index) => {
             vertex_positions[12 * index +  0] = positions[index].x;
             vertex_positions[12 * index +  1] = positions[index].y;
@@ -153,23 +159,6 @@ export default {
             quad_positions[8 * index + 6] = -0.5;
             quad_positions[8 * index + 7] =  0.5;
 
-            vertex_colors[16 * index +  0] = colors[index].r;
-            vertex_colors[16 * index +  1] = colors[index].g;
-            vertex_colors[16 * index +  2] = colors[index].b;
-            vertex_colors[16 * index +  3] = colors[index].a;
-            vertex_colors[16 * index +  4] = colors[index].r;
-            vertex_colors[16 * index +  5] = colors[index].g;
-            vertex_colors[16 * index +  6] = colors[index].b;
-            vertex_colors[16 * index +  7] = colors[index].a;
-            vertex_colors[16 * index +  8] = colors[index].r;
-            vertex_colors[16 * index +  9] = colors[index].g;
-            vertex_colors[16 * index + 10] = colors[index].b;
-            vertex_colors[16 * index + 11] = colors[index].a;
-            vertex_colors[16 * index + 12] = colors[index].r;
-            vertex_colors[16 * index + 13] = colors[index].g;
-            vertex_colors[16 * index + 14] = colors[index].b;
-            vertex_colors[16 * index + 15] = colors[index].a;
-
             vertex_texcoords[8 * index + 0] = 0.0;
             vertex_texcoords[8 * index + 1] = 0.0;
             vertex_texcoords[8 * index + 2] = 1.0;
@@ -178,6 +167,17 @@ export default {
             vertex_texcoords[8 * index + 5] = 1.0;
             vertex_texcoords[8 * index + 6] = 0.0;
             vertex_texcoords[8 * index + 7] = 1.0;
+
+            let row = ~~(index / dims);
+            let col = index % dims;
+            vertex_idx_uv[8 * index + 0] = (col + 0.5) / dims;
+            vertex_idx_uv[8 * index + 1] = (row + 0.5) / dims;
+            vertex_idx_uv[8 * index + 2] = (col + 0.5) / dims;
+            vertex_idx_uv[8 * index + 3] = (row + 0.5) / dims;
+            vertex_idx_uv[8 * index + 4] = (col + 0.5) / dims;
+            vertex_idx_uv[8 * index + 5] = (row + 0.5) / dims;
+            vertex_idx_uv[8 * index + 6] = (col + 0.5) / dims;
+            vertex_idx_uv[8 * index + 7] = (row + 0.5) / dims;
 
             vertex_indices[6 * index + 0] = (4 * index);
             vertex_indices[6 * index + 1] = (4 * index) + 1;
@@ -189,9 +189,9 @@ export default {
 
         let vertex_data = new VertexData();
         vertex_data.positions = vertex_positions;
-        vertex_data.colors = vertex_colors;
         vertex_data.uvs = vertex_texcoords;
         vertex_data.uvs2 = quad_positions;
+        vertex_data.uvs3 = vertex_idx_uv;
         vertex_data.indices = vertex_indices;
 
         vertex_data.applyToMesh(is_mesh);
@@ -199,7 +199,6 @@ export default {
         return is_mesh;
     },
     CreateImposterSphereShaderMaterial: (scene) => {
-        // TODO: use babylon lights rather than manually passing data to custom uniforms?
         Effect.ShadersStore['imposterspheresVertexShader'] = vertex_shader_src;
         Effect.ShadersStore['imposterspheresFragmentShader'] = fragment_shader_src;
 
@@ -211,8 +210,9 @@ export default {
                 fragment: 'imposterspheres'
             },
             {
-                attributes: ['position', 'color', 'uv', 'uv2'],
-                uniforms: ['world', 'view', 'projection']
+                attributes: ['position', 'uv', 'uv2', 'uv3'],
+                uniforms: ['world', 'view', 'projection'],
+                samplers: ['image']
             }
         );
 

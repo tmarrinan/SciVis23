@@ -13,6 +13,8 @@ import { CreateTube } from '@babylonjs/core/Meshes/Builders/tubeBuilder';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import { RawTexture } from '@babylonjs/core/Materials/Textures/rawTexture';
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 
 import UserInterface from './UserInterface.vue'
@@ -35,7 +37,8 @@ export default {
             render_size: {width: 0, height: 0},
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
-            brain_center: new Vector3(0.0, 0.0, 0.0)
+            brain_center: new Vector3(0.0, 0.0, 0.0),
+            area_texture: null
         }
     },
     computed: {
@@ -176,7 +179,7 @@ export default {
             cam.updateUpVectorFromRotation = true;
             cam.minZ = 0.5;
             cam.maxZ = 500.0;
-            cam.wheelPrecision = 10;
+            cam.wheelPrecision = 20;
             cam.layerMask = Math.pow(2, i);
             if (i === 0) {
                 cam.attachControl(canvas, true);
@@ -207,22 +210,30 @@ export default {
         pc_material.setVector3('hemispheric_light_ground_color', new Vector3(light.groundColor.r * light.intensity,
                                                                              light.groundColor.g * light.intensity,
                                                                              light.groundColor.b * light.intensity));
-        //pc_material.setVector3('light_position[0]', new Vector3(20.0, 80.0, 40.0));
-        //pc_material.setVector3('light_color[0]', new Vector3(1.0, 1.0, 1.0));
+        
+        // 244 is sqrt(50000) rounded up
+        let neuron_colors = new Uint8Array(new Array(224 * 224 * 4).fill(255));
+        this.area_texture = RawTexture.CreateRGBATexture(neuron_colors, 224, 224, this.scene, false,
+                                                         false, Texture.NEAREST_SAMPLINGMODE);
+        pc_material.setTexture('image', this.area_texture);
 
         // Download brain position data and create point cloud
         this.getCSV('/data/viz-no-network_positions.csv')
         //this.getCSV('/data/viz-stimulus_positions.csv')
         .then((neurons) => {
+            console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);
-            let neuron_colors = new Array(neurons.length);
             $.each(neurons, (index) => {
                 neuron_positions[index] = new Vector3(parseFloat(neurons[index][0]),
                                                       parseFloat(neurons[index][1]),
                                                       parseFloat(neurons[index][2]));
-                neuron_colors[index] = this.area_colors[parseInt(neurons[index][3])];
+                let color = this.area_colors[parseInt(neurons[index][3])];
+                neuron_colors[4 * index + 0] = 255 * color.r;
+                neuron_colors[4 * index + 1] = 255 * color.g;
+                neuron_colors[4 * index + 2] = 255 * color.b;
+                neuron_colors[4 * index + 3] = 255 * color.a;
             });
-            console.log(neurons.length + ' points');
+            this.area_texture.update(neuron_colors);
 
             // BEGIN area centroid - precomputed
             let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
@@ -244,93 +255,6 @@ export default {
             mesh.position.x = -10.0;
             mesh.position.z = 7.5;
             mesh.layerMask = 1;
-            mesh.onBeforeRenderObservable.add(() => {
-                //console.log('About to render AREA CENTROIDS');
-            });
-
-            /*
-            // BEGIN area centroid - precalculate this in future and load from file
-            //let area_centroids = new Array(48);
-            let area_centroid_indices = new Array(48);
-            let area_centroid_minval = new Array(48).fill(9.9e12);
-            let neuron_dists = new Array(neurons.length).fill(0);
-            $.each(neurons, (i) => {
-                $.each(neurons, (j) => {
-                    if (neurons[i][3] === neurons[j][3]) {
-                        let dist2 = neuron_positions[i].subtract(neuron_positions[j]).lengthSquared();
-                        neuron_dists[i] += dist2;
-                    }
-                });
-            });
-            for (let i = 0; i < neurons.length; i++) {
-                let area = parseInt(neurons[i][3]);
-                if (neuron_dists[i] < area_centroid_minval[area]) {
-                    area_centroid_minval[area] = neuron_dists[i];
-                    area_centroid_indices[area] = i;
-                    //area_centroids[area] = neuron_positions[i];
-                }
-            }
-            console.log(area_centroid_indices);
-            //console.log(area_centroid_minval);
-            let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
-            let sps = new SolidParticleSystem('sps', scene);
-            sps.addShape(sphere, area_centroid_indices.length);
-            sphere.dispose();
-            let mesh = sps.buildMesh();
-            sps.initParticles = () => {
-                $.each(sps.particles, (index) => {
-                    const particle = sps.particles[index];
-                    particle.position = neuron_positions[area_centroid_indices[index]];//area_centroids[index];
-                });
-            };
-            sps.computeBoundingBox = true;
-            sps.initParticles();
-            sps.setParticles();
-            mesh.scaling = new Vector3(0.1, 0.1, 0.1);
-            mesh.rotation.x = -Math.PI / 2.0;
-            mesh.position.x = -10.0;
-            mesh.position.z = 7.5;
-            // END area centroid
-            */
-            
-            /*
-            // points - simple rendering, but more efficient
-            let pcs = new PointsCloudSystem('pcs', 3, scene);
-            pcs.addPoints(neurons.length, (particle, i, s) => {
-                particle.position = neuron_positions[s];
-                particle.color = neuron_colors[s];
-            });
-            pcs.buildMeshAsync()
-            .then((mesh) => {
-                mesh.scaling = new Vector3(0.1, 0.1, 0.1);
-                mesh.rotation.x = -Math.PI / 2.0;
-                mesh.position.x = -10.0;
-                mesh.position.z = 7.5;
-            });
-            */
-            
-            /*
-            // spheres - takes longer, uses more resources
-            let sphere = CreateSphere('sphere', {diameter: 1.0, segments: 4});
-            let sps = new SolidParticleSystem('sps', scene);
-            sps.addShape(sphere, neuron_positions.length);
-            sphere.dispose();
-            let mesh = sps.buildMesh();
-            sps.initParticles = () => {
-                $.each(sps.particles, (index) => {
-                    const particle = sps.particles[index];
-                    particle.position = neuron_positions[index];
-                    particle.color = neuron_colors[index];
-                });
-            };
-            sps.computeBoundingBox = true;
-            sps.initParticles();
-            sps.setParticles();
-            mesh.scaling = new Vector3(0.1, 0.1, 0.1);
-            mesh.rotation.x = -Math.PI / 2.0;
-            mesh.position.x = -10.0;
-            mesh.position.z = 7.5;
-            */
             
             // custom point cloud (imposter spheres)
             // TODO - test dynamic LOD
@@ -341,22 +265,18 @@ export default {
             //    * if distance > threshold:
             //        * discard everyone except the master (i.e. only draw 1 sphere per "mini-cluster")
 
-            let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, neuron_colors, this.scene);
+            let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, this.scene);
             point_cloud.material = pc_material;
             point_cloud.scaling = new Vector3(0.1, 0.1, 0.1);
             point_cloud.rotation.x = -Math.PI / 2.0;
             point_cloud.position.x = -10.0;
             point_cloud.position.z = 7.5;
-            point_cloud.onBeforeRenderObservable.add(() => {
-                //console.log('About to render NEURONS');
-            });
             
             this.brain_center = point_cloud.getBoundingInfo().boundingBox.center;
 
             // TEST - connections
             let endpt1a = neuron_positions[this.area_centroids[5]];
             let endpt1b = neuron_positions[this.area_centroids[9]];
-            //let tube1 = this.createBezierTube(neuron_positions[1234], neuron_positions[40000], 16);
             let tube1 = this.createBezierTube(endpt1a, endpt1b, 16);
             tube1.scaling = new Vector3(0.1, 0.1, 0.1);
             tube1.rotation.x = -Math.PI / 2.0;
@@ -365,7 +285,6 @@ export default {
 
             let endpt2a = neuron_positions[this.area_centroids[15]];
             let endpt2b = neuron_positions[this.area_centroids[47]];
-            //let tube2 = this.createBezierTube(neuron_positions[7], neuron_positions[26500], 16);
             let tube2 = this.createBezierTube(endpt2a, endpt2b, 16);
             tube2.scaling = new Vector3(0.1, 0.1, 0.1);
             tube2.rotation.x = -Math.PI / 2.0;
@@ -374,7 +293,6 @@ export default {
 
             let endpt3a = neuron_positions[this.area_centroids[14]];
             let endpt3b = neuron_positions[this.area_centroids[31]];
-            //let tube3 = this.createBezierTube(neuron_positions[9000], neuron_positions[35678], 16);
             let tube3 = this.createBezierTube(endpt3a, endpt3b, 16);
             tube3.scaling = new Vector3(0.1, 0.1, 0.1);
             tube3.rotation.x = -Math.PI / 2.0;
