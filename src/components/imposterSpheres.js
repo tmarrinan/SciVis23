@@ -14,7 +14,6 @@ const vertex_shader_src =
 'in vec3 position;\n' +
 'in vec2 uv;\n' +
 'in vec2 uv2;\n' +
-'in vec2 uv3;\n' +
 '\n' +
 '// Uniforms\n' +
 'uniform vec3 camera_position;\n' +
@@ -50,10 +49,8 @@ const vertex_shader_src =
 '    world_normal_mat = mat3(u, v, n);\n' +
 '\n' +
 '    model_center = world_point;\n' +
-'    //model_color = color;\n' +
-'    model_color = texture(image, uv3);\n' +
-'    //model_color = vec4(1.0, 0.5, 0.2, 1.0);\n' +
-'    model_texcoord = uv;\n' +
+'    model_color = texture(image, uv);\n' +
+'    model_texcoord = uv2 + vec2(0.5, 0.5);\n' +
 '\n' +
 '    gl_Position = projection * view * vec4(world_position, 1.0);\n' +
 '    gl_Position.z = 0.0;\n' +
@@ -130,7 +127,6 @@ export default {
         let is_mesh = new Mesh(name, scene);
         let vertex_positions = new Array(positions.length * 12);
         let quad_positions = new Array(positions.length * 8);
-        let vertex_texcoords = new Array(positions.length * 8);
         let vertex_idx_uv = new Array(positions.length * 8);
         let vertex_indices = new Array(positions.length * 6);
 
@@ -159,15 +155,6 @@ export default {
             quad_positions[8 * index + 6] = -0.5;
             quad_positions[8 * index + 7] =  0.5;
 
-            vertex_texcoords[8 * index + 0] = 0.0;
-            vertex_texcoords[8 * index + 1] = 0.0;
-            vertex_texcoords[8 * index + 2] = 1.0;
-            vertex_texcoords[8 * index + 3] = 0.0;
-            vertex_texcoords[8 * index + 4] = 1.0;
-            vertex_texcoords[8 * index + 5] = 1.0;
-            vertex_texcoords[8 * index + 6] = 0.0;
-            vertex_texcoords[8 * index + 7] = 1.0;
-
             let row = ~~(index / dims);
             let col = index % dims;
             vertex_idx_uv[8 * index + 0] = (col + 0.5) / dims;
@@ -189,9 +176,8 @@ export default {
 
         let vertex_data = new VertexData();
         vertex_data.positions = vertex_positions;
-        vertex_data.uvs = vertex_texcoords;
+        vertex_data.uvs = vertex_idx_uv;
         vertex_data.uvs2 = quad_positions;
-        vertex_data.uvs3 = vertex_idx_uv;
         vertex_data.indices = vertex_indices;
 
         vertex_data.applyToMesh(is_mesh);
@@ -210,7 +196,7 @@ export default {
                 fragment: 'imposterspheres'
             },
             {
-                attributes: ['position', 'uv', 'uv2', 'uv3'],
+                attributes: ['position', 'uv', 'uv2'],
                 uniforms: ['world', 'view', 'projection'],
                 samplers: ['image']
             }

@@ -38,7 +38,7 @@ export default {
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0),
-            area_texture: null
+            textures: {area: null, calcium: null}
         }
     },
     computed: {
@@ -211,11 +211,10 @@ export default {
                                                                              light.groundColor.g * light.intensity,
                                                                              light.groundColor.b * light.intensity));
         
-        // 244 is sqrt(50000) rounded up
-        let neuron_colors = new Uint8Array(new Array(224 * 224 * 4).fill(255));
-        this.area_texture = RawTexture.CreateRGBATexture(neuron_colors, 224, 224, this.scene, false,
-                                                         false, Texture.NEAREST_SAMPLINGMODE);
-        pc_material.setTexture('image', this.area_texture);
+        let tmp_colors = new Uint8Array([0, 0, 0, 255]);
+        let tmp_texture = RawTexture.CreateRGBATexture(tmp_colors, 1, 1, this.scene, false,
+                                                       false, Texture.NEAREST_SAMPLINGMODE);
+        pc_material.setTexture('image', tmp_texture);
 
         // Download brain position data and create point cloud
         this.getCSV('/data/viz-no-network_positions.csv')
@@ -223,6 +222,8 @@ export default {
         .then((neurons) => {
             console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);
+            let texture_dims = Math.ceil(Math.sqrt(neurons.length));
+            let neuron_colors = new Uint8Array(texture_dims * texture_dims * 4);
             $.each(neurons, (index) => {
                 neuron_positions[index] = new Vector3(parseFloat(neurons[index][0]),
                                                       parseFloat(neurons[index][1]),
@@ -233,7 +234,10 @@ export default {
                 neuron_colors[4 * index + 2] = 255 * color.b;
                 neuron_colors[4 * index + 3] = 255 * color.a;
             });
-            this.area_texture.update(neuron_colors);
+            this.textures.area = RawTexture.CreateRGBATexture(neuron_colors, 224, 224, this.scene, false,
+                                                              false, Texture.NEAREST_SAMPLINGMODE);
+            pc_material.setTexture('image', this.textures.area);
+            //this.area_texture.update(neuron_colors);
 
             // BEGIN area centroid - precomputed
             let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
