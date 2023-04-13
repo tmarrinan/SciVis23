@@ -37,9 +37,9 @@ export default {
 
 <template>
     <div class="user-interface">
-        <div v-if="show_ui">
+        <div v-show="show_ui">
             <div style="width: 16rem; text-align: right; margin-bottom: 0.5rem;">
-                <button class="show-hide-ui" type="button" @click="toggleShowUi">&lt;</button>
+                <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="/images/down-arrow.png" alt="down arrow"/></button>
             </div>
             <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
             <input class="ui-element" type="range" min="5" max="300" v-model="near_clip_slider" @input="updateNearClip"/>
@@ -55,8 +55,8 @@ export default {
                 <option value="viz-calcium">Per-Neuron Calcium Targets</option>
             </select>
         </div>
-        <div v-else>
-            <button class="show-hide-ui" type="button"  @click="toggleShowUi">&#8964;</button>
+        <div v-show="!show_ui">
+            <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="/images/left-arrow.png" alt="left arrow"/></button>
         </div>
     </div>
 </template>
@@ -78,8 +78,15 @@ label, input, select, option {
 }
 
 .show-hide-ui {
-    width: 2rem;
-    height: 2rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0.1rem;
+}
+
+.show-hide-arrow {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
 }
 
 .ui-element {
