@@ -23,6 +23,7 @@ import uniqueColors from './uniqueColors'
 import areaCentroids from './areaCentroids'
 import imposterSpheres from './imposterSpheres'
 import timeline from './timeline'
+import { CameraInputTypes } from '@babylonjs/core/Cameras/cameraInputsManager';
 
 
 export default {
@@ -38,7 +39,8 @@ export default {
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0),
-            textures: {area: null, calcium: null}
+            scalars: {area: null, calcium: null},
+            colormaps: {area: null, low_high: null, divergent: null}
         }
     },
     computed: {
@@ -105,6 +107,38 @@ export default {
             }
             let tube = CreateTube('tube', {path: path, radius: 1.0, tessellation: 12, sideOrientation: Mesh.DOUBLESIDE}, scene);
             return tube;
+        },
+
+        createAreaColorMap() {
+            let cmap = new Uint8Array(this.area_colors.length * 4);
+            for (let i = 0; i < this.area_colors.length; i++) {
+                cmap[4 * i + 0] = 255 * this.area_colors[i].r;
+                cmap[4 * i + 1] = 255 * this.area_colors[i].g;
+                cmap[4 * i + 2] = 255 * this.area_colors[i].b;
+                cmap[4 * i + 3] = 255 * this.area_colors[i].a;
+            }
+            return cmap;
+        },
+
+        createThreePtColorMap(low, mid, high) {
+            let num_colors = 1024;
+            let half_num = ~~(num_colors / 2);
+            let cmap = new Uint8Array(num_colors * 4);
+            for (let i = 0; i < half_num; i++) {
+                let t = i / half_num;
+                cmap[4 * i + 0] = (1 - t) * low[0] + t * mid[0];
+                cmap[4 * i + 1] = (1 - t) * low[1] + t * mid[1];
+                cmap[4 * i + 2] = (1 - t) * low[2] + t * mid[2];
+                cmap[4 * i + 3] = 255;
+            }
+            for (let i = half_num; i < num_colors; i++) {
+                let t = (i - half_num) / (num_colors - half_num);
+                cmap[4 * i + 0] = (1 - t) * mid[0] + t * high[0];
+                cmap[4 * i + 1] = (1 - t) * mid[1] + t * high[1];
+                cmap[4 * i + 2] = (1 - t) * mid[2] + t * high[2];
+                cmap[4 * i + 3] = 255;
+            }
+            return cmap;
         },
 
         /**
@@ -211,10 +245,17 @@ export default {
                                                                              light.groundColor.g * light.intensity,
                                                                              light.groundColor.b * light.intensity));
         
-        let tmp_colors = new Uint8Array([0, 0, 0, 255]);
-        let tmp_texture = RawTexture.CreateRGBATexture(tmp_colors, 1, 1, this.scene, false,
-                                                       false, Texture.NEAREST_SAMPLINGMODE);
-        pc_material.setTexture('image', tmp_texture);
+        let area_colormap = this.createAreaColorMap();
+        this.colormaps.area = RawTexture.CreateRGBATexture(area_colormap, this.area_colors.length, 1, this.scene,
+                                                           false, false, Texture.BILINEAR_SAMPLINGMODE);
+        let lowhigh_colormap = this.createThreePtColorMap([42, 20, 82], [56, 166, 120], [245, 240, 95]);
+        this.colormaps.low_high = RawTexture.CreateRGBATexture(lowhigh_colormap, 1024, 1, this.scene,
+                                                               false, false, Texture.BILINEAR_SAMPLINGMODE);
+        let divergent_colormap = this.createThreePtColorMap([190, 0, 0], [255, 255, 255], [45, 45, 180]);
+        this.colormaps.divergent = RawTexture.CreateRGBATexture(divergent_colormap, 1024, 1, this.scene,
+                                                               false, false, Texture.BILINEAR_SAMPLINGMODE);
+        
+        pc_material.setTexture('colormap', this.colormaps.area);
 
         // Download brain position data and create point cloud
         this.getCSV('/data/viz-no-network_positions.csv')
@@ -222,22 +263,19 @@ export default {
         .then((neurons) => {
             console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);
-            let texture_dims = Math.ceil(Math.sqrt(neurons.length));
-            let neuron_colors = new Uint8Array(texture_dims * texture_dims * 4);
+            let scalar_tex_dims = Math.ceil(Math.sqrt(neurons.length));
+            let neuron_areas = new Float32Array(scalar_tex_dims * scalar_tex_dims);
             $.each(neurons, (index) => {
                 neuron_positions[index] = new Vector3(parseFloat(neurons[index][0]),
                                                       parseFloat(neurons[index][1]),
                                                       parseFloat(neurons[index][2]));
-                let color = this.area_colors[parseInt(neurons[index][3])];
-                neuron_colors[4 * index + 0] = 255 * color.r;
-                neuron_colors[4 * index + 1] = 255 * color.g;
-                neuron_colors[4 * index + 2] = 255 * color.b;
-                neuron_colors[4 * index + 3] = 255 * color.a;
+                neuron_areas[index] = parseInt(neurons[index][3]);
             });
-            this.textures.area = RawTexture.CreateRGBATexture(neuron_colors, 224, 224, this.scene, false,
-                                                              false, Texture.NEAREST_SAMPLINGMODE);
-            pc_material.setTexture('image', this.textures.area);
-            //this.area_texture.update(neuron_colors);
+            this.scalars.area = new RawTexture(neuron_areas, scalar_tex_dims, scalar_tex_dims, Engine.TEXTUREFORMAT_RED,
+                                               this.scene, false, false, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTURETYPE_FLOAT);
+            pc_material.setTexture('scalars', this.scalars.area);
+            pc_material.setVector2('scalar_range', new Vector2(0, this.area_colors.length - 1));
+            //this.scalars.area.update(neuron_colors);
 
             // BEGIN area centroid - precomputed
             let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});

@@ -22,7 +22,9 @@ const vertex_shader_src =
 'uniform mat4 world;\n' +
 'uniform mat4 view;\n' +
 'uniform mat4 projection;\n' +
-'uniform sampler2D image;\n' +
+'uniform vec2 scalar_range;\n' +
+'uniform sampler2D scalars;\n' +
+'uniform sampler2D colormap;\n' +
 '\n' +
 '// Output\n' +
 'out vec3 world_position;\n' +
@@ -49,7 +51,8 @@ const vertex_shader_src =
 '    world_normal_mat = mat3(u, v, n);\n' +
 '\n' +
 '    model_center = world_point;\n' +
-'    model_color = texture(image, uv);\n' +
+'    float scalar_value = (texture(scalars, uv).r - scalar_range.x) / (scalar_range.y - scalar_range.x);\n' +
+'    model_color = texture(colormap, vec2(scalar_value, 0.5));\n' +
 '    model_texcoord = uv2 + vec2(0.5, 0.5);\n' +
 '\n' +
 '    gl_Position = projection * view * vec4(world_position, 1.0);\n' +
@@ -198,7 +201,7 @@ export default {
             {
                 attributes: ['position', 'uv', 'uv2'],
                 uniforms: ['world', 'view', 'projection'],
-                samplers: ['image']
+                samplers: ['scalars', 'colormap']
             }
         );
 
