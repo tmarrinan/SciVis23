@@ -77,9 +77,9 @@ const fragment_shader_src =
 'uniform vec3 camera_position;\n' +
 'uniform int num_lights;\n' +
 'uniform vec3 light_ambient;\n' +
-'uniform vec3 hemispheric_light_direction;\n' +
-'uniform vec3 hemispheric_light_sky_color;\n' +
-'uniform vec3 hemispheric_light_ground_color;\n' +
+'uniform vec3 hemi_light_direction;\n' +
+'uniform vec3 hemi_light_sky_color;\n' +
+'uniform vec3 hemi_light_ground_color;\n' +
 'uniform vec3 point_light_position[8];\n' +
 'uniform vec3 point_light_color[8];\n' +
 '\n' +
@@ -109,8 +109,8 @@ const fragment_shader_src =
 '    }\n' +
 '    gl_FragDepth = frag_depth;\n' +
 '\n' +
-'    float hemi_weight = 0.5 + 0.5 * dot(sphere_normal, hemispheric_light_direction);\n' +
-'    vec3 light_diffuse = mix(hemispheric_light_ground_color, hemispheric_light_sky_color, hemi_weight);\n' +
+'    float hemi_weight = 0.5 + 0.5 * dot(sphere_normal, hemi_light_direction);\n' +
+'    vec3 light_diffuse = mix(hemi_light_ground_color, hemi_light_sky_color, hemi_weight);\n' +
 '    for (int i = 0; i < num_lights; i++) {\n' +
 '        vec3 light_direction = normalize(point_light_position[i] - sphere_position);\n' +
 '        float n_dot_l = max(dot(sphere_normal, light_direction), 0.0);\n' +
