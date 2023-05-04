@@ -100,20 +100,26 @@ export default {
             });
         },
 
-        updateNearClip(value) {
-            this.views[0].camera.minZ = value;
+        updateNearClip(event) {
+            let view = event.idx;
+            let value = event.data;
+            this.views[view].camera.minZ = value;
         },
 
-        updateTimestep(value) {
-          this.timeline.setTimestep(value);
-          this.timeline.getTimestep()
+        updateTimestep(event) {
+            let view = event.idx;
+            let value = event.data;
+            this.timeline.setTimestep(value);
+            this.timeline.getTimestep()
             .then(this.updateMonitorViz)
             .catch((reason) => { console.error(reason); });
         },
 
-        updateSimulationSelection(value) {
-          this.timeline.setSimulation(value);
-          this.timeline.getTimestep()
+        updateSimulationSelection(event) {
+            let view = event.idx;
+            let value = event.data;
+            this.timeline.setSimulation(value);
+            this.timeline.getTimestep()
             .then(this.updateMonitorViz)
             .catch((reason) => { console.error(reason); });
         },
@@ -376,7 +382,8 @@ export default {
         <canvas id="render-canvas" touch-action="none" tabindex="-1"></canvas>
         <div v-for="col in (view_columns - 1)" class="vertical-bar" :style="'left: ' + (100 * col / view_columns) + '%;'"></div>
         <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>
-        <UserInterface @update-near-clip="updateNearClip" @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"/>
+        <UserInterface v-for="i in 8" v-show="i <= num_views" :idx="i - 1" :num_views="num_views" @update-near-clip="updateNearClip"
+            @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"/>
     </div>
 </template>
 

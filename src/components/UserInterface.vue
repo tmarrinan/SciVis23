@@ -1,6 +1,9 @@
 <script>
 export default {
-    props: {},
+    props: {
+        idx: {type: Number},
+        num_views: {type: Number}
+    },
     data() {
         return {
             show_ui: true,
@@ -16,27 +19,45 @@ export default {
     },
     emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection'],
     methods: {
+        getLocationRight() {
+            let rows = (this.num_views > 2) ? 2 : 1;
+            let cols = this.num_views / rows;
+            let x = this.idx % cols;
+            console.log('UI ' + this.idx + ': ' + ((x + 1) * (100 / cols)) + '%')
+            return ((cols - x - 1) * (100 / cols)) + '%';
+        },
+
+        getLocationTop() {
+            let rows = (this.num_views > 2) ? 2 : 1;
+            let cols = this.num_views / rows;
+            let y = ~~(this.idx / cols);
+            return ((y) * (100 / rows)) + '%';
+        },
+
         toggleShowUi(event) {
             this.show_ui = !this.show_ui;
         },
 
         updateNearClip(event) {
-            this.$emit('update-near-clip', this.near_clip);
+            this.$emit('update-near-clip', {idx: this.idx, data: this.near_clip});
         },
 
         updateTimestep(event) {
-             this.$emit('update-timestep', this.timestep);
+             this.$emit('update-timestep', {idx: this.idx, data: this.timestep});
         },
 
         updateSimulationStimulus(event) {
-              this.$emit('update-simulation-selection', this.sim_dataset);
+              this.$emit('update-simulation-selection', {idx: this.idx, data: this.sim_dataset});
         }
+    },
+    mounted() {
+        if (this.idx > 0) this.show_ui = false;
     }
 }
 </script>
 
 <template>
-    <div class="user-interface">
+    <div class="user-interface" :style="'right: calc(' + getLocationRight() + ' + 1rem); top: calc(' + getLocationTop() + ' + 1rem);'">
         <div v-show="show_ui">
             <div style="width: 16rem; text-align: right; margin-bottom: 0.5rem;">
                 <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="/images/down-arrow.png" alt="down arrow"/></button>
@@ -68,8 +89,6 @@ label, input, select, option {
 
 .user-interface {
     position: absolute;
-    right: 1rem;
-    top: 1rem;
     padding: 0.5rem;
     border-radius: 0.5rem;
     background-color: rgba(255, 255, 255, 0.8);
