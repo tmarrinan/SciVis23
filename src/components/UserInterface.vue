@@ -23,7 +23,6 @@ export default {
             let rows = (this.num_views > 2) ? 2 : 1;
             let cols = this.num_views / rows;
             let x = this.idx % cols;
-            console.log('UI ' + this.idx + ': ' + ((x + 1) * (100 / cols)) + '%')
             return ((cols - x - 1) * (100 / cols)) + '%';
         },
 

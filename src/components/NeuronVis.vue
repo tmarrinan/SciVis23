@@ -182,11 +182,29 @@ export default {
           * XXX - Tommy: This is where you need to inject the code to color the 
           * neuron particles
           */
-          updateMonitorViz(table) {
-            console.log(`Number of rows: ${table.numRows}`);
-            console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
-            console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
-          }
+        updateMonitorViz(table) {
+            //console.log(`Number of rows: ${table.numRows}`);
+            //console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
+            //console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
+
+            let field = 'calcium';
+            let field_idx = this.findTableColumnIndex(table.schema.fields, field);
+            if (field_idx >= 0) {
+                let values = table.data[0].children[field_idx].values;
+                console.log(values);
+            }
+        },
+
+        findTableColumnIndex(schema_fields, field_name) {
+            let field_index = -1;
+            for (let i = 0; i < schema_fields.length; i++) {
+                if (schema_fields[i].name === field_name) {
+                    field_index = i;
+                    break;
+                }
+            }
+            return field_index;
+        }
     },
     mounted() {
         // Get the canvas element from the DOM.
@@ -354,10 +372,10 @@ export default {
             console.log(err);
         });
 
-        //this.timeline = new timeline.Timeline();
-        //this.timeline.getTimestep()
-        //  .then(this.updateMonitorViz)
-        //  .catch((reason) => { console.error(reason); });
+        this.timeline = new timeline.Timeline();
+        this.timeline.getTimestep()
+          .then(this.updateMonitorViz)
+          .catch((reason) => { console.error(reason); });
 
         
         // Handle animation / shader uniform updates frame and per view (prior to render)
