@@ -36,7 +36,7 @@ export default {
             brain_center: new Vector3(0.0, 0.0, 0.0),
             ptcloud_mat: null,
             scalars: {area: null, calcium: null},
-            colormaps: {area: null, low_high: null, divergent: null}
+            colormaps: {area: null, low_high: null, low_high2: null, divergent: null}
         }
     },
     computed: {
@@ -201,11 +201,14 @@ export default {
                 let property = new Float32Array(scalar_tex_dims * scalar_tex_dims);
                 property.set(values, 0);
 
+                console.log(values);
+                console.log(property);
+
                 let scalar_texture = new RawTexture(property, scalar_tex_dims, scalar_tex_dims, Engine.TEXTUREFORMAT_RED,
                                                     this.scene, false, false, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTURETYPE_FLOAT);
                 this.ptcloud_mat.setTexture('scalars', scalar_texture);
                 this.ptcloud_mat.setVector2('scalar_range', new Vector2(0.6, 0.9));
-                this.ptcloud_mat.setTexture('colormap', this.colormaps.low_high);
+                this.ptcloud_mat.setTexture('colormap', this.colormaps.low_high2);
             }
         },
 
@@ -267,6 +270,7 @@ export default {
         */
         this.colormaps.area = new Texture('/images/areas_cmap.png', this.scene, true, false, Texture.NEAREST_SAMPLINGMODE);
         this.colormaps.low_high = new Texture('/images/lowhigh_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
+        this.colormaps.low_high2 = new Texture('/images/lowhigh2_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
         this.colormaps.divergent = new Texture('/images/divergent_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
 
 
