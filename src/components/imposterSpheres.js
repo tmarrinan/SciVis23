@@ -40,7 +40,8 @@ const vertex_shader_src =
 '    vec3 cam_right = normalize(cross(vertex_direction, camera_up));\n' +
 '    vec3 cam_up = cross(cam_right, vertex_direction);\n' +
 '\n' +
-'    float dist_scale = clamp(0.15 * length(camera_position - world_point), 0.05, 1.0);\n' + // make this variable somehow?
+'    float dist_scale = clamp(((length(camera_position - world_point) - 1.3) / (10.0 - 1.3)) * (1.0 - 0.05) + 0.05, 0.05, 1.0);\n' +
+//'    float dist_scale = clamp(0.075 * length(camera_position - world_point), 0.05, 1.0);\n' + // make this variable somehow?
 '    model_size = dist_scale * point_size;\n' +
 '    world_position = world_point + (cam_right * uv2.x * model_size) +\n' +
 '                                   (cam_up * uv2.y * model_size);\n' +

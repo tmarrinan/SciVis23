@@ -34,6 +34,7 @@ export default {
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0),
+            ptcloud_mat: null,
             scalars: {area: null, calcium: null},
             colormaps: {area: null, low_high: null, divergent: null}
         }
@@ -191,7 +192,20 @@ export default {
             let field_idx = this.findTableColumnIndex(table.schema.fields, field);
             if (field_idx >= 0) {
                 let values = table.data[0].children[field_idx].values;
-                console.log(values);
+                let min = Math.min(...values);
+                let max = Math.max(...values);
+                console.log(min, max);
+
+                let num_neurons = 50000;
+                let scalar_tex_dims = Math.ceil(Math.sqrt(num_neurons));
+                let property = new Float32Array(scalar_tex_dims * scalar_tex_dims);
+                property.set(values, 0);
+
+                let scalar_texture = new RawTexture(property, scalar_tex_dims, scalar_tex_dims, Engine.TEXTUREFORMAT_RED,
+                                                    this.scene, false, false, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTURETYPE_FLOAT);
+                this.ptcloud_mat.setTexture('scalars', scalar_texture);
+                this.ptcloud_mat.setVector2('scalar_range', new Vector2(0.6, 0.9));
+                this.ptcloud_mat.setTexture('colormap', this.colormaps.low_high);
             }
         },
 
@@ -257,18 +271,18 @@ export default {
 
 
         // Create custom point cloud shader material
-        let ptcloud_mat = imposterSpheres.CreateImposterSphereShaderMaterial(this.scene);
-        ptcloud_mat.setFloat('point_size', 0.2);
-        ptcloud_mat.setInt('num_lights', 0);
-        ptcloud_mat.setVector3('light_ambient', new Vector3(0.0, 0.0, 0.0));
-        ptcloud_mat.setVector3('hemi_light_direction', light.direction);
-        ptcloud_mat.setVector3('hemi_light_sky_color', new Vector3(light.diffuse.r * light.intensity,
-                                                                   light.diffuse.g * light.intensity, 
-                                                                   light.diffuse.b * light.intensity));
-        ptcloud_mat.setVector3('hemi_light_ground_color', new Vector3(light.groundColor.r * light.intensity,
-                                                                      light.groundColor.g * light.intensity,
-                                                                      light.groundColor.b * light.intensity));
-        ptcloud_mat.setTexture('colormap', this.colormaps.area);
+        this.ptcloud_mat = imposterSpheres.CreateImposterSphereShaderMaterial(this.scene);
+        this.ptcloud_mat.setFloat('point_size', 0.2);
+        this.ptcloud_mat.setInt('num_lights', 0);
+        this.ptcloud_mat.setVector3('light_ambient', new Vector3(0.0, 0.0, 0.0));
+        this.ptcloud_mat.setVector3('hemi_light_direction', light.direction);
+        this.ptcloud_mat.setVector3('hemi_light_sky_color', new Vector3(light.diffuse.r * light.intensity,
+                                                                        light.diffuse.g * light.intensity, 
+                                                                        light.diffuse.b * light.intensity));
+        this.ptcloud_mat.setVector3('hemi_light_ground_color', new Vector3(light.groundColor.r * light.intensity,
+                                                                           light.groundColor.g * light.intensity,
+                                                                           light.groundColor.b * light.intensity));
+        this.ptcloud_mat.setTexture('colormap', this.colormaps.area);
         
         // Create our 8 possible views (but only enable the first by default)
         let view_shared_data = {
@@ -277,11 +291,11 @@ export default {
                 target: new Vector3(-0.666377, 7.335706, -0.167549),
                 near: 0.5,
                 far: 500.0,
-                wheel_precision: 15
+                wheel_precision: 30//15
             },
             neuron_ptcloud: {
                 mesh: null,
-                material: ptcloud_mat
+                material: this.ptcloud_mat
             }
         }
         for (let i = 0; i < 8; i++) {
@@ -297,18 +311,18 @@ export default {
             let neuron_areas = new Float32Array(scalar_tex_dims * scalar_tex_dims);
             neurons.forEach((neuron, idx) => {
                 neuron_positions[idx] = new Vector3(parseFloat(neuron[0]),
-                                                      parseFloat(neuron[1]),
-                                                      parseFloat(neuron[2]));
+                                                    parseFloat(neuron[1]),
+                                                    parseFloat(neuron[2]));
                 neuron_areas[idx] = parseInt(neuron[3]);
             });
             this.scalars.area = new RawTexture(neuron_areas, scalar_tex_dims, scalar_tex_dims, Engine.TEXTUREFORMAT_RED,
                                                this.scene, false, false, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTURETYPE_FLOAT);
-            ptcloud_mat.setTexture('scalars', this.scalars.area);
-            ptcloud_mat.setVector2('scalar_range', new Vector2(0, this.area_colors.length - 1));
+            this.ptcloud_mat.setTexture('scalars', this.scalars.area);
+            this.ptcloud_mat.setVector2('scalar_range', new Vector2(0, this.area_colors.length - 1));
 
             // Create point cloud data using neuron positions
             let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, this.scene);
-            point_cloud.material = ptcloud_mat;
+            point_cloud.material = this.ptcloud_mat;
             point_cloud.scaling = new Vector3(0.1, 0.1, 0.1);
             point_cloud.rotation.x = -Math.PI / 2.0;
             point_cloud.position.x = -10.0;
@@ -380,7 +394,7 @@ export default {
         
         // Handle animation / shader uniform updates frame and per view (prior to render)
         this.scene.onBeforeRenderObservable.add(() => {
-            ptcloud_mat.setVector3('hemi_light_direction', light.direction);
+            this.ptcloud_mat.setVector3('hemi_light_direction', light.direction);
         });
         this.scene.onBeforeCameraRenderObservable.add(() => {
             let view_idx = parseInt(this.scene.activeCamera.id.substring(6));
