@@ -126,6 +126,14 @@ const fragment_shader_src =
 '    FragColor = vec4(final_color, model_color.a);\n' +
 '}'
 
+function nearestFactors(num) {
+    let fac1 = Math.floor(Math.sqrt(num));
+    while (num % fac1 > 0) {
+        fac1--;
+    }
+    return [fac1, num / fac1];
+}
+
 export default {
     CreateImposterSphereMesh: (name, positions, scene) => {
         let is_mesh = new Mesh(name, scene);
@@ -134,7 +142,10 @@ export default {
         let vertex_idx_uv = new Array(positions.length * 8);
         let vertex_indices = new Array(positions.length * 6);
 
-        let dims = Math.ceil(Math.sqrt(positions.length));
+        //let dims = Math.ceil(Math.sqrt(positions.length));
+        let dims = nearestFactors(positions.length);
+        let dims_y = dims[0];
+        let dims_x = dims[1];
 
         $.each(positions, (index) => {
             vertex_positions[12 * index +  0] = positions[index].x;
@@ -159,16 +170,16 @@ export default {
             quad_positions[8 * index + 6] = -0.5;
             quad_positions[8 * index + 7] =  0.5;
 
-            let row = ~~(index / dims);
-            let col = index % dims;
-            vertex_idx_uv[8 * index + 0] = (col + 0.5) / dims;
-            vertex_idx_uv[8 * index + 1] = (row + 0.5) / dims;
-            vertex_idx_uv[8 * index + 2] = (col + 0.5) / dims;
-            vertex_idx_uv[8 * index + 3] = (row + 0.5) / dims;
-            vertex_idx_uv[8 * index + 4] = (col + 0.5) / dims;
-            vertex_idx_uv[8 * index + 5] = (row + 0.5) / dims;
-            vertex_idx_uv[8 * index + 6] = (col + 0.5) / dims;
-            vertex_idx_uv[8 * index + 7] = (row + 0.5) / dims;
+            let row = ~~(index / dims_x);
+            let col = index % dims_x;
+            vertex_idx_uv[8 * index + 0] = (col + 0.5) / dims_x;
+            vertex_idx_uv[8 * index + 1] = (row + 0.5) / dims_y;
+            vertex_idx_uv[8 * index + 2] = (col + 0.5) / dims_x;
+            vertex_idx_uv[8 * index + 3] = (row + 0.5) / dims_y;
+            vertex_idx_uv[8 * index + 4] = (col + 0.5) / dims_x;
+            vertex_idx_uv[8 * index + 5] = (row + 0.5) / dims_y;
+            vertex_idx_uv[8 * index + 6] = (col + 0.5) / dims_x;
+            vertex_idx_uv[8 * index + 7] = (row + 0.5) / dims_y;
 
             vertex_indices[6 * index + 0] = (4 * index);
             vertex_indices[6 * index + 1] = (4 * index) + 1;

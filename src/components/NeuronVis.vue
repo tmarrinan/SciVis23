@@ -184,9 +184,9 @@ export default {
           * neuron particles
           */
         updateMonitorViz(table) {
-            //console.log(`Number of rows: ${table.numRows}`);
-            //console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
-            //console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
+            // console.log(`Number of rows: ${table.numRows}`);
+            // console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
+            // console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
 
             let field = 'calcium';
             let field_idx = this.findTableColumnIndex(table.schema.fields, field);
@@ -197,14 +197,14 @@ export default {
                 console.log(min, max);
 
                 let num_neurons = 50000;
-                let scalar_tex_dims = Math.ceil(Math.sqrt(num_neurons));
-                let property = new Float32Array(scalar_tex_dims * scalar_tex_dims);
+                let scalar_tex_dims = [250, 200];
+                let property = new Float32Array(50000);
                 property.set(values, 0);
 
                 console.log(values);
                 console.log(property);
 
-                let scalar_texture = new RawTexture(property, scalar_tex_dims, scalar_tex_dims, Engine.TEXTUREFORMAT_RED,
+                let scalar_texture = new RawTexture(property, scalar_tex_dims[0], scalar_tex_dims[1], Engine.TEXTUREFORMAT_RED,
                                                     this.scene, false, false, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTURETYPE_FLOAT);
                 this.ptcloud_mat.setTexture('scalars', scalar_texture);
                 this.ptcloud_mat.setVector2('scalar_range', new Vector2(0.6, 0.9));
@@ -311,15 +311,17 @@ export default {
         .then((neurons) => {
             console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);
-            let scalar_tex_dims = Math.ceil(Math.sqrt(neurons.length));
-            let neuron_areas = new Float32Array(scalar_tex_dims * scalar_tex_dims);
+            //let scalar_tex_dims = Math.ceil(Math.sqrt(neurons.length));
+            //let neuron_areas = new Float32Array(scalar_tex_dims * scalar_tex_dims);
+            let scalar_tex_dims = [250, 200];
+            let neuron_areas = new Float32Array(neurons.length);
             neurons.forEach((neuron, idx) => {
                 neuron_positions[idx] = new Vector3(parseFloat(neuron[0]),
                                                     parseFloat(neuron[1]),
                                                     parseFloat(neuron[2]));
                 neuron_areas[idx] = parseInt(neuron[3]);
             });
-            this.scalars.area = new RawTexture(neuron_areas, scalar_tex_dims, scalar_tex_dims, Engine.TEXTUREFORMAT_RED,
+            this.scalars.area = new RawTexture(neuron_areas, scalar_tex_dims[0], scalar_tex_dims[1], Engine.TEXTUREFORMAT_RED,
                                                this.scene, false, false, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTURETYPE_FLOAT);
             this.ptcloud_mat.setTexture('scalars', this.scalars.area);
             this.ptcloud_mat.setVector2('scalar_range', new Vector2(0, this.area_colors.length - 1));
