@@ -1,5 +1,9 @@
+import { Engine } from '@babylonjs/core/Engines/engine';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Viewport } from '@babylonjs/core/Maths/math.viewport';
+import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import { RawTexture } from '@babylonjs/core/Materials/Textures/rawTexture';
 
 class NeuronView {
     constructor(id, canvas, data) {
@@ -9,6 +13,9 @@ class NeuronView {
         this.camera_settings = data.camera;
         this.camera = null;
         this.neuron_ptcloud = data.neuron_ptcloud;
+        this.neuron_scalar_tex = null;
+        this.neuron_scalar_range = new Vector2(0.0, 1.0);
+        this.colormap = null;
 
         this.addCamera();
     }
@@ -32,6 +39,19 @@ class NeuronView {
 
     setPointCloudMesh(point_cloud) {
         this.neuron_ptcloud.mesh = point_cloud;
+        
+        let dim_x = this.neuron_ptcloud.mesh.uv_dimensions.u;
+        let dim_y = this.neuron_ptcloud.mesh.uv_dimensions.v;
+        let scalars = new Float32Array(dim_x * dim_y);
+        this.neuron_scalar_tex = new RawTexture(scalars, dim_x, dim_y, Engine.TEXTUREFORMAT_RED,
+                                                this.scene, false, false, Texture.NEAREST_SAMPLINGMODE,
+                                                Engine.TEXTURETYPE_FLOAT);
+    }
+
+    setNeuronTexture(scalar_values, scalar_range, colormap) {
+        this.neuron_scalar_tex.update(scalar_values);
+        this.neuron_scalar_range = scalar_range;
+        this.colormap = colormap;
     }
 
     setActive(is_active) {
@@ -50,6 +70,9 @@ class NeuronView {
     beforeRender() {
         this.neuron_ptcloud.material.setVector3('camera_position', this.camera.position);
         this.neuron_ptcloud.material.setVector3('camera_up', this.camera.upVector);
+        this.neuron_ptcloud.material.setTexture('scalars', this.neuron_scalar_tex);
+        this.neuron_ptcloud.material.setVector2('scalar_range', this.neuron_scalar_range);
+        this.neuron_ptcloud.material.setTexture('colormap', this.colormap);
     }
 }
 

@@ -34,8 +34,6 @@ export default {
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0),
-            ptcloud_mat: null,
-            scalars: {area: null, calcium: null},
             colormaps: {area: null, low_high: null, low_high2: null, divergent: null}
         }
     },
@@ -112,7 +110,9 @@ export default {
             let value = event.data;
             this.timeline.setTimestep(value);
             this.timeline.getTimestep()
-            .then(this.updateMonitorViz)
+            .then((table) => {
+                this.updateMonitorViz(view, table);
+            })
             .catch((reason) => { console.error(reason); });
         },
 
@@ -121,7 +121,9 @@ export default {
             let value = event.data;
             this.timeline.setSimulation(value);
             this.timeline.getTimestep()
-            .then(this.updateMonitorViz)
+            .then((table) => {
+                this.updateMonitorViz(view, table);
+            })
             .catch((reason) => { console.error(reason); });
         },
 
@@ -183,7 +185,8 @@ export default {
           * XXX - Tommy: This is where you need to inject the code to color the 
           * neuron particles
           */
-        updateMonitorViz(table) {
+        updateMonitorViz(view, table) {
+            // console.log(`View: ${view}`);
             // console.log(`Number of rows: ${table.numRows}`);
             // console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
             // console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
@@ -192,23 +195,10 @@ export default {
             let field_idx = this.findTableColumnIndex(table.schema.fields, field);
             if (field_idx >= 0) {
                 let values = table.data[0].children[field_idx].values;
-                let min = Math.min(...values);
-                let max = Math.max(...values);
-                console.log(min, max);
-
-                let num_neurons = 50000;
-                let scalar_tex_dims = [250, 200];
                 let property = new Float32Array(50000);
                 property.set(values, 0);
 
-                console.log(values);
-                console.log(property);
-
-                let scalar_texture = new RawTexture(property, scalar_tex_dims[0], scalar_tex_dims[1], Engine.TEXTUREFORMAT_RED,
-                                                    this.scene, false, false, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTURETYPE_FLOAT);
-                this.ptcloud_mat.setTexture('scalars', scalar_texture);
-                this.ptcloud_mat.setVector2('scalar_range', new Vector2(0.6, 0.9));
-                this.ptcloud_mat.setTexture('colormap', this.colormaps.low_high2);
+                this.views[view].setNeuronTexture(property, new Vector2(0.6, 0.9), this.colormaps.low_high2);
             }
         },
 
@@ -257,17 +247,6 @@ export default {
         ground.material = grid_mat;
 
         // Create colormap textures for neuron visualization
-        /*
-        let area_colormap = this.createAreaColorMap();
-        this.colormaps.area = RawTexture.CreateRGBATexture(area_colormap, this.area_colors.length, 1, this.scene,
-                                                           false, false, Texture.BILINEAR_SAMPLINGMODE);
-        let lowhigh_colormap = this.createThreePtColorMap([42, 20, 82], [56, 166, 120], [245, 240, 95]);
-        this.colormaps.low_high = RawTexture.CreateRGBATexture(lowhigh_colormap, 1024, 1, this.scene,
-                                                               false, false, Texture.BILINEAR_SAMPLINGMODE);
-        let divergent_colormap = this.createThreePtColorMap([190, 0, 0], [255, 255, 255], [45, 45, 180]);
-        this.colormaps.divergent = RawTexture.CreateRGBATexture(divergent_colormap, 1024, 1, this.scene,
-                                                               false, false, Texture.BILINEAR_SAMPLINGMODE);
-        */
         this.colormaps.area = new Texture('/images/areas_cmap.png', this.scene, true, false, Texture.NEAREST_SAMPLINGMODE);
         this.colormaps.low_high = new Texture('/images/lowhigh_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
         this.colormaps.low_high2 = new Texture('/images/lowhigh2_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
@@ -275,18 +254,17 @@ export default {
 
 
         // Create custom point cloud shader material
-        this.ptcloud_mat = imposterSpheres.CreateImposterSphereShaderMaterial(this.scene);
-        this.ptcloud_mat.setFloat('point_size', 0.2);
-        this.ptcloud_mat.setInt('num_lights', 0);
-        this.ptcloud_mat.setVector3('light_ambient', new Vector3(0.0, 0.0, 0.0));
-        this.ptcloud_mat.setVector3('hemi_light_direction', light.direction);
-        this.ptcloud_mat.setVector3('hemi_light_sky_color', new Vector3(light.diffuse.r * light.intensity,
-                                                                        light.diffuse.g * light.intensity, 
-                                                                        light.diffuse.b * light.intensity));
-        this.ptcloud_mat.setVector3('hemi_light_ground_color', new Vector3(light.groundColor.r * light.intensity,
-                                                                           light.groundColor.g * light.intensity,
-                                                                           light.groundColor.b * light.intensity));
-        this.ptcloud_mat.setTexture('colormap', this.colormaps.area);
+        let ptcloud_mat = imposterSpheres.CreateImposterSphereShaderMaterial(this.scene);
+        ptcloud_mat.setFloat('point_size', 0.2);
+        ptcloud_mat.setInt('num_lights', 0);
+        ptcloud_mat.setVector3('light_ambient', new Vector3(0.0, 0.0, 0.0));
+        ptcloud_mat.setVector3('hemi_light_direction', light.direction);
+        ptcloud_mat.setVector3('hemi_light_sky_color', new Vector3(light.diffuse.r * light.intensity,
+                                                                   light.diffuse.g * light.intensity, 
+                                                                   light.diffuse.b * light.intensity));
+        ptcloud_mat.setVector3('hemi_light_ground_color', new Vector3(light.groundColor.r * light.intensity,
+                                                                      light.groundColor.g * light.intensity,
+                                                                      light.groundColor.b * light.intensity));
         
         // Create our 8 possible views (but only enable the first by default)
         let view_shared_data = {
@@ -299,7 +277,7 @@ export default {
             },
             neuron_ptcloud: {
                 mesh: null,
-                material: this.ptcloud_mat
+                material: ptcloud_mat
             }
         }
         for (let i = 0; i < 8; i++) {
@@ -311,9 +289,6 @@ export default {
         .then((neurons) => {
             console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);
-            //let scalar_tex_dims = Math.ceil(Math.sqrt(neurons.length));
-            //let neuron_areas = new Float32Array(scalar_tex_dims * scalar_tex_dims);
-            let scalar_tex_dims = [250, 200];
             let neuron_areas = new Float32Array(neurons.length);
             neurons.forEach((neuron, idx) => {
                 neuron_positions[idx] = new Vector3(parseFloat(neuron[0]),
@@ -321,14 +296,10 @@ export default {
                                                     parseFloat(neuron[2]));
                 neuron_areas[idx] = parseInt(neuron[3]);
             });
-            this.scalars.area = new RawTexture(neuron_areas, scalar_tex_dims[0], scalar_tex_dims[1], Engine.TEXTUREFORMAT_RED,
-                                               this.scene, false, false, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTURETYPE_FLOAT);
-            this.ptcloud_mat.setTexture('scalars', this.scalars.area);
-            this.ptcloud_mat.setVector2('scalar_range', new Vector2(0, this.area_colors.length - 1));
 
             // Create point cloud data using neuron positions
             let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, this.scene);
-            point_cloud.material = this.ptcloud_mat;
+            point_cloud.material = ptcloud_mat;
             point_cloud.scaling = new Vector3(0.1, 0.1, 0.1);
             point_cloud.rotation.x = -Math.PI / 2.0;
             point_cloud.position.x = -10.0;
@@ -338,6 +309,7 @@ export default {
 
             this.views.forEach((view) => {
                 view.setPointCloudMesh(point_cloud);
+                view.setNeuronTexture(neuron_areas, new Vector2(0, this.area_colors.length - 1), this.colormaps.area);
             });
 
             // BEGIN area centroid - precomputed
@@ -393,14 +365,16 @@ export default {
         });
 
         this.timeline = new timeline.Timeline();
-        this.timeline.getTimestep()
-          .then(this.updateMonitorViz)
-          .catch((reason) => { console.error(reason); });
+        // this.timeline.getTimestep()
+        // .then((table) => {
+        //     this.updateMonitorViz(0, table);
+        // })
+        // .catch((reason) => { console.error(reason); });
 
         
         // Handle animation / shader uniform updates frame and per view (prior to render)
         this.scene.onBeforeRenderObservable.add(() => {
-            this.ptcloud_mat.setVector3('hemi_light_direction', light.direction);
+            ptcloud_mat.setVector3('hemi_light_direction', light.direction);
         });
         this.scene.onBeforeCameraRenderObservable.add(() => {
             let view_idx = parseInt(this.scene.activeCamera.id.substring(6));

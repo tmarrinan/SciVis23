@@ -197,6 +197,8 @@ export default {
 
         vertex_data.applyToMesh(is_mesh);
 
+        is_mesh.num_points = positions.length;
+        is_mesh.uv_dimensions = {u: dims_x, v: dims_y};
         return is_mesh;
     },
     CreateImposterSphereShaderMaterial: (scene) => {
