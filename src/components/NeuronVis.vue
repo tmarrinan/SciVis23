@@ -9,7 +9,6 @@ import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
-import { RawTexture } from '@babylonjs/core/Materials/Textures/rawTexture';
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 
 import UserInterface from './UserInterface.vue'
@@ -144,38 +143,6 @@ export default {
             }
             let tube = CreateTube('tube', {path: path, radius: 1.0, tessellation: 12, sideOrientation: Mesh.DOUBLESIDE}, scene);
             return tube;
-        },
-
-        createAreaColorMap() {
-            let cmap = new Uint8Array(this.area_colors.length * 4);
-            for (let i = 0; i < this.area_colors.length; i++) {
-                cmap[4 * i + 0] = 255 * this.area_colors[i].r;
-                cmap[4 * i + 1] = 255 * this.area_colors[i].g;
-                cmap[4 * i + 2] = 255 * this.area_colors[i].b;
-                cmap[4 * i + 3] = 255 * this.area_colors[i].a;
-            }
-            return cmap;
-        },
-
-        createThreePtColorMap(low, mid, high) {
-            let num_colors = 1024;
-            let half_num = ~~(num_colors / 2);
-            let cmap = new Uint8Array(num_colors * 4);
-            for (let i = 0; i < half_num; i++) {
-                let t = i / half_num;
-                cmap[4 * i + 0] = (1 - t) * low[0] + t * mid[0];
-                cmap[4 * i + 1] = (1 - t) * low[1] + t * mid[1];
-                cmap[4 * i + 2] = (1 - t) * low[2] + t * mid[2];
-                cmap[4 * i + 3] = 255;
-            }
-            for (let i = half_num; i < num_colors; i++) {
-                let t = (i - half_num) / (num_colors - half_num);
-                cmap[4 * i + 0] = (1 - t) * mid[0] + t * high[0];
-                cmap[4 * i + 1] = (1 - t) * mid[1] + t * high[1];
-                cmap[4 * i + 2] = (1 - t) * mid[2] + t * high[2];
-                cmap[4 * i + 3] = 255;
-            }
-            return cmap;
         },
 
         /**
