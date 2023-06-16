@@ -240,7 +240,7 @@ export default {
                 target: new Vector3(-0.666377, 7.335706, -0.167549),
                 near: 0.5,
                 far: 500.0,
-                wheel_precision: 30//15
+                wheel_precision: 30
             },
             neuron_ptcloud: {
                 mesh: null,

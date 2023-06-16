@@ -57,26 +57,33 @@ export default {
 
 <template>
     <div class="user-interface" :style="'right: calc(' + getLocationRight() + ' + 1rem); top: calc(' + getLocationTop() + ' + 1rem);'">
-        <div v-show="show_ui">
-            <div style="width: 16rem; text-align: right; margin-bottom: 0.5rem;">
-                <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="/images/down-arrow.png" alt="down arrow"/></button>
-            </div>
-            <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
-            <input class="ui-element" type="range" min="5" max="300" v-model="near_clip_slider" @input="updateNearClip"/>
-            <br/>
-            <label>Timestep: {{ timestep }}</label><br/>
-            <input class="ui-element" type="range" min="0" max="1000" v-model="timestep" @change="updateTimestep"/>
-            <br/>
-            <label>Simulation:</label><br/>
-            <select class="ui-element last" v-model="sim_dataset" @change="updateSimulationStimulus">
-                <option value="viz-no-network">No Initial Connectivity</option>
-                <option value="viz-stimulus">Stimulation / Learning</option>
-                <option value="viz-disable">Disable Areas / Injury</option>
-                <option value="viz-calcium">Per-Neuron Calcium Targets</option>
-            </select>
+        <div class="neuron-legend">
+            <label>Neurons:</label><br/>
+            <label>PROPERTY</label>
+            <img src="/images/areas_cmap.png" alt="colormap" />
         </div>
-        <div v-show="!show_ui">
-            <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="/images/left-arrow.png" alt="left arrow"/></button>
+        <div class="widgets">
+            <div v-show="show_ui">
+                <div style="width: 16rem; text-align: right; margin-bottom: 0.5rem;">
+                    <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="/images/down-arrow.png" alt="down arrow"/></button>
+                </div>
+                <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
+                <input class="ui-element" type="range" min="5" max="300" v-model="near_clip_slider" @input="updateNearClip"/>
+                <br/>
+                <label>Timestep: {{ timestep }}</label><br/>
+                <input class="ui-element" type="range" min="0" max="1000" v-model="timestep" @change="updateTimestep"/>
+                <br/>
+                <label>Simulation:</label><br/>
+                <select class="ui-element last" v-model="sim_dataset" @change="updateSimulationStimulus">
+                    <option value="viz-no-network">No Initial Connectivity</option>
+                    <option value="viz-stimulus">Stimulation / Learning</option>
+                    <option value="viz-disable">Disable Areas / Injury</option>
+                    <option value="viz-calcium">Per-Neuron Calcium Targets</option>
+                </select>
+            </div>
+            <div v-show="!show_ui">
+                <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="/images/left-arrow.png" alt="left arrow"/></button>
+            </div>
         </div>
     </div>
 </template>
@@ -88,11 +95,35 @@ label, input, select, option {
 
 .user-interface {
     position: absolute;
+    z-index: 2;
+}
+
+.widgets {
+    position: relative;
     padding: 0.5rem;
     border-radius: 0.5rem;
     background-color: rgba(255, 255, 255, 0.8);
     color: #000000;
-    z-index: 2;
+}
+
+.neuron-legend {
+    position: absolute;
+    right: 0rem;
+    top: 5rem;
+    width: 6.5rem;
+    text-align: center;
+}
+
+.neuron-legend label {
+    color: #FFFFFF;
+}
+
+.neuron-legend img {
+    width: 6.5rem;
+    height: 10rem;
+    image-rendering: pixelated;
+    transform: scale(0.2, 1.54) rotate(-90deg);
+    margin-top: 1rem;
 }
 
 .show-hide-ui {
