@@ -33,7 +33,7 @@ export default {
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0),
-            colormaps: {area: null, low_high: null, low_high2: null, divergent: null}
+            //colormaps: {area: null, low_high: null, low_high2: null, divergent: null}
         }
     },
     computed: {
@@ -158,17 +158,21 @@ export default {
             console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
             console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
 
-            let field = 'calcium';
-            let field_idx = this.findTableColumnIndex(table.schema.fields, field);
-            if (field_idx >= 0) {
-                let values = table.data[0].children[field_idx].values;
-                let property = new Float32Array(50000);
-                property.set(values, 0);
-
-                this.views[view].setNeuronTexture(property, new Vector2(0.6, 0.9), this.colormaps.low_high2);
+            let sim_data = {};
+            //let desired_columns = ['calcium','fired', 'fired_fraction', 'grown_axons', 'grown_excitatory_dendrites',
+            //                       'connected_axons', 'connected_excitatory_dendrites'];
+            let desired_columns = ['calcium','fired', 'fired_fraction'];
+            for (let i = 0; i < table.schema.fields.length; i++) {
+                if (desired_columns.includes(table.schema.fields[i].name)) {
+                    //sim_data[table.schema.fields[i].name] = table.data[0].children[i].values;
+                    sim_data[table.schema.fields[i].name] = Float32Array.from(table.data[0].children[i].values);
+                }
             }
+
+            this.views[view].updateSimulationData(sim_data);
         },
 
+        /*
         findTableColumnIndex(schema_fields, field_name) {
             let field_index = -1;
             for (let i = 0; i < schema_fields.length; i++) {
@@ -179,6 +183,7 @@ export default {
             }
             return field_index;
         }
+        */
     },
     mounted() {
         // Get the canvas element from the DOM.
@@ -214,10 +219,10 @@ export default {
         ground.material = grid_mat;
 
         // Create colormap textures for neuron visualization
-        this.colormaps.area = new Texture('/images/areas_cmap.png', this.scene, true, false, Texture.NEAREST_SAMPLINGMODE);
-        this.colormaps.low_high = new Texture('/images/lowhigh_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
-        this.colormaps.low_high2 = new Texture('/images/lowhigh2_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
-        this.colormaps.divergent = new Texture('/images/divergent_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
+        // this.colormaps.area = new Texture('/images/areas_cmap.png', this.scene, true, false, Texture.NEAREST_SAMPLINGMODE);
+        // this.colormaps.low_high = new Texture('/images/lowhigh_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
+        // this.colormaps.low_high2 = new Texture('/images/lowhigh2_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
+        // this.colormaps.divergent = new Texture('/images/divergent_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
 
 
         // Create custom point cloud shader material
@@ -245,6 +250,12 @@ export default {
             neuron_ptcloud: {
                 mesh: null,
                 material: ptcloud_mat
+            },
+            colormaps: {
+                area: new Texture('/images/areas_cmap.png', this.scene, true, false, Texture.NEAREST_SAMPLINGMODE),
+                low_high: new Texture('/images/lowhigh_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE),
+                low_high2: new Texture('/images/lowhigh2_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE),
+                divergent: new Texture('/images/divergent_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE)
             }
         }
         for (let i = 0; i < 8; i++) {
@@ -276,7 +287,7 @@ export default {
 
             this.views.forEach((view) => {
                 view.setPointCloudMesh(point_cloud);
-                view.setNeuronTexture(neuron_areas, new Vector2(0, this.area_colors.length - 1), this.colormaps.area);
+                view.setNeuronAreas(neuron_areas, new Vector2(0, this.area_colors.length - 1));
             });
 
             // BEGIN area centroid - precomputed

@@ -13,9 +13,13 @@ class NeuronView {
         this.camera_settings = data.camera;
         this.camera = null;
         this.neuron_ptcloud = data.neuron_ptcloud;
+        this.area_values = null;
+        this.area_range = new Vector2(0.0, 1.0);
         this.neuron_scalar_tex = null;
         this.neuron_scalar_range = new Vector2(0.0, 1.0);
-        this.colormap = null;
+        this.colormaps = data.colormaps;
+        this.selected_colormap = null;
+        this.simulation_data = null;
 
         this.addCamera();
     }
@@ -48,6 +52,12 @@ class NeuronView {
                                                 Engine.TEXTURETYPE_FLOAT);
     }
 
+    setNeuronAreas(areas, area_range) {
+        this.area_values = areas;
+        this.area_range = area_range;
+        this.setNeuronTexture(this.area_values, this.area_range, this.colormaps.area);
+    }
+
     setNeuronTexture(scalar_values, scalar_range, colormap) {
         this.neuron_scalar_tex.update(scalar_values);
         this.neuron_scalar_range = scalar_range;
@@ -65,6 +75,11 @@ class NeuronView {
 
     setViewport(x, y, w, h) {
         this.camera.viewport = new Viewport(x, y, w, h);
+    }
+
+    updateSimulationData(sim_data) {
+        this.simulation_data = sim_data;
+        console.log(this.simulation_data);
     }
 
     beforeRender() {
