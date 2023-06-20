@@ -126,6 +126,13 @@ export default {
             .catch((reason) => { console.error(reason); });
         },
 
+        updateNeuronProperty(event) {
+            let view = event.idx;
+            let value = event.data;
+            console.log(view, value);
+            this.views[view].setNeuronProperty(value, new Vector2(0.0, 1.1)); // TODO: update range!
+        },
+
         createBezierTube(start_pt, end_pt, num_divisions, scene) {
             let ctrl_point1 = start_pt.add(this.brain_center.subtract(start_pt).scale(0.67));
             let ctrl_point2 = end_pt.add(this.brain_center.subtract(end_pt).scale(0.67));
@@ -343,11 +350,11 @@ export default {
         });
 
         this.timeline = new timeline.Timeline();
-        // this.timeline.getTimestep()
-        // .then((table) => {
-        //     this.updateMonitorViz(0, table);
-        // })
-        // .catch((reason) => { console.error(reason); });
+        this.timeline.getTimestep()
+        .then((table) => {
+            this.updateMonitorViz(0, table);
+        })
+        .catch((reason) => { console.error(reason); });
 
         
         // Handle animation / shader uniform updates frame and per view (prior to render)
@@ -373,7 +380,8 @@ export default {
         <div v-for="col in (view_columns - 1)" class="vertical-bar" :style="'left: ' + (100 * col / view_columns) + '%;'"></div>
         <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>
         <UserInterface v-for="i in 8" v-show="i <= num_views" :idx="i - 1" :num_views="num_views" @update-near-clip="updateNearClip"
-            @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"/>
+            @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"
+            @update-neuron-property="updateNeuronProperty"/>
     </div>
 </template>
 

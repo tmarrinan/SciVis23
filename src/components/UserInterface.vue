@@ -35,7 +35,7 @@ export default {
             return this.near_clip_slider / 10.0;
         }
     },
-    emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection'],
+    emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection', 'update-neuron-property'],
     methods: {
         getLocationRight() {
             let rows = (this.num_views > 2) ? 2 : 1;
@@ -68,7 +68,7 @@ export default {
         },
 
         updateNeuronProperty(event) {
-
+            this.$emit('update-neuron-property', {idx: this.idx, data: this.selected_neuron_prop});
         }
     },
     mounted() {

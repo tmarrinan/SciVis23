@@ -58,7 +58,17 @@ class NeuronView {
         this.setNeuronTexture(this.area_values, this.area_range, this.colormaps.area);
     }
 
+    setNeuronProperty(value, value_range) {
+        if (value === 'area') {
+            this.setNeuronTexture(this.area_values, this.area_range, this.colormaps.area);
+        }
+        else {
+            this.setNeuronTexture(this.simulation_data[value], value_range, this.colormaps.low_high2);
+        }
+    }
+
     setNeuronTexture(scalar_values, scalar_range, colormap) {
+        console.log(scalar_values, scalar_range, colormap);
         this.neuron_scalar_tex.update(scalar_values);
         this.neuron_scalar_range = scalar_range;
         this.colormap = colormap;
