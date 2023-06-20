@@ -154,9 +154,9 @@ export default {
           */
         updateMonitorViz(view, table) {
             // console.log(`View: ${view}`);
-            // console.log(`Number of rows: ${table.numRows}`);
-            // console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
-            // console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
+            console.log(`Number of rows: ${table.numRows}`);
+            console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
+            console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
 
             let field = 'calcium';
             let field_idx = this.findTableColumnIndex(table.schema.fields, field);

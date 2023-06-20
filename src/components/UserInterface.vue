@@ -9,7 +9,25 @@ export default {
             show_ui: true,
             near_clip_slider: 5,
             timestep: 0,
-            sim_dataset: 'viz-no-network'
+            selected_simulation: 'viz-no-network',
+            simulations: [
+                {name: 'viz-no-network', description: 'No Initial Connectivity'},
+                {name: 'viz-stimulus', description: 'Stimulation / Learning'},
+                {name: 'viz-disable', description: 'Disable Areas / Injury'},
+                {name: 'viz-calcium', description: 'Per-Neuron Calcium Targets'}
+            ],
+            selected_neuron_prop: 'area',
+            neuron_properties: {
+                area: 'Area',
+                calcium: 'Calcium',
+                calcium_target: 'Calcium to Target',
+                fired: 'Fired',
+                fired_fraction: 'Fired Rate',
+                grown_axons: 'Axons',
+                grown_excitatory_dendrites: 'Dendrites',
+                connected_axons: 'Incoming Connections',
+                connected_excitatory_dendrites: 'Outgoing Connections'
+            }
         }
     },
     computed: {
@@ -46,7 +64,11 @@ export default {
         },
 
         updateSimulationStimulus(event) {
-              this.$emit('update-simulation-selection', {idx: this.idx, data: this.sim_dataset});
+              this.$emit('update-simulation-selection', {idx: this.idx, data: this.selected_simulation});
+        },
+
+        updateNeuronProperty(event) {
+
         }
     },
     mounted() {
@@ -59,7 +81,7 @@ export default {
     <div class="user-interface" :style="'right: calc(' + getLocationRight() + ' + 1rem); top: calc(' + getLocationTop() + ' + 1rem);'">
         <div class="neuron-legend">
             <label>Neurons:</label><br/>
-            <label>PROPERTY</label>
+            <label>{{ neuron_properties[selected_neuron_prop] }}</label>
             <img src="/images/areas_cmap.png" alt="colormap" />
         </div>
         <div class="widgets">
@@ -74,11 +96,13 @@ export default {
                 <input class="ui-element" type="range" min="0" max="1000" v-model="timestep" @change="updateTimestep"/>
                 <br/>
                 <label>Simulation:</label><br/>
-                <select class="ui-element last" v-model="sim_dataset" @change="updateSimulationStimulus">
-                    <option value="viz-no-network">No Initial Connectivity</option>
-                    <option value="viz-stimulus">Stimulation / Learning</option>
-                    <option value="viz-disable">Disable Areas / Injury</option>
-                    <option value="viz-calcium">Per-Neuron Calcium Targets</option>
+                <select class="ui-element" v-model="selected_simulation" @change="updateSimulationStimulus">
+                    <option v-for="item in simulations" :value="item.name">{{ item.description }}</option>
+                </select>
+                <br/>
+                <label>Neuron Property:</label><br/>
+                <select class="ui-element last" v-model="selected_neuron_prop" @change="updateNeuronProperty">
+                    <option v-for="(item, key) in neuron_properties" :value="key">{{ item }}</option>
                 </select>
             </div>
             <div v-show="!show_ui">
