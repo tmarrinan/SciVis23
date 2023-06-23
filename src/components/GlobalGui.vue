@@ -1,6 +1,9 @@
 <script>
 export default {
-    props: {},
+    props: {
+        ws: {type: Object},
+        ws_open: {type: Boolean}
+    },
     data() {
         return {
             num_views: 1,
@@ -41,24 +44,44 @@ export default {
         },
 
         joinRoom(event) {
-            if (this.room_id !== '') {
-                // TODO: actually join room (WebSockets?)
-                this.joined_room = true;
+            if (this.room_id !== '' && this.ws_open) {
+                let message = {type: 'join', data: {id: this.room_id}};
+                this.ws.send(JSON.stringify(message));
             }
         },
 
         createRoom(event) {
-            if (this.room_id !== '') {
-                // TODO: actually create room (WebSockets?)
-                this.joined_room = true;
+            if (this.room_id !== '' && this.ws_open) {
+                let message = {type: 'create', data: {id: this.room_id}};
+                this.ws.send(JSON.stringify(message));
             }
         },
 
         leaveRoom(event) {
-            // TODO: actually leave room (WebSockets?)
+            let message = {type: 'leave', data: {id: this.room_id}};
+            this.ws.send(JSON.stringify(message));
             this.joined_room = false;
             this.room_id = '';
         },
+
+        webSocketMessage(message) {
+            if (message.type === 'create') {
+                if (message.response === 'success') {
+                    this.joined_room = true;
+                }
+                else {
+                    alert('Error: Could not create room. Try a different ID.')
+                }
+            }
+            else if (message.type === 'join') {
+                if (message.response === 'success') {
+                    this.joined_room = true;
+                }
+                else {
+                    alert('Error: Could not join room. Try creating one or join using a different ID.')
+                }
+            }
+        }
     },
     mounted() {
         let width = window.innerWidth;
@@ -83,12 +106,12 @@ export default {
         <label>Room:</label>
         <div v-if="!joined_room" style="display: inline;">
             <input class="text-input" type="text" placeholder="Enter ID" v-model="room_id"/>
-            <button id="join-btn" class="button-input" type="button" @click="joinRoom">Join</button>
-            <button id="create-btn" class="button-input" type="button" @click="createRoom">Create</button>
+            <button :class="'button-input ' + (ws_open ? 'join-btn' : 'disable-btn')" type="button" @click="joinRoom">Join</button>
+            <button :class="'button-input ' + (ws_open ? 'create-btn' : 'disable-btn')" type="button" @click="createRoom">Create</button>
         </div>
         <div v-else style="display: inline;">
             <label class="text-display">{{ room_id }}</label>
-            <button id="leave-btn" class="button-input" type="button" @click="leaveRoom">Leave</button>
+            <button :class="'button-input ' + (ws_open ? 'leave-btn' : 'disable-btn')" type="button" @click="leaveRoom">Leave</button>
         </div>
     </div>
 </template>
@@ -107,18 +130,6 @@ input, select, option, button {
 #global-gui {
     padding: 0.5rem;
     font-size: 1rem;
-}
-
-#join-btn {
-    background-color: #4A9056;
-}
-
-#create-btn {
-    background-color: #585EAC;
-}
-
-#leave-btn {
-    background-color: #931F1F;
 }
 
 .number-input {
@@ -143,6 +154,23 @@ input, select, option, button {
     border: none;
     color: #FFFFFF;
     margin: 0 0.5rem 0 0;
+}
+
+.join-btn {
+    background-color: #4A9056;
+}
+
+.create-btn {
+    background-color: #585EAC;
+}
+
+.leave-btn {
+    background-color: #931F1F;
+}
+
+.disable-btn {
+    background-color: #CDCDCD;
+    color: #636363;
 }
 
 .text-display {

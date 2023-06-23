@@ -6,7 +6,9 @@ export default {
     data() {
         return {
             num_views: 1,
-            data_url: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/'
+            data_url: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
+            ws: null,
+            ws_open: false
         }
     },
     components: {
@@ -21,6 +23,24 @@ export default {
         updateDataUrl(value) {
             this.data_url = value;
         }
+    },
+    mounted() {
+        this.ws = new WebSocket('wss://gliese.cs.stthomas.edu:8008');
+        this.ws.onopen = (event) => {
+            console.log('WebSocket connected!');
+            this.ws_open = true;
+        };
+        this.ws.onclose = (event) => {
+            console.log('WebSocket closed');
+            this.ws_open = false;
+        };
+        this.ws.onerror = (event) => {
+            console.log('WebSocket error: could not connect');
+        };
+        this.ws.onmessage = (event) => {
+            //console.log('WebSocket message:', event.data);
+            this.$refs.global_gui.webSocketMessage(JSON.parse(event.data));
+        };
     }
 }
 </script>
@@ -28,10 +48,10 @@ export default {
 <template>
     <div class="box">
         <div class="row header">
-            <GlobalGui @update-num-views="updateNumViews" @update-data-url="updateDataUrl"/>
+            <GlobalGui ref="global_gui" :ws="ws" :ws_open="ws_open" @update-num-views="updateNumViews" @update-data-url="updateDataUrl"/>
         </div>
         <div class="row content">
-            <NeuronVis :num_views="num_views" :data_url="data_url"/>
+            <NeuronVis :ws="ws" :num_views="num_views" :data_url="data_url"/>
         </div>
     </div>
 </template>

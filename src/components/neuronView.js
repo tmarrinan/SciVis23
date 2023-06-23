@@ -79,7 +79,6 @@ class NeuronView {
     }
 
     setNeuronTexture(scalar_values, scalar_range, colormap) {
-        console.log(scalar_values, scalar_range, colormap);
         this.neuron_scalar_tex.update(scalar_values);
         this.neuron_scalar_range = scalar_range;
         this.colormap = colormap;
@@ -100,7 +99,6 @@ class NeuronView {
 
     updateSimulationData(sim_data) {
         this.simulation_data = sim_data;
-        console.log(this.simulation_data);
     }
 
     beforeRender() {

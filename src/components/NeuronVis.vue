@@ -23,7 +23,8 @@ import timeline from './timeline'
 export default {
     props: {
         num_views: {type: Number},
-        data_url: {type: String}
+        data_url: {type: String},
+        ws: {type: Object}
     },
     data() {
         return {
@@ -129,7 +130,6 @@ export default {
         updateNeuronProperty(event) {
             let view = event.idx;
             let value = event.data;
-            console.log(view, value);
             this.views[view].setNeuronProperty(value, new Vector2(0.0, 1.1)); // TODO: update range!
         },
 
@@ -161,9 +161,9 @@ export default {
           */
         updateMonitorViz(view, table) {
             // console.log(`View: ${view}`);
-            console.log(`Number of rows: ${table.numRows}`);
-            console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
-            console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
+            // console.log(`Number of rows: ${table.numRows}`);
+            // console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
+            // console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
 
             let sim_data = {};
             //let desired_columns = ['calcium','fired', 'fired_fraction', 'grown_axons', 'grown_excitatory_dendrites',
