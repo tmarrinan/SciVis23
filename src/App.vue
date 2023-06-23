@@ -38,7 +38,6 @@ export default {
             console.log('WebSocket error: could not connect');
         };
         this.ws.onmessage = (event) => {
-            //console.log('WebSocket message:', event.data);
             this.$refs.global_gui.webSocketMessage(JSON.parse(event.data));
         };
     }

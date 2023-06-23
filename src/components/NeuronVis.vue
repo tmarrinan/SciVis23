@@ -203,8 +203,11 @@ export default {
             this.resizeCanvas(canvas, top_bar.offsetHeight);
         });
 
-        // Attach user control to proper view when mouse presses down
+        // Attach user control to proper view when mouse presses down or wheel scrolls
         canvas.addEventListener('pointerdown', (event) => {
+            this.selectView(event.offsetX, event.offsetY);
+        });
+        canvas.addEventListener('wheel', (event) => {
             this.selectView(event.offsetX, event.offsetY);
         });
 
