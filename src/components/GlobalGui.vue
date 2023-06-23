@@ -10,7 +10,9 @@ export default {
             data_url_list: {
                 stthomas: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
                 add_new: '... Add new'
-            }
+            },
+            joined_room: false,
+            room_id: ''
         }
     },
     emits: ['update-num-views', 'update-data-url'],
@@ -36,7 +38,27 @@ export default {
             else {
                 this.$emit('update-data-url', this.data_url_list[this.data_url]);
             }
-        }
+        },
+
+        joinRoom(event) {
+            if (this.room_id !== '') {
+                // TODO: actually join room (WebSockets?)
+                this.joined_room = true;
+            }
+        },
+
+        createRoom(event) {
+            if (this.room_id !== '') {
+                // TODO: actually create room (WebSockets?)
+                this.joined_room = true;
+            }
+        },
+
+        leaveRoom(event) {
+            // TODO: actually leave room (WebSockets?)
+            this.joined_room = false;
+            this.room_id = '';
+        },
     },
     mounted() {
         let width = window.innerWidth;
@@ -58,13 +80,21 @@ export default {
         <select class="dropdown-input" v-model="data_url" @change="updateDataUrl">
             <option v-for="(url, name) in data_url_list" :value="name">{{ url }}</option>
         </select>
-        <label>Other stuff here...</label>
-        <!-- TODO: add data URL? -->
+        <label>Room:</label>
+        <div v-if="!joined_room" style="display: inline;">
+            <input class="text-input" type="text" placeholder="Enter ID" v-model="room_id"/>
+            <button id="join-btn" class="button-input" type="button" @click="joinRoom">Join</button>
+            <button id="create-btn" class="button-input" type="button" @click="createRoom">Create</button>
+        </div>
+        <div v-else style="display: inline;">
+            <label class="text-display">{{ room_id }}</label>
+            <button id="leave-btn" class="button-input" type="button" @click="leaveRoom">Leave</button>
+        </div>
     </div>
 </template>
 
 <style scoped>
-input, select, option {
+input, select, option, button {
     font-size: 1rem;
 }
 
@@ -79,6 +109,18 @@ input, select, option {
     font-size: 1rem;
 }
 
+#join-btn {
+    background-color: #4A9056;
+}
+
+#create-btn {
+    background-color: #585EAC;
+}
+
+#leave-btn {
+    background-color: #931F1F;
+}
+
 .number-input {
     width: 3.5rem;
     margin: 0 2rem 0 0.5rem;
@@ -87,5 +129,28 @@ input, select, option {
 .dropdown-input {
     width: 17.5rem;
     margin: 0 2rem 0 0.5rem;
+}
+
+.text-input {
+    width: 8rem;
+    margin: 0 0.5rem;
+}
+
+.button-input {
+    width: 5rem;
+    height: 1.5rem;
+    border-radius: 0.25rem;
+    border: none;
+    color: #FFFFFF;
+    margin: 0 0.5rem 0 0;
+}
+
+.text-display {
+    display: inline-block;
+    background-color: #DCDCDC;
+    color: #000000;
+    width: 7.6rem;
+    margin: 0 0.5rem;
+    padding: 0.2rem;
 }
 </style>
