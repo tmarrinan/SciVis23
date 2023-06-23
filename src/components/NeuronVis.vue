@@ -352,7 +352,7 @@ export default {
         this.timeline = new timeline.Timeline();
         this.timeline.getTimestep()
         .then((table) => {
-            this.updateMonitorViz(0, table);
+            for (let v = 0; v < 8; v++) this.updateMonitorViz(v, table);
         })
         .catch((reason) => { console.error(reason); });
 

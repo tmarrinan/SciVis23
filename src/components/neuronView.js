@@ -20,6 +20,16 @@ class NeuronView {
         this.colormaps = data.colormaps;
         this.selected_colormap = null;
         this.simulation_data = null;
+        this.property_colormaps = {
+            calcium: 'low_high2',
+            calcium_target: 'divergent',
+            fired: 'divergent',
+            fired_fraction: 'low_high2',
+            grown_axons: 'low_high2',
+            grown_excitatory_dendrites: 'low_high2',
+            connected_axons: 'low_high2',
+            connected_excitatory_dendrites: 'low_high2'
+        }
 
         this.addCamera();
     }
@@ -63,7 +73,8 @@ class NeuronView {
             this.setNeuronTexture(this.area_values, this.area_range, this.colormaps.area);
         }
         else {
-            this.setNeuronTexture(this.simulation_data[value], value_range, this.colormaps.low_high2);
+            let colormap = this.colormaps[this.property_colormaps[value]];
+            this.setNeuronTexture(this.simulation_data[value], value_range, colormap);
         }
     }
 

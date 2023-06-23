@@ -33,6 +33,19 @@ export default {
     computed: {
         near_clip() {
             return this.near_clip_slider / 10.0;
+        },
+
+        colormap_image() {
+            if (this.selected_neuron_prop === 'area') {
+                return '/images/areas_cmap.png';
+            }
+            else if (['calcium', 'fired_fraction', 'grown_axons', 'grown_excitatory_dendrites',
+                      'connected_axons', 'connected_excitatory_dendrites'].includes(this.selected_neuron_prop)) {
+                return '/images/lowhigh2_cmap.png';
+            }
+            else {
+                return '/images/divergent_cmap.png';
+            }
         }
     },
     emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection', 'update-neuron-property'],
@@ -82,7 +95,7 @@ export default {
         <div class="neuron-legend">
             <label>Neurons:</label><br/>
             <label>{{ neuron_properties[selected_neuron_prop] }}</label>
-            <img src="/images/areas_cmap.png" alt="colormap" />
+            <img :src="colormap_image" alt="colormap" />
         </div>
         <div class="widgets">
             <div v-show="show_ui">

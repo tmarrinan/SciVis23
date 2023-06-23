@@ -56,7 +56,7 @@ def main():
     
     low_high = createThreePtColorMap([42, 20, 82], [56, 166, 120], [245, 240, 95])
     low_high2 = createColorMap([[0, 0, 4], [40, 11, 84], [101, 21, 110], [159, 42, 99], [212, 72, 66], [245, 125, 21], [250, 193, 39], [252, 255, 164]])
-    divergent = createThreePtColorMap([190, 0, 0], [255, 255, 255], [45, 45, 180])
+    divergent = createThreePtColorMap([45, 45, 180], [255, 255, 255], [190, 0, 0])
     
     img1 = Image.new(mode='RGBA', size=(len(area_colors), 1))
     img1.putdata(area_colors)
