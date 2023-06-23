@@ -5,6 +5,7 @@ export default {
         return {
             num_views: 1,
             prev_views: 1,
+            max_views: 1,
             data_url: 'stthomas',
             data_url_list: {
                 stthomas: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
@@ -36,6 +37,14 @@ export default {
                 this.$emit('update-data-url', this.data_url_list[this.data_url]);
             }
         }
+    },
+    mounted() {
+        let width = window.innerWidth;
+        this.max_views = (width < 768) ? 1 : (width < 1280) ? 2 : (width < 1920) ? 4 : (width < 3840) ? 6 : 8;
+        window.addEventListener('resize', (event) => {
+            width = window.innerWidth;
+            this.max_views = (width < 768) ? 1 : (width < 1280) ? 2 : (width < 1920) ? 4 : (width < 3840) ? 6 : 8;
+        });
     }
 }
 </script>
@@ -44,7 +53,7 @@ export default {
     <div id="global-gui">
         <span id="gui-title">Brain Plasticity</span>
         <label>Views:</label>
-        <input class="number-input" type="number" min="1" max="8" v-model="num_views" @input="updateNumViews"/>
+        <input class="number-input" type="number" min="1" :max="max_views" v-model="num_views" @input="updateNumViews"/>
         <label>Data URL:</label>
         <select class="dropdown-input" v-model="data_url" @change="updateDataUrl">
             <option v-for="(url, name) in data_url_list" :value="name">{{ url }}</option>
