@@ -38,7 +38,13 @@ export default {
             console.log('WebSocket error: could not connect');
         };
         this.ws.onmessage = (event) => {
-            this.$refs.global_gui.webSocketMessage(JSON.parse(event.data));
+            let message = JSON.parse(event.data);
+            if (message.type === 'create' || message.type === 'join') {
+                this.$refs.global_gui.joinedRoom(message.type, message.response === 'success');
+            }
+            else {
+                console.log(message);
+            }
         };
     }
 }

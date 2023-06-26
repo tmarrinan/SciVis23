@@ -64,21 +64,16 @@ export default {
             this.room_id = '';
         },
 
-        webSocketMessage(message) {
-            if (message.type === 'create') {
-                if (message.response === 'success') {
-                    this.joined_room = true;
-                }
-                else {
-                    alert('Error: Could not create room. Try a different ID.')
-                }
+        joinedRoom(type, success) {
+            if (success) {
+                this.joined_room = true;
             }
-            else if (message.type === 'join') {
-                if (message.response === 'success') {
-                    this.joined_room = true;
+            else {
+                if (type === 'create') {
+                    alert('Error: Could not create room. Try a different ID.');
                 }
-                else {
-                    alert('Error: Could not join room. Try creating one or join using a different ID.')
+                else if (type === 'join') {
+                    alert('Error: Could not join room. Try creating one or join using a different ID.');
                 }
             }
         }
