@@ -51,7 +51,8 @@ export default {
              .attr('x', d => x_axis(d.name))
              .attr('width', x_axis.bandwidth())
              .attr('y', d =>  y_axis(d.value))
-             .attr('height', d => (height - y_axis(d.value)));
+             .attr('height', d => (height - y_axis(d.value)))
+             .style('stroke-dasharray', d => ((x_axis.bandwidth() + height - y_axis(d.value)) + ',' + x_axis.bandwidth()));
 
         d3svg.append('g').classed('d3axis', true)
                          .attr('transform', 'translate(0,' + height + ')')
@@ -74,7 +75,12 @@ svg :deep(.d3bar) {
     fill: #2687E8;
 }
 
+svg :deep(.d3bar:hover) {
+    stroke: #6F43A4;
+}
+
 svg :deep(.d3axis) {
     font-size: 1rem;
 }
+
 </style>
