@@ -18,7 +18,7 @@ export default {
             room_id: ''
         }
     },
-    emits: ['update-num-views', 'update-data-url'],
+    emits: ['update-num-views', 'update-data-url', 'update-room-id'],
     methods: {
         updateNumViews(event) {
             if ([3, 5, 7].includes(this.num_views)) {
@@ -62,11 +62,13 @@ export default {
             this.ws.send(JSON.stringify(message));
             this.joined_room = false;
             this.room_id = '';
+            this.$emit('update-room-id', this.room_id);
         },
 
         joinedRoom(type, success) {
             if (success) {
                 this.joined_room = true;
+                this.$emit('update-room-id', this.room_id);
             }
             else {
                 if (type === 'create') {

@@ -34,7 +34,8 @@ export default {
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0),
-            //colormaps: {area: null, low_high: null, low_high2: null, divergent: null}
+            room_id: '',
+            state: []
         }
     },
     computed: {
@@ -99,6 +100,10 @@ export default {
             });
         },
 
+        updateState(state) {
+            console.log(state);
+        },
+
         updateNearClip(event) {
             let view = event.idx;
             let value = event.data;
@@ -108,6 +113,10 @@ export default {
         updateTimestep(event) {
             let view = event.idx;
             let value = event.data;
+
+            this.state[view].timestep = value;
+            this.syncState(view, this.state[view]);
+            
             this.timeline.setTimestep(value);
             this.timeline.getTimestep()
             .then((table) => {
@@ -119,6 +128,10 @@ export default {
         updateSimulationSelection(event) {
             let view = event.idx;
             let value = event.data;
+            
+            this.state[view].simulation = value;
+            this.syncState(view, this.state[view]);
+
             this.timeline.setSimulation(value);
             this.timeline.getTimestep()
             .then((table) => {
@@ -130,6 +143,11 @@ export default {
         updateNeuronProperty(event) {
             let view = event.idx;
             let value = event.data;
+
+            this.state[view].neuron_property = value;
+            this.syncState(view, this.state[view]);
+
+            console.log(this.state);
             this.views[view].setNeuronProperty(value, new Vector2(0.0, 1.1)); // TODO: update range!
         },
 
@@ -179,18 +197,16 @@ export default {
             this.views[view].updateSimulationData(sim_data);
         },
 
-        /*
-        findTableColumnIndex(schema_fields, field_name) {
-            let field_index = -1;
-            for (let i = 0; i < schema_fields.length; i++) {
-                if (schema_fields[i].name === field_name) {
-                    field_index = i;
-                    break;
-                }
+        setRoomId(id) {
+            this.room_id = id;
+        },
+
+        syncState(view_idx, state) {
+            if (this.room_id !== '') {
+                let message = {type: 'updateState', data: {view: view_idx, state: state}};
+                this.ws.send(JSON.stringify(message));
             }
-            return field_index;
         }
-        */
     },
     mounted() {
         // Get the canvas element from the DOM.
@@ -270,6 +286,11 @@ export default {
         }
         for (let i = 0; i < 8; i++) {
             this.views.push(new NeuronView(i, canvas, view_shared_data));
+            this.state.push({
+                simulation: 'viz-no-network',
+                timestep: 0,
+                neuron_property: 'area'
+            });
         }
         
         // Download brain position data and create point cloud

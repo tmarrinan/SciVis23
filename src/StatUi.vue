@@ -44,6 +44,10 @@ export default {
                     alert('Error: Could not join room. Try creating one or join using a different ID.');
                 }
             }
+        },
+
+        updateState(state) {
+            console.log(state);
         }
     },
     mounted() {
@@ -64,6 +68,9 @@ export default {
             let message = JSON.parse(event.data);
             if (message.type === 'create' || message.type === 'join') {
                 this.joinedRoom(message.type, message.response === 'success');
+            }
+            else if (message.type === 'updateState') {
+                this.updateState(message.response);
             }
             else {
                 console.log(message);
