@@ -8,7 +8,11 @@ export default {
         return {
             show_ui: true,
             near_clip_slider: 5,
+            near_clip_start: 5,
+            near_clip_end: 300,
             timestep: 0,
+            timestep_start: 0,
+            timestep_end: 1000,
             selected_simulation: 'viz-no-network',
             simulations: [
                 {name: 'viz-no-network', description: 'No Initial Connectivity'},
@@ -72,8 +76,36 @@ export default {
             this.$emit('update-near-clip', {idx: this.idx, data: this.near_clip});
         },
 
+        decrementNearClip(event) {
+            if (this.near_clip_slider > this.near_clip_start) {
+                this.near_clip_slider--;
+                this.updateNearClip();
+            }
+        },
+
+        incrementNearClip(event) {
+            if (this.near_clip_slider < this.near_clip_end) {
+                this.near_clip_slider++;
+                this.updateNearClip();
+            }
+        },
+
         updateTimestep(event) {
              this.$emit('update-timestep', {idx: this.idx, data: this.timestep});
+        },
+
+        decrementTimestep(event) {
+            if (this.timestep > this.timestep_start) {
+                this.timestep--;
+                this.updateTimestep();
+            }
+        },
+
+        incrementTimestep(event) {
+            if (this.timestep < this.timestep_end) {
+                this.timestep++;
+                this.updateTimestep();
+            }
         },
 
         updateSimulationStimulus(event) {
@@ -103,10 +135,14 @@ export default {
                     <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="/images/down-arrow.png" alt="down arrow"/></button>
                 </div>
                 <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
-                <input class="ui-element" type="range" min="5" max="300" v-model="near_clip_slider" @input="updateNearClip"/>
+                <button class="ui-slider-btn" type="button" @click="decrementNearClip"><img src="/images/left-arrow.png" alt="left arrow"/></button>
+                <input class="ui-slider" type="range" :min="near_clip_start" :max="near_clip_end" v-model="near_clip_slider" @input="updateNearClip"/>
+                <button class="ui-slider-btn" type="button" @click="incrementNearClip"><img src="/images/right-arrow.png" alt="left arrow"/></button>
                 <br/>
                 <label>Timestep: {{ timestep }}</label><br/>
-                <input class="ui-element" type="range" min="0" max="1000" v-model="timestep" @change="updateTimestep"/>
+                <button class="ui-slider-btn" type="button" @click="decrementTimestep"><img src="/images/left-arrow.png" alt="left arrow"/></button>
+                <input class="ui-slider" type="range" :min="timestep_start" :max="timestep_end" v-model="timestep" @change="updateTimestep"/>
+                <button class="ui-slider-btn" type="button" @click="incrementTimestep"><img src="/images/right-arrow.png" alt="left arrow"/></button>
                 <br/>
                 <label>Simulation:</label><br/>
                 <select class="ui-element" v-model="selected_simulation" @change="updateSimulationStimulus">
@@ -178,6 +214,29 @@ label, input, select, option {
 .ui-element {
     width: 16rem;
     margin-bottom: 1rem;
+}
+
+.ui-slider {
+    width: 13rem;
+    margin: 0 0.25rem 1rem 0.25rem;
+}
+
+.ui-slider-btn {
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0.25rem;
+    border: none;
+    border-radius: 25%;
+    background-color: #EEEEEE;
+}
+
+.ui-slider-btn:active {
+    background-color: #A8A8A8;
+}
+
+.ui-slider-btn img {
+    width: 0.75rem;
+    height: 0.75rem;
 }
 
 .last {
