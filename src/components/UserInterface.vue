@@ -22,15 +22,15 @@ export default {
             ],
             selected_neuron_prop: 'area',
             neuron_properties: {
-                area: 'Area',
-                calcium: 'Calcium',
-                calcium_target: 'Calcium to Target',
-                fired: 'Fired',
-                fired_fraction: 'Fired Rate',
-                grown_axons: 'Axons',
-                grown_excitatory_dendrites: 'Dendrites',
-                connected_axons: 'Incoming Connections',
-                connected_excitatory_dendrites: 'Outgoing Connections'
+                area: {name: 'Area', min: 0, max: 48},
+                calcium: {name: 'Calcium', min: 0.0, max: 1.1},
+                calcium_target: {name: 'Calcium to Target', min: -0.7, max: 0.7},
+                fired: {name: 'Fired', min: 'False', max: 'True'},
+                fired_fraction: {name: 'Fired Rate', min: 0.0, max: 1.0},
+                grown_axons: {name: 'Axons', min: 0, max: 50},
+                grown_excitatory_dendrites: {name: 'Dendrites', min: 0, max: 50},
+                connected_axons: {name: 'Incoming Connections', min: 0, max: 50},
+                connected_excitatory_dendrites: {name: 'Outgoing Connections', min: 0, max: 50}
             }
         }
     },
@@ -126,8 +126,12 @@ export default {
     <div class="user-interface" :style="'right: calc(' + getLocationRight() + ' + 1rem); top: calc(' + getLocationTop() + ' + 1rem);'">
         <div class="neuron-legend">
             <label>Neurons:</label><br/>
-            <label>{{ neuron_properties[selected_neuron_prop] }}</label>
+            <label>{{ neuron_properties[selected_neuron_prop].name }}</label><br/>
             <img :src="colormap_image" alt="colormap" />
+            <div style="width: 100%; text-align: right;">
+                <label class="neuron-legend-min">{{ neuron_properties[selected_neuron_prop].min }}</label><br/>
+                <label class="neuron-legend-max">{{ neuron_properties[selected_neuron_prop].max }}</label>
+            </div>
         </div>
         <div class="widgets">
             <div v-show="show_ui">
@@ -151,7 +155,7 @@ export default {
                 <br/>
                 <label>Neuron Property:</label><br/>
                 <select class="ui-element last" v-model="selected_neuron_prop" @change="updateNeuronProperty">
-                    <option v-for="(item, key) in neuron_properties" :value="key">{{ item }}</option>
+                    <option v-for="(item, key) in neuron_properties" :value="key">{{ item.name }}</option>
                 </select>
             </div>
             <div v-show="!show_ui">
@@ -197,6 +201,18 @@ label, input, select, option {
     image-rendering: pixelated;
     transform: scale(0.2, 1.54) rotate(-90deg);
     margin-top: 1rem;
+}
+
+.neuron-legend-min {
+    position: relative;
+    top: -1.25rem;
+    right: 5rem;
+}
+
+.neuron-legend-max {
+    position: relative;
+    top: -11.5rem;
+    right: 5rem;
 }
 
 .show-hide-ui {
