@@ -70,7 +70,7 @@ export default {
                 this.joinedRoom(message.type, message.response === 'success');
             }
             else if (message.type === 'updateState') {
-                this.updateState(message.response);
+                this.updateState(message.data);
             }
             else {
                 console.log(message);
