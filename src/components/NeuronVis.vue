@@ -17,6 +17,7 @@ import { NeuronView } from './neuronView'
 import uniqueColors from './uniqueColors'
 import areaCentroids from './areaCentroids'
 import imposterSpheres from './imposterSpheres'
+import { CreateTubeCollection } from './tubeCollection'
 import timeline from './timeline'
 
 
@@ -367,6 +368,13 @@ export default {
             tube3.position.x = -10.0;
             tube3.position.z = 7.5;
             */
+            let paths = [
+                [neuron_positions[this.area_centroids[5]], neuron_positions[this.area_centroids[9]]],
+                [neuron_positions[this.area_centroids[15]], neuron_positions[this.area_centroids[47]]],
+                [neuron_positions[this.area_centroids[14]], neuron_positions[this.area_centroids[31]]]
+            ];
+
+            CreateTubeCollection('connections', {paths: paths, tessellation: 12, sideOrientation: Mesh.DOUBLESIDE}, this.scene);
         })
         .catch((err) => {
             console.log(err);
