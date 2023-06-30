@@ -147,7 +147,6 @@ export default {
             this.state[view].neuron_property = value;
             this.syncState(view, this.state[view]);
 
-            console.log(this.state);
             this.views[view].setNeuronProperty(value, new Vector2(0.0, 1.1)); // TODO: update range!
         },
 
