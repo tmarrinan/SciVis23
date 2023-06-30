@@ -20,7 +20,7 @@ export function CreateTubeCollection(name, options, scene) {
         const pi2 = Math.PI * 2;
         const step = (pi2 / tessellation);
 
-        let circle_path, rad, normal, rotated;
+        let circle_path, rad, normal, rotated, rotated_normal;
         const rotation_matrix = TmpVectors.Matrix[0];
         for (let i = 0; i < path.length; i++) {
             rad = radiusFunction(i, distances[i]); // current radius
@@ -31,7 +31,9 @@ export function CreateTubeCollection(name, options, scene) {
                 rotated = circle_path[t] ? circle_path[t] : Vector3.Zero();
                 Vector3.TransformCoordinatesToRef(normal, rotation_matrix, rotated);
                 rotated.scaleInPlace(rad).addInPlace(path[i]);
-                circle_path.push(rotated);
+                rotated_normal = rotated.subtract(path[i]);
+                rotated_normal.normalize();
+                circle_path.push({vertex: rotated, normal: rotated_normal});
             }
             circle_paths.push(circle_path);
         }
