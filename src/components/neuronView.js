@@ -15,11 +15,11 @@ class NeuronView {
         this.neuron_ptcloud = data.neuron_ptcloud;
         this.area_values = null;
         this.area_range = new Vector2(0.0, 1.0);
+        this.neuron_property = 'area';
         this.neuron_scalar_tex = null;
         this.neuron_scalar_range = new Vector2(0.0, 1.0);
+        this.colormap = null;
         this.colormaps = data.colormaps;
-        this.selected_property = 'area';
-        this.selected_colormap = null;
         this.simulation_data = null;
         this.property_colormaps = {
             calcium: 'low_high2',
@@ -70,13 +70,13 @@ class NeuronView {
     }
 
     setNeuronProperty(value, value_range) {
-        this.selected_property = value;
-        if (this.selected_property === 'area') {
+        this.neuron_property = value;
+        if (this.neuron_property === 'area') {
             this.setNeuronTexture(this.area_values, this.area_range, this.colormaps.area);
         }
         else {
-            let colormap = this.colormaps[this.property_colormaps[this.selected_property]];
-            this.setNeuronTexture(this.simulation_data[this.selected_property], value_range, colormap);
+            let colormap = this.colormaps[this.property_colormaps[this.neuron_property]];
+            this.setNeuronTexture(this.simulation_data[this.neuron_property], value_range, colormap);
         }
     }
 
@@ -101,7 +101,9 @@ class NeuronView {
 
     updateSimulationData(sim_data) {
         this.simulation_data = sim_data;
-        this.setNeuronProperty(this.selected_property, this.neuron_scalar_range);
+        if (this.neuron_property !== 'area') {
+            this.setNeuronTexture(this.simulation_data[this.neuron_property], this.neuron_scalar_range, this.colormap);
+        }
     }
 
     beforeRender() {
