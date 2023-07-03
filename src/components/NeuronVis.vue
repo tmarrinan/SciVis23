@@ -11,7 +11,7 @@ import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
-import { StandardMaterial} from '@babylonjs/core/Materials/standardMaterial'
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 
 import UserInterface from './UserInterface.vue'
@@ -389,17 +389,25 @@ export default {
             tube3.position.x = -10.0;
             tube3.position.z = 7.5;
             */
-            let paths = [
-                this.createBezierPath(neuron_positions[this.area_centroids[5]], neuron_positions[this.area_centroids[9]], 2),
-                this.createBezierPath(neuron_positions[this.area_centroids[15]], neuron_positions[this.area_centroids[47]], 2),
-                this.createBezierPath(neuron_positions[this.area_centroids[14]], neuron_positions[this.area_centroids[31]], 2)
-            ];
 
-            let conn = CreateTubeCollection('connections', {paths: paths, tessellation: 12}, this.scene);
-            conn.material = new StandardMaterial('connection_mat', this.scene);
-            conn.material.backFaceCulling = false;
-            //conn.material.diffuseColor = new Color3(0.8, 0.8, 0.8);
-            conn.material.diffuseTexture = new Texture('/images/divergent_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
+            let tube_options = {
+                paths: [
+                    this.createBezierPath(neuron_positions[this.area_centroids[5]], neuron_positions[this.area_centroids[9]], 16),
+                    this.createBezierPath(neuron_positions[this.area_centroids[15]], neuron_positions[this.area_centroids[47]], 16),
+                    this.createBezierPath(neuron_positions[this.area_centroids[14]], neuron_positions[this.area_centroids[31]], 16)
+                ],
+                colors: {
+                    color_list: [
+                        new Color3(0.0, 0.0, 1.0),
+                        new Color3(1.0, 1.0, 1.0),
+                        new Color3(1.0, 0.0, 0.0)
+                    ],
+                    path_colors: [0, 0, 2]
+                },
+                radius: [1.0, 0.5, 2.0],
+                tessellation: 12
+            };
+            let conn = CreateTubeCollection('connections', tube_options, this.scene);
             conn.scaling = new Vector3(0.1, 0.1, 0.1);
             conn.rotation.x = -Math.PI / 2.0;
             conn.position.x = -10.0;

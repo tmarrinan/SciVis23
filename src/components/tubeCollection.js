@@ -1,8 +1,12 @@
+import { Engine } from '@babylonjs/core/Engines/engine';
 import { Vector3, TmpVectors, Matrix } from '@babylonjs/core/Maths/math.vector.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { VertexBuffer } from '@babylonjs/core/Meshes/buffer';
 import { Path3D } from '@babylonjs/core/Maths/math.path.js';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
+import { RawTexture } from '@babylonjs/core/Materials/Textures/rawTexture';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 
 export function CreateTubeCollection(name, options, scene) {
     const path_array = options.paths;
@@ -68,6 +72,9 @@ export function CreateTubeCollection(name, options, scene) {
     let t_offset = 0;
     tube_circles_array.forEach((tube, t_idx) => {
         let texcoord = (t_idx + 0.5) / tube_circles_array.length;
+        if (options.hasOwnProperty('colors') && options.colors.hasOwnProperty('color_list') && options.colors.hasOwnProperty('path_colors')) {
+            texcoord = (options.colors.path_colors[t_idx] + 0.5) / options.colors.color_list.length;
+        }
         tube.forEach((circle, c_idx) => {
             let c_offset = c_idx * tessellation;
             circle.forEach((point, p_idx) => {
@@ -92,6 +99,21 @@ export function CreateTubeCollection(name, options, scene) {
     vertex_data.uvs = vertex_texcoords;
     vertex_data.indices = triangle_indices;
     vertex_data.applyToMesh(tube_collection, true);
+
+    if (options.hasOwnProperty('colors') && options.colors.hasOwnProperty('color_list') && options.colors.hasOwnProperty('path_colors')) {
+        let path_color_px = new Uint8Array(options.colors.color_list.length * 4);
+        options.colors.color_list.forEach((color, index) => {
+            path_color_px[4 * index + 0] = 255 * color.r;
+            path_color_px[4 * index + 1] = 255 * color.g;
+            path_color_px[4 * index + 2] = 255 * color.b;
+            path_color_px[4 * index + 3] = 255;
+        });
+        let path_color_tex = new RawTexture(path_color_px, options.colors.color_list.length, 1, Engine.TEXTUREFORMAT_RGBA, scene,
+                                            false, false, Texture.NEAREST_NEAREST);
+        tube_collection.material = new StandardMaterial(name + '_mat', scene);
+        tube_collection.material.backFaceCulling = false;
+        tube_collection.material.diffuseTexture = path_color_tex;
+    }
 
     return tube_collection;
 }
