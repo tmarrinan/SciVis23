@@ -1,6 +1,7 @@
-import { Vector2, Vector3, TmpVectors, Matrix } from '@babylonjs/core/Maths/math.vector.js';
+import { Vector3, TmpVectors, Matrix } from '@babylonjs/core/Maths/math.vector.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
+import { VertexBuffer } from '@babylonjs/core/Meshes/buffer';
 import { Path3D } from '@babylonjs/core/Maths/math.path.js';
 
 export function CreateTubeCollection(name, options, scene) {
@@ -57,10 +58,9 @@ export function CreateTubeCollection(name, options, scene) {
         let tube_circles = tubePathArray(path, path_3d, tessellation, radius_function);
         tube_circles_array.push(tube_circles);
     });
-
-    console.log(tube_circles_array);
     
     let tube_collection = new Mesh(name, scene);
+    tube_collection.markVerticesDataAsUpdatable(VertexBuffer.UVKind, true);
     let vertex_positions = [];
     let vertex_normals = [];
     let vertex_texcoords = [];
@@ -91,7 +91,7 @@ export function CreateTubeCollection(name, options, scene) {
     vertex_data.normals = vertex_normals;
     vertex_data.uvs = vertex_texcoords;
     vertex_data.indices = triangle_indices;
-    vertex_data.applyToMesh(tube_collection);
+    vertex_data.applyToMesh(tube_collection, true);
 
     return tube_collection;
 }

@@ -3,6 +3,7 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { VertexBuffer } from '@babylonjs/core/Meshes/buffer';
 import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSystem';
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { CreateTube } from '@babylonjs/core/Meshes/Builders/tubeBuilder';
@@ -389,9 +390,9 @@ export default {
             tube3.position.z = 7.5;
             */
             let paths = [
-                this.createBezierPath(neuron_positions[this.area_centroids[5]], neuron_positions[this.area_centroids[9]], 16),
-                this.createBezierPath(neuron_positions[this.area_centroids[15]], neuron_positions[this.area_centroids[47]], 16),
-                this.createBezierPath(neuron_positions[this.area_centroids[14]], neuron_positions[this.area_centroids[31]], 16)
+                this.createBezierPath(neuron_positions[this.area_centroids[5]], neuron_positions[this.area_centroids[9]], 2),
+                this.createBezierPath(neuron_positions[this.area_centroids[15]], neuron_positions[this.area_centroids[47]], 2),
+                this.createBezierPath(neuron_positions[this.area_centroids[14]], neuron_positions[this.area_centroids[31]], 2)
             ];
 
             let conn = CreateTubeCollection('connections', {paths: paths, tessellation: 12}, this.scene);
@@ -403,6 +404,18 @@ export default {
             conn.rotation.x = -Math.PI / 2.0;
             conn.position.x = -10.0;
             conn.position.z = 7.5;
+
+            // TEST
+            // setTimeout(() => {
+            //     console.log(conn.getVerticesData(VertexBuffer.UVKind));
+            //     let uvs = [0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5,
+            //                1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5,
+            //                0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5,
+            //                1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5,
+            //                0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5,
+            //                1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5]
+            //     conn.updateVerticesData(VertexBuffer.UVKind, uvs);
+            // }, 3000);
         })
         .catch((err) => {
             console.log(err);
