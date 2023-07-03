@@ -2,6 +2,7 @@
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSystem';
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { CreateTube } from '@babylonjs/core/Meshes/Builders/tubeBuilder';
@@ -9,6 +10,7 @@ import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import { StandardMaterial} from '@babylonjs/core/Materials/standardMaterial'
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 
 import UserInterface from './UserInterface.vue'
@@ -168,6 +170,24 @@ export default {
             }
             let tube = CreateTube('tube', {path: path, radius: 1.0, tessellation: 12, sideOrientation: Mesh.DOUBLESIDE}, scene);
             return tube;
+        },
+
+        createBezierPath(start_pt, end_pt, num_divisions) {
+            let ctrl_point1 = start_pt.add(this.brain_center.subtract(start_pt).scale(0.67));
+            let ctrl_point2 = end_pt.add(this.brain_center.subtract(end_pt).scale(0.67));
+            let path = [];
+            for (let i = 0; i < num_divisions; i++) {
+                let t = (i / (num_divisions - 1));
+                let one_minus_t = 1.0 - t;
+                let x = (one_minus_t * one_minus_t * one_minus_t * start_pt.x) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.x) +
+                        (3 * one_minus_t * t * t * ctrl_point2.x) + (t * t * t * end_pt.x);
+                let y = (one_minus_t * one_minus_t * one_minus_t * start_pt.y) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.y) +
+                        (3 * one_minus_t * t * t * ctrl_point2.y) + (t * t * t * end_pt.y);
+                let z = (one_minus_t * one_minus_t * one_minus_t * start_pt.z) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.z) +
+                        (3 * one_minus_t * t * t * ctrl_point2.z) + (t * t * t * end_pt.z);
+                path.push(new Vector3(x, y, z));
+            }
+            return path;
         },
 
         /**
@@ -369,12 +389,20 @@ export default {
             tube3.position.z = 7.5;
             */
             let paths = [
-                [neuron_positions[this.area_centroids[5]], neuron_positions[this.area_centroids[9]]],
-                [neuron_positions[this.area_centroids[15]], neuron_positions[this.area_centroids[47]]],
-                [neuron_positions[this.area_centroids[14]], neuron_positions[this.area_centroids[31]]]
+                this.createBezierPath(neuron_positions[this.area_centroids[5]], neuron_positions[this.area_centroids[9]], 16),
+                this.createBezierPath(neuron_positions[this.area_centroids[15]], neuron_positions[this.area_centroids[47]], 16),
+                this.createBezierPath(neuron_positions[this.area_centroids[14]], neuron_positions[this.area_centroids[31]], 16)
             ];
 
-            CreateTubeCollection('connections', {paths: paths, tessellation: 12, sideOrientation: Mesh.DOUBLESIDE}, this.scene);
+            let conn = CreateTubeCollection('connections', {paths: paths, tessellation: 12}, this.scene);
+            conn.material = new StandardMaterial('connection_mat', this.scene);
+            conn.material.backFaceCulling = false;
+            //conn.material.diffuseColor = new Color3(0.8, 0.8, 0.8);
+            conn.material.diffuseTexture = new Texture('/images/divergent_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
+            conn.scaling = new Vector3(0.1, 0.1, 0.1);
+            conn.rotation.x = -Math.PI / 2.0;
+            conn.position.x = -10.0;
+            conn.position.z = 7.5;
         })
         .catch((err) => {
             console.log(err);

@@ -1,5 +1,6 @@
-import { Vector3, TmpVectors, Matrix } from '@babylonjs/core/Maths/math.vector.js';
+import { Vector2, Vector3, TmpVectors, Matrix } from '@babylonjs/core/Maths/math.vector.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { Path3D } from '@babylonjs/core/Maths/math.path.js';
 
 export function CreateTubeCollection(name, options, scene) {
@@ -9,8 +10,6 @@ export function CreateTubeCollection(name, options, scene) {
         radius_array = options.radius;
     }
     const tessellation = options.tessellation || 64 | 0;
-    const updatable = options.updatable;
-    const side_orientation = Mesh._GetDefaultSideOrientation(options.sideOrientation);
 
     const tubePathArray = (path, path3D, tessellation, radiusFunction) => {
         let circle_paths = [];
@@ -44,7 +43,7 @@ export function CreateTubeCollection(name, options, scene) {
     let tube_circles_array = [];
     path_array.forEach((path, index) => {
         let radius = Array.isArray(radius_array) ? radius_array[index] : null;
-        let path3D = new Path3D(path);
+        let path_3d = new Path3D(path);
         let radius_function;
         if (typeof radius === 'number') {
             radius_function = () => {return radius};
@@ -55,9 +54,44 @@ export function CreateTubeCollection(name, options, scene) {
         else {
             radius_function = () => {return 1.0};
         }
-        let tube_circles = tubePathArray(path, path3D, tessellation, radius_function);
+        let tube_circles = tubePathArray(path, path_3d, tessellation, radius_function);
         tube_circles_array.push(tube_circles);
     });
 
     console.log(tube_circles_array);
+    
+    let tube_collection = new Mesh(name, scene);
+    let vertex_positions = [];
+    let vertex_normals = [];
+    let vertex_texcoords = [];
+    let triangle_indices = [];
+    let t_offset = 0;
+    tube_circles_array.forEach((tube, t_idx) => {
+        let texcoord = (t_idx + 0.5) / tube_circles_array.length;
+        tube.forEach((circle, c_idx) => {
+            let c_offset = c_idx * tessellation;
+            circle.forEach((point, p_idx) => {
+                vertex_positions.push(point.vertex.x, point.vertex.y, point.vertex.z);
+                vertex_normals.push(point.normal.x, point.normal.y, point.normal.z);
+                vertex_texcoords.push(texcoord, 0.5);
+                if (c_idx < (tube.length - 1)) {
+                    let p0 = t_offset + c_offset + p_idx;
+                    let p1 = t_offset + c_offset + ((p_idx + 1) % tessellation);
+                    let p2 = p1 + tessellation;
+                    let p3 = p0 + tessellation;
+                    triangle_indices.push(p0, p1, p3);
+                    triangle_indices.push(p1, p2, p3);
+                }
+            });
+        });
+        t_offset += tube.length * tessellation;
+    });
+    let vertex_data = new VertexData();
+    vertex_data.positions = vertex_positions;
+    vertex_data.normals = vertex_normals;
+    vertex_data.uvs = vertex_texcoords;
+    vertex_data.indices = triangle_indices;
+    vertex_data.applyToMesh(tube_collection);
+
+    return tube_collection;
 }
