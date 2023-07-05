@@ -27,8 +27,8 @@ export default {
                 area: {name: 'Area', min: 0, max: 47},
                 current_calcium: {name: 'Calcium', min: 0.0, max: 1.1},
                 target_calcium: {name: 'Calcium to Target', min: -0.7, max: 0.7},
-                fired: {name: 'Fired', min: 'False', max: 'True'},
-                fired_fraction: {name: 'Fired Rate', min: '0%', max: '10%'},
+                fired: {name: 'Fired', min: 0, max: 1},
+                fired_fraction: {name: 'Fired Rate', min: 0.0, max: 0.8},
                 grown_axons: {name: 'Axons', min: 0, max: 50},
                 grown_dendrites: {name: 'Dendrites', min: 0, max: 50},
                 connected_axons: {name: 'Incoming Connections', min: 0, max: 50},
@@ -70,6 +70,37 @@ export default {
             let cols = this.num_views / rows;
             let y = ~~(this.idx / cols);
             return ((y) * (100 / rows)) + '%';
+        },
+
+        colormapLegendMin() {
+            let cmap_min = this.neuron_properties[this.selected_neuron_prop].min;
+            if (!this.global_scalar_range) {
+                cmap_min = this.neuron_local_ranges[this.selected_neuron_prop].min;
+            }
+            return this.formatPropertyRangeValue(cmap_min);
+        },
+
+        colormapLegendMax() {
+            let cmap_max = this.neuron_properties[this.selected_neuron_prop].max;
+            if (!this.global_scalar_range) {
+                cmap_max = this.neuron_local_ranges[this.selected_neuron_prop].max;
+            }
+            return this.formatPropertyRangeValue(cmap_max);
+        },
+
+        formatPropertyRangeValue(value) {
+            if (['current_calcium', 'target_calcium'].includes(this.selected_neuron_prop)) {
+                return value.toFixed(3);
+            }
+            else if (this.selected_neuron_prop === 'fired') {
+                return value === 0 ? 'False' : 'True';
+            }
+            else if (this.selected_neuron_prop === 'fired_fraction') {
+                return value.toFixed(1) + '%';
+            }
+            else {
+                return parseInt(value);
+            }
         },
 
         toggleShowUi(event) {
@@ -141,8 +172,8 @@ export default {
             <label>{{ neuron_properties[selected_neuron_prop].name }}</label><br/>
             <img :src="colormap_image" alt="colormap" />
             <div style="width: 100%; text-align: right;">
-                <label class="neuron-legend-min">{{ global_scalar_range ? neuron_properties[selected_neuron_prop].min : neuron_local_ranges[selected_neuron_prop].min }}</label><br/>
-                <label class="neuron-legend-max">{{ global_scalar_range ? neuron_properties[selected_neuron_prop].max : neuron_local_ranges[selected_neuron_prop].max }}</label>
+                <label class="neuron-legend-min">{{ colormapLegendMin() }}</label><br/>
+                <label class="neuron-legend-max">{{ colormapLegendMax() }}</label>
             </div>
         </div>
         <div class="widgets">

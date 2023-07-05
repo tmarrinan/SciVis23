@@ -88,8 +88,6 @@ class NeuronView {
             this.setNeuronTexture(this.area_values, this.colormaps.area);
         }
         else {
-            console.log(this.neuron_property);
-            console.log(this.simulation_data[this.neuron_property]);
             let colormap = this.colormaps[this.property_colormaps[this.neuron_property]];
             this.setNeuronTexture(this.simulation_data[this.neuron_property], colormap);
         }

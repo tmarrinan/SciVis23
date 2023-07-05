@@ -222,29 +222,32 @@ export default {
             // console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
 
             let sim_data = {};
-            let sim_data_ranges = {};
             let desired_columns = ['current_calcium', 'target_calcium', 'fired', 'fired_fraction', 'grown_axons',
                                    'grown_dendrites', 'connected_axons', 'connected_dendrites'];
             for (let i = 0; i < table.schema.fields.length; i++) {
                 if (desired_columns.includes(table.schema.fields[i].name)) {
-                    let data_array = table.data[0].children[i].values;
-                    let d_min = data_array[0];
-                    let d_max = data_array[0];
-                    for (let j = 1; j < data_array.length; j++) {
-                        let val = data_array[j];
+                    sim_data[table.schema.fields[i].name] = table.data[0].children[i].values;
+                }
+            }
+            let sim_data_ranges = {};
+            for (let key in sim_data) {
+                if (sim_data.hasOwnProperty(key)) {
+                    if (key === 'target_calcium') {
+                        sim_data[key] = sim_data[key].map((value, index) => sim_data['current_calcium'][index] - value);
+                    }
+                    let d_min = sim_data[key][0];
+                    let d_max = sim_data[key][0];
+                    for (let i = 1; i < sim_data[key].length; i++) {
+                        let val = sim_data[key][i];
                         d_min = val < d_min ? val : d_min;
                         d_max = val > d_max ? val : d_max;
                     }
-                    sim_data[table.schema.fields[i].name] = data_array;
-                    sim_data_ranges[table.schema.fields[i].name] = {min: d_min, max: d_max};
+                    sim_data_ranges[key] = {min: d_min, max: d_max};
                 }
-            }
-            if (view === 0) {
-                console.log(sim_data);
-            }
+            };
 
             this.views[view].updateSimulationData(sim_data, sim_data_ranges);
-            this.$refs['ui_' + view][0].setLocalRanges(sim_data_ranges);
+            this.$refs['ui_' + view][0].setLocalRanges(sim_data_ranges); // why $ref array at index [0]?
         },
 
         setRoomId(id) {
