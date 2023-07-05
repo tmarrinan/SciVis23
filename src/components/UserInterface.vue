@@ -23,14 +23,14 @@ export default {
             selected_neuron_prop: 'area',
             neuron_properties: {
                 area: {name: 'Area', min: 0, max: 48},
-                calcium: {name: 'Calcium', min: 0.0, max: 1.1},
+                current_calcium: {name: 'Calcium', min: 0.0, max: 1.1},
                 calcium_target: {name: 'Calcium to Target', min: -0.7, max: 0.7},
                 fired: {name: 'Fired', min: 'False', max: 'True'},
                 fired_fraction: {name: 'Fired Rate', min: 0.0, max: 1.0},
                 grown_axons: {name: 'Axons', min: 0, max: 50},
-                grown_excitatory_dendrites: {name: 'Dendrites', min: 0, max: 50},
+                grown_dendrites: {name: 'Dendrites', min: 0, max: 50},
                 connected_axons: {name: 'Incoming Connections', min: 0, max: 50},
-                connected_excitatory_dendrites: {name: 'Outgoing Connections', min: 0, max: 50}
+                connected_dendrites: {name: 'Outgoing Connections', min: 0, max: 50}
             }
         }
     },
@@ -43,8 +43,8 @@ export default {
             if (this.selected_neuron_prop === 'area') {
                 return '/images/areas_cmap.png';
             }
-            else if (['calcium', 'fired_fraction', 'grown_axons', 'grown_excitatory_dendrites',
-                      'connected_axons', 'connected_excitatory_dendrites'].includes(this.selected_neuron_prop)) {
+            else if (['current_calcium', 'fired_fraction', 'grown_axons', 'grown_dendrites',
+                      'connected_axons', 'connected_dendrites'].includes(this.selected_neuron_prop)) {
                 return '/images/lowhigh2_cmap.png';
             }
             else {

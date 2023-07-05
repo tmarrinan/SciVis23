@@ -22,14 +22,14 @@ class NeuronView {
         this.colormaps = data.colormaps;
         this.simulation_data = null;
         this.property_colormaps = {
-            calcium: 'low_high2',
+            current_calcium: 'low_high2',
             calcium_target: 'divergent',
             fired: 'divergent',
             fired_fraction: 'low_high2',
             grown_axons: 'low_high2',
-            grown_excitatory_dendrites: 'low_high2',
+            grown_dendrites: 'low_high2',
             connected_axons: 'low_high2',
-            connected_excitatory_dendrites: 'low_high2'
+            connected_dendrites: 'low_high2'
         }
 
         this.addCamera();

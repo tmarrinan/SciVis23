@@ -1,5 +1,6 @@
 <script>
 import { Engine } from '@babylonjs/core/Engines/engine';
+//import { Contants } from '@babylonjs/core/Engines/constants';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
@@ -151,7 +152,7 @@ export default {
             this.state[view].neuron_property = value;
             this.syncState(view, this.state[view]);
 
-            this.views[view].setNeuronProperty(value, new Vector2(0.0, 1.1)); // TODO: update range!
+            this.views[view].setNeuronProperty(value, new Vector2(0.0, 0.8)); // TODO: update range!
         },
 
         createBezierTube(start_pt, end_pt, num_divisions, scene) {
@@ -191,6 +192,13 @@ export default {
             return path;
         },
 
+        LoadColormapTexture(filename, sample_mode) {
+            let cmap = new Texture(filename, this.scene, true, false, sample_mode);
+            cmap.wrapU = Texture.CLAMP_ADDRESSMODE;
+            cmap.wrapV = Texture.CLAMP_ADDRESSMODE;
+            return cmap;
+        },
+
         /**
           * Takes a Table as an argumenent
           * https://arrow.apache.org/docs/js/classes/Arrow_dom.Table.html
@@ -205,14 +213,15 @@ export default {
             // console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
 
             let sim_data = {};
-            //let desired_columns = ['calcium','fired', 'fired_fraction', 'grown_axons', 'grown_excitatory_dendrites',
-            //                       'connected_axons', 'connected_excitatory_dendrites'];
-            let desired_columns = ['calcium','fired', 'fired_fraction'];
+            let desired_columns = ['current_calcium', 'target_calcium', 'fired', 'fired_fraction', 'grown_axons',
+                                   'grown_dendrites', 'connected_axons', 'connected_dendrites'];
             for (let i = 0; i < table.schema.fields.length; i++) {
                 if (desired_columns.includes(table.schema.fields[i].name)) {
-                    //sim_data[table.schema.fields[i].name] = table.data[0].children[i].values;
-                    sim_data[table.schema.fields[i].name] = Float32Array.from(table.data[0].children[i].values);
+                    sim_data[table.schema.fields[i].name] = table.data[0].children[i].values;
                 }
+            }
+            if (view === 0) {
+                console.log(sim_data);
             }
 
             this.views[view].updateSimulationData(sim_data);
@@ -299,10 +308,10 @@ export default {
                 material: ptcloud_mat
             },
             colormaps: {
-                area: new Texture('/images/areas_cmap.png', this.scene, true, false, Texture.NEAREST_SAMPLINGMODE),
-                low_high: new Texture('/images/lowhigh_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE),
-                low_high2: new Texture('/images/lowhigh2_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE),
-                divergent: new Texture('/images/divergent_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE)
+                area: this.LoadColormapTexture('/images/areas_cmap.png', Texture.NEAREST_SAMPLINGMODE),
+                low_high: this.LoadColormapTexture('/images/lowhigh_cmap.png', Texture.BILINEAR_SAMPLINGMODE),
+                low_high2: this.LoadColormapTexture('/images/lowhigh2_cmap.png', Texture.BILINEAR_SAMPLINGMODE),
+                divergent: this.LoadColormapTexture('/images/divergent_cmap.png', Texture.BILINEAR_SAMPLINGMODE)
             }
         }
         for (let i = 0; i < 8; i++) {
