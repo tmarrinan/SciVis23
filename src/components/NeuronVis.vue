@@ -1,6 +1,5 @@
 <script>
 import { Engine } from '@babylonjs/core/Engines/engine';
-//import { Contants } from '@babylonjs/core/Engines/constants';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
@@ -223,18 +222,29 @@ export default {
             // console.log(`Example use: Now let's get the calcium value for neuron 50: ${table.get(50).calcium}`);
 
             let sim_data = {};
+            let sim_data_ranges = {};
             let desired_columns = ['current_calcium', 'target_calcium', 'fired', 'fired_fraction', 'grown_axons',
                                    'grown_dendrites', 'connected_axons', 'connected_dendrites'];
             for (let i = 0; i < table.schema.fields.length; i++) {
                 if (desired_columns.includes(table.schema.fields[i].name)) {
-                    sim_data[table.schema.fields[i].name] = table.data[0].children[i].values;
+                    let data_array = table.data[0].children[i].values;
+                    let d_min = data_array[0];
+                    let d_max = data_array[0];
+                    for (let j = 1; j < data_array.length; j++) {
+                        let val = data_array[j];
+                        d_min = val < d_min ? val : d_min;
+                        d_max = val > d_max ? val : d_max;
+                    }
+                    sim_data[table.schema.fields[i].name] = data_array;
+                    sim_data_ranges[table.schema.fields[i].name] = {min: d_min, max: d_max};
                 }
             }
             if (view === 0) {
                 console.log(sim_data);
             }
 
-            this.views[view].updateSimulationData(sim_data);
+            this.views[view].updateSimulationData(sim_data, sim_data_ranges);
+            this.$refs['ui_' + view][0].setLocalRanges(sim_data_ranges);
         },
 
         setRoomId(id) {
@@ -478,7 +488,7 @@ export default {
         <canvas id="render-canvas" touch-action="none" tabindex="-1"></canvas>
         <div v-for="col in (view_columns - 1)" class="vertical-bar" :style="'left: ' + (100 * col / view_columns) + '%;'"></div>
         <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>
-        <UserInterface v-for="i in 8" v-show="i <= num_views" :idx="i - 1" :num_views="num_views" @update-near-clip="updateNearClip"
+        <UserInterface v-for="i in 8" v-show="i <= num_views" :ref="'ui_' + (i - 1)" :idx="i - 1" :num_views="num_views" @update-near-clip="updateNearClip"
             @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"
             @update-neuron-property="updateNeuronProperty" @use-global-scalar-range="useGlobalScalarRange"/>
     </div>

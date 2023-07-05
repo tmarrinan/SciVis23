@@ -14,17 +14,30 @@ class NeuronView {
         this.camera = null;
         this.neuron_ptcloud = data.neuron_ptcloud;
         this.area_values = null;
-        this.area_range = new Vector2(0.0, 1.0);
         this.neuron_property = 'area';
         this.neuron_scalar_tex = null;
         this.neuron_scalar_range = new Vector2(0.0, 1.0);
         this.use_global_scalar_range = true;
+        this.global_scalar_range = null;
+        this.local_scalar_range = null;
+        this.global_scalar_ranges = {
+            area: {min: 0, max: 47},
+            current_calcium: {min: 0.0, max: 1.1},
+            target_calcium: {min: -0.7, max: 0.7},
+            fired: {min: 0.0, max: 1.0},
+            fired_fraction: {min: 0.0, max: 0.1},
+            grown_axons: {min: 0, max: 50},
+            grown_dendrites: {min: 0, max: 50},
+            connected_axons: {min: 0, max: 50},
+            connected_dendrites: {min: 0, max: 50}
+        };
         this.colormap = null;
         this.colormaps = data.colormaps;
         this.simulation_data = null;
+        this.data_ranges = null;
         this.property_colormaps = {
             current_calcium: 'low_high2',
-            calcium_target: 'divergent',
+            target_calcium: 'divergent',
             fired: 'divergent',
             fired_fraction: 'low_high2',
             grown_axons: 'low_high2',
@@ -66,45 +79,39 @@ class NeuronView {
 
     setNeuronAreas(areas, area_range) {
         this.area_values = areas;
-        this.area_range = area_range;
-        this.setNeuronTexture(this.area_values, this.area_range, this.colormaps.area);
+        this.setNeuronTexture(this.area_values, this.colormaps.area);
     }
 
-    setNeuronProperty(value, value_range) {
+    setNeuronProperty(value) {
         this.neuron_property = value;
         if (this.neuron_property === 'area') {
-            this.setNeuronTexture(this.area_values, this.area_range, this.colormaps.area);
+            this.setNeuronTexture(this.area_values, this.colormaps.area);
         }
         else {
+            console.log(this.neuron_property);
+            console.log(this.simulation_data[this.neuron_property]);
             let colormap = this.colormaps[this.property_colormaps[this.neuron_property]];
-            this.setNeuronTexture(this.simulation_data[this.neuron_property], value_range, colormap);
+            this.setNeuronTexture(this.simulation_data[this.neuron_property], colormap);
         }
     }
 
     setScalarRangeToGlobal() {
         this.use_global_scalar_range = true;
-        this.neuron_scalar_range = this.global_scalar_range;
+        let range = this.global_scalar_ranges[this.neuron_property];
+        this.neuron_scalar_range = new Vector2(range.min, range.max);
     }
 
     setScalarRangeToLocal() {
         this.use_global_scalar_range = false;
-        this.neuron_scalar_range = this.local_scalar_range;
+        let range = this.data_ranges[this.neuron_property];
+        this.neuron_scalar_range = new Vector2(range.min, range.max);
     }
 
-    setNeuronTexture(scalar_values, scalar_range, colormap) {
-        let local_min = scalar_values[0];
-        let local_max = scalar_values[0];
-        for (let i = 1; i < scalar_values.length; i++) {
-            let val = scalar_values[i]
-            local_min = val < local_min ? val : local_min;
-            local_max = val > local_max ? val : local_max;
-        }
-
-        this.local_scalar_range = new Vector2(local_min, local_max);
-        this.global_scalar_range = scalar_range;
+    setNeuronTexture(scalar_values, colormap) {
+        let range = this.use_global_scalar_range ? this.global_scalar_ranges[this.neuron_property] : this.data_ranges[this.neuron_property];
 
         this.neuron_scalar_tex.update(scalar_values);
-        this.neuron_scalar_range = this.use_global_scalar_range ? this.global_scalar_range : this.local_scalar_range;
+        this.neuron_scalar_range = new Vector2(range.min, range.max);
         this.colormap = colormap;
     }
 
@@ -121,10 +128,12 @@ class NeuronView {
         this.camera.viewport = new Viewport(x, y, w, h);
     }
 
-    updateSimulationData(sim_data) {
+    updateSimulationData(sim_data, data_ranges) {
         this.simulation_data = sim_data;
+        this.data_ranges = data_ranges;
+        this.data_ranges.area = this.global_scalar_ranges.area;
         if (this.neuron_property !== 'area') {
-            this.setNeuronTexture(this.simulation_data[this.neuron_property], this.global_scalar_range, this.colormap);
+            this.setNeuronTexture(this.simulation_data[this.neuron_property], this.colormap);
         }
     }
 

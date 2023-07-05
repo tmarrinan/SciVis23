@@ -22,17 +22,19 @@ export default {
                 {name: 'viz-calcium', description: 'Per-Neuron Calcium Targets'}
             ],
             selected_neuron_prop: 'area',
+            // TODO: enable local min/max on colormap legend scale
             neuron_properties: {
-                area: {name: 'Area', min: 0, max: 48},
+                area: {name: 'Area', min: 0, max: 47},
                 current_calcium: {name: 'Calcium', min: 0.0, max: 1.1},
-                calcium_target: {name: 'Calcium to Target', min: -0.7, max: 0.7},
+                target_calcium: {name: 'Calcium to Target', min: -0.7, max: 0.7},
                 fired: {name: 'Fired', min: 'False', max: 'True'},
-                fired_fraction: {name: 'Fired Rate', min: 0.0, max: 1.0},
+                fired_fraction: {name: 'Fired Rate', min: '0%', max: '10%'},
                 grown_axons: {name: 'Axons', min: 0, max: 50},
                 grown_dendrites: {name: 'Dendrites', min: 0, max: 50},
                 connected_axons: {name: 'Incoming Connections', min: 0, max: 50},
                 connected_dendrites: {name: 'Outgoing Connections', min: 0, max: 50}
-            }
+            },
+            neuron_local_ranges: null
         }
     },
     computed: {
@@ -120,6 +122,10 @@ export default {
 
         updateScalarRangeType(event) {
             this.$emit('use-global-scalar-range', {idx: this.idx, data: this.global_scalar_range});
+        },
+
+        setLocalRanges(local_ranges) {
+            this.neuron_local_ranges = local_ranges;
         }
     },
     mounted() {
@@ -135,8 +141,8 @@ export default {
             <label>{{ neuron_properties[selected_neuron_prop].name }}</label><br/>
             <img :src="colormap_image" alt="colormap" />
             <div style="width: 100%; text-align: right;">
-                <label class="neuron-legend-min">{{ neuron_properties[selected_neuron_prop].min }}</label><br/>
-                <label class="neuron-legend-max">{{ neuron_properties[selected_neuron_prop].max }}</label>
+                <label class="neuron-legend-min">{{ global_scalar_range ? neuron_properties[selected_neuron_prop].min : neuron_local_ranges[selected_neuron_prop].min }}</label><br/>
+                <label class="neuron-legend-max">{{ global_scalar_range ? neuron_properties[selected_neuron_prop].max : neuron_local_ranges[selected_neuron_prop].max }}</label>
             </div>
         </div>
         <div class="widgets">
