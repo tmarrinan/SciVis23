@@ -152,7 +152,17 @@ export default {
             this.state[view].neuron_property = value;
             this.syncState(view, this.state[view]);
 
-            this.views[view].setNeuronProperty(value, new Vector2(0.0, 0.8)); // TODO: update range!
+            this.views[view].setNeuronProperty(value, new Vector2(0.0, 1.1)); // TODO: update range!
+        },
+
+        useGlobalScalarRange(event) {
+            let view = event.idx;
+            let value = event.data;
+
+            if (value === true)
+                this.views[view].setScalarRangeToGlobal();
+            else
+                this.views[view].setScalarRangeToLocal();
         },
 
         createBezierTube(start_pt, end_pt, num_divisions, scene) {
@@ -470,7 +480,7 @@ export default {
         <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>
         <UserInterface v-for="i in 8" v-show="i <= num_views" :idx="i - 1" :num_views="num_views" @update-near-clip="updateNearClip"
             @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"
-            @update-neuron-property="updateNeuronProperty"/>
+            @update-neuron-property="updateNeuronProperty" @use-global-scalar-range="useGlobalScalarRange"/>
     </div>
 </template>
 

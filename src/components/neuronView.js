@@ -18,6 +18,7 @@ class NeuronView {
         this.neuron_property = 'area';
         this.neuron_scalar_tex = null;
         this.neuron_scalar_range = new Vector2(0.0, 1.0);
+        this.use_global_scalar_range = true;
         this.colormap = null;
         this.colormaps = data.colormaps;
         this.simulation_data = null;
@@ -80,9 +81,30 @@ class NeuronView {
         }
     }
 
+    setScalarRangeToGlobal() {
+        this.use_global_scalar_range = true;
+        this.neuron_scalar_range = this.global_scalar_range;
+    }
+
+    setScalarRangeToLocal() {
+        this.use_global_scalar_range = false;
+        this.neuron_scalar_range = this.local_scalar_range;
+    }
+
     setNeuronTexture(scalar_values, scalar_range, colormap) {
+        let local_min = scalar_values[0];
+        let local_max = scalar_values[0];
+        for (let i = 1; i < scalar_values.length; i++) {
+            let val = scalar_values[i]
+            local_min = val < local_min ? val : local_min;
+            local_max = val > local_max ? val : local_max;
+        }
+
+        this.local_scalar_range = new Vector2(local_min, local_max);
+        this.global_scalar_range = scalar_range;
+
         this.neuron_scalar_tex.update(scalar_values);
-        this.neuron_scalar_range = scalar_range;
+        this.neuron_scalar_range = this.use_global_scalar_range ? this.global_scalar_range : this.local_scalar_range;
         this.colormap = colormap;
     }
 
@@ -102,7 +124,7 @@ class NeuronView {
     updateSimulationData(sim_data) {
         this.simulation_data = sim_data;
         if (this.neuron_property !== 'area') {
-            this.setNeuronTexture(this.simulation_data[this.neuron_property], this.neuron_scalar_range, this.colormap);
+            this.setNeuronTexture(this.simulation_data[this.neuron_property], this.global_scalar_range, this.colormap);
         }
     }
 

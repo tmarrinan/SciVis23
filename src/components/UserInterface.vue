@@ -14,6 +14,7 @@ export default {
             timestep_start: 0,
             timestep_end: 1000,
             selected_simulation: 'viz-no-network',
+            global_scalar_range: true,
             simulations: [
                 {name: 'viz-no-network', description: 'No Initial Connectivity'},
                 {name: 'viz-stimulus', description: 'Stimulation / Learning'},
@@ -52,7 +53,8 @@ export default {
             }
         }
     },
-    emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection', 'update-neuron-property'],
+    emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection', 'update-neuron-property',
+            'use-global-scalar-range'],
     methods: {
         getLocationRight() {
             let rows = (this.num_views > 2) ? 2 : 1;
@@ -114,6 +116,10 @@ export default {
 
         updateNeuronProperty(event) {
             this.$emit('update-neuron-property', {idx: this.idx, data: this.selected_neuron_prop});
+        },
+
+        updateScalarRangeType(event) {
+            this.$emit('use-global-scalar-range', {idx: this.idx, data: this.global_scalar_range});
         }
     },
     mounted() {
@@ -154,9 +160,12 @@ export default {
                 </select>
                 <br/>
                 <label>Neuron Property:</label><br/>
-                <select class="ui-element last" v-model="selected_neuron_prop" @change="updateNeuronProperty">
+                <select class="ui-element" v-model="selected_neuron_prop" @change="updateNeuronProperty">
                     <option v-for="(item, key) in neuron_properties" :value="key">{{ item.name }}</option>
                 </select>
+                <br/>
+                <label>Global Scalar Range:</label>
+                <input class="ui-checkbox last" type="checkbox" v-model="global_scalar_range" @change="updateScalarRangeType"/>
             </div>
             <div v-show="!show_ui">
                 <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="/images/left-arrow.png" alt="left arrow"/></button>
@@ -235,6 +244,10 @@ label, input, select, option {
 .ui-slider {
     width: 13rem;
     margin: 0 0.25rem 1rem 0.25rem;
+}
+
+.ui-checkbox {
+    margin: 0 0 1rem 0.75rem;
 }
 
 .ui-slider-btn {
