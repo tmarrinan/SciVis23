@@ -23,6 +23,7 @@ import imposterSpheres from './imposterSpheres'
 import { CreateTubeCollection } from './tubeCollection'
 import timeline from './timeline'
 
+const BASE_URL = import.meta.env.BASE_URL || '/';
 
 export default {
     props: {
@@ -331,10 +332,10 @@ export default {
                 material: ptcloud_mat
             },
             colormaps: {
-                area: this.LoadColormapTexture('/images/areas_cmap.png', Texture.NEAREST_SAMPLINGMODE),
-                low_high: this.LoadColormapTexture('/images/lowhigh_cmap.png', Texture.BILINEAR_SAMPLINGMODE),
-                low_high2: this.LoadColormapTexture('/images/lowhigh2_cmap.png', Texture.BILINEAR_SAMPLINGMODE),
-                divergent: this.LoadColormapTexture('/images/divergent_cmap.png', Texture.BILINEAR_SAMPLINGMODE)
+                area: this.LoadColormapTexture(BASE_URL + 'images/areas_cmap.png', Texture.NEAREST_SAMPLINGMODE),
+                low_high: this.LoadColormapTexture(BASE_URL + 'images/lowhigh_cmap.png', Texture.BILINEAR_SAMPLINGMODE),
+                low_high2: this.LoadColormapTexture(BASE_URL + 'images/lowhigh2_cmap.png', Texture.BILINEAR_SAMPLINGMODE),
+                divergent: this.LoadColormapTexture(BASE_URL + 'images/divergent_cmap.png', Texture.BILINEAR_SAMPLINGMODE)
             }
         }
         for (let i = 0; i < 8; i++) {
@@ -347,7 +348,7 @@ export default {
         }
         
         // Download brain position data and create point cloud
-        this.getCSV('/data/viz-no-network_positions.csv')
+        this.getCSV(BASE_URL + 'data/viz-no-network_positions.csv')
         .then((neurons) => {
             console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);

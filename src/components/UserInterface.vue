@@ -1,4 +1,6 @@
 <script>
+const BASE_URL = import.meta.env.BASE_URL || '/';
+
 export default {
     props: {
         idx: {type: Number},
@@ -44,14 +46,14 @@ export default {
 
         colormap_image() {
             if (this.selected_neuron_prop === 'area') {
-                return '/images/areas_cmap.png';
+                return BASE_URL + 'images/areas_cmap.png';
             }
             else if (['current_calcium', 'fired_fraction', 'grown_axons', 'grown_dendrites',
                       'connected_axons', 'connected_dendrites'].includes(this.selected_neuron_prop)) {
-                return '/images/lowhigh2_cmap.png';
+                return BASE_URL + 'images/lowhigh2_cmap.png';
             }
             else {
-                return '/images/divergent_cmap.png';
+                return BASE_URL + 'images/divergent_cmap.png';
             }
         }
     },
@@ -179,17 +181,17 @@ export default {
         <div class="widgets">
             <div v-show="show_ui">
                 <div style="width: 16rem; text-align: right; margin-bottom: 0.5rem;">
-                    <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="/images/down-arrow.png" alt="down arrow"/></button>
+                    <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="images/down-arrow.png" alt="down arrow"/></button>
                 </div>
                 <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
-                <button class="ui-slider-btn" type="button" @click="decrementNearClip"><img src="/images/left-arrow.png" alt="left arrow"/></button>
+                <button class="ui-slider-btn" type="button" @click="decrementNearClip"><img src="images/left-arrow.png" alt="left arrow"/></button>
                 <input class="ui-slider" type="range" :min="near_clip_start" :max="near_clip_end" v-model="near_clip_slider" @input="updateNearClip"/>
-                <button class="ui-slider-btn" type="button" @click="incrementNearClip"><img src="/images/right-arrow.png" alt="left arrow"/></button>
+                <button class="ui-slider-btn" type="button" @click="incrementNearClip"><img src="images/right-arrow.png" alt="left arrow"/></button>
                 <br/>
                 <label>Timestep: {{ timestep }}</label><br/>
-                <button class="ui-slider-btn" type="button" @click="decrementTimestep"><img src="/images/left-arrow.png" alt="left arrow"/></button>
+                <button class="ui-slider-btn" type="button" @click="decrementTimestep"><img src="images/left-arrow.png" alt="left arrow"/></button>
                 <input class="ui-slider" type="range" :min="timestep_start" :max="timestep_end" v-model="timestep" @change="updateTimestep"/>
-                <button class="ui-slider-btn" type="button" @click="incrementTimestep"><img src="/images/right-arrow.png" alt="left arrow"/></button>
+                <button class="ui-slider-btn" type="button" @click="incrementTimestep"><img src="images/right-arrow.png" alt="left arrow"/></button>
                 <br/>
                 <label>Simulation:</label><br/>
                 <select class="ui-element" v-model="selected_simulation" @change="updateSimulationStimulus">
@@ -205,7 +207,7 @@ export default {
                 <input class="ui-checkbox last" type="checkbox" v-model="global_scalar_range" @change="updateScalarRangeType"/>
             </div>
             <div v-show="!show_ui">
-                <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="/images/left-arrow.png" alt="left arrow"/></button>
+                <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="images/left-arrow.png" alt="left arrow"/></button>
             </div>
         </div>
     </div>
