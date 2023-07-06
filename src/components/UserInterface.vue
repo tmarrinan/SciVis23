@@ -83,7 +83,7 @@ export default {
         colormapLegendMax() {
             let cmap_max = this.neuron_properties[this.selected_neuron_prop].max;
             if (!this.global_scalar_range) {
-                cmap_max = this.neuron_local_ranges[this.selected_neuron_prop].max;
+                cmap_max = this.neuron_local_ranges[this.selected_neuron_prop].max + 0.000001;
             }
             return this.formatPropertyRangeValue(cmap_max);
         },
@@ -96,7 +96,7 @@ export default {
                 return value === 0 ? 'False' : 'True';
             }
             else if (this.selected_neuron_prop === 'fired_fraction') {
-                return value.toFixed(1) + '%';
+                return value.toFixed(2) + '%';
             }
             else {
                 return parseInt(value);

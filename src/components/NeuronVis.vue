@@ -247,7 +247,7 @@ export default {
             };
 
             this.views[view].updateSimulationData(sim_data, sim_data_ranges);
-            this.$refs['ui_' + view][0].setLocalRanges(sim_data_ranges); // why $ref array at index [0]?
+            this.$refs.ui[view].setLocalRanges(sim_data_ranges);
         },
 
         setRoomId(id) {
@@ -491,7 +491,7 @@ export default {
         <canvas id="render-canvas" touch-action="none" tabindex="-1"></canvas>
         <div v-for="col in (view_columns - 1)" class="vertical-bar" :style="'left: ' + (100 * col / view_columns) + '%;'"></div>
         <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>
-        <UserInterface v-for="i in 8" v-show="i <= num_views" :ref="'ui_' + (i - 1)" :idx="i - 1" :num_views="num_views" @update-near-clip="updateNearClip"
+        <UserInterface v-for="i in 8" v-show="i <= num_views" ref="ui" :idx="i - 1" :num_views="num_views" @update-near-clip="updateNearClip"
             @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"
             @update-neuron-property="updateNeuronProperty" @use-global-scalar-range="useGlobalScalarRange"/>
     </div>
