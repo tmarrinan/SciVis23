@@ -425,9 +425,9 @@ export default {
 
             let tube_options = {
                 paths: [
-                    this.createBezierPath(neuron_positions[this.area_centroids[5]], neuron_positions[this.area_centroids[9]], 16),
-                    this.createBezierPath(neuron_positions[this.area_centroids[15]], neuron_positions[this.area_centroids[47]], 16),
-                    this.createBezierPath(neuron_positions[this.area_centroids[14]], neuron_positions[this.area_centroids[31]], 16)
+                    this.createBezierPath(neuron_positions[this.area_centroids[5]], neuron_positions[this.area_centroids[9]], 24),
+                    this.createBezierPath(neuron_positions[this.area_centroids[15]], neuron_positions[this.area_centroids[47]], 24),
+                    this.createBezierPath(neuron_positions[this.area_centroids[14]], neuron_positions[this.area_centroids[31]], 24)
                 ],
                 colors: {
                     color_list: [
@@ -438,7 +438,7 @@ export default {
                     path_colors: [0, 0, 2]
                 },
                 radius: [1.0, 0.5, 2.0],
-                tessellation: 12
+                tessellation: 6
             };
             let conn = CreateTubeCollection('connections', tube_options, this.scene);
             conn.scaling = new Vector3(0.1, 0.1, 0.1);

@@ -35,6 +35,7 @@ export default {
         joinedRoom(type, success) {
             if (success) {
                 this.joined_room = true;
+                this.ws.send(JSON.stringify({type: 'getState'}));
             }
             else {
                 if (type === 'create') {
