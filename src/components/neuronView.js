@@ -66,6 +66,12 @@ class NeuronView {
         }
     }
 
+    setCameraView(position, target, up) {
+        this.camera.position = position;
+        this.camera.target = target;
+        this.camera.upVector = up;
+    }
+
     setPointCloudMesh(point_cloud) {
         this.neuron_ptcloud.mesh = point_cloud;
         

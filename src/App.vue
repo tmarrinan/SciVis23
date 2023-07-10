@@ -21,6 +21,10 @@ export default {
             this.num_views = value;
         },
 
+        updateSyncViews(value) {
+            this.$refs.neuron_vis.syncViews(value);
+        },
+
         updateDataUrl(value) {
             this.data_url = value;
         },
@@ -62,7 +66,7 @@ export default {
 <template>
     <div class="box">
         <div class="row header">
-            <GlobalGui ref="global_gui" :ws="ws" :ws_open="ws_open" @update-num-views="updateNumViews" @update-data-url="updateDataUrl" @update-room-id="updateRoomId"/>
+            <GlobalGui ref="global_gui" :ws="ws" :ws_open="ws_open" @update-num-views="updateNumViews" @update-sync-views="updateSyncViews" @update-data-url="updateDataUrl" @update-room-id="updateRoomId"/>
         </div>
         <div class="row content">
             <NeuronVis ref="neuron_vis" :ws="ws" :num_views="num_views" :data_url="data_url"/>

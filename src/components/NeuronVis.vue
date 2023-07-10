@@ -35,10 +35,12 @@ export default {
         return {
             scene: null,
             views: [],
+            active_view: 0,
             render_size: {width: 0, height: 0},
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             brain_center: new Vector3(0.0, 0.0, 0.0),
+            sync_views: false,
             room_id: '',
             state: []
         }
@@ -94,6 +96,7 @@ export default {
                     if (pointer_x >= (x * w) && pointer_x < ((x + 1) * w) &&
                         pointer_y >= (y * h) && pointer_y < ((y + 1) * h)) {
                         view.setActive(true);
+                        this.active_view = idx;
                     }
                     else {
                         view.setActive(false);
@@ -101,6 +104,24 @@ export default {
                 }
                 else {
                     view.setActive(false);
+                }
+            });
+        },
+
+        syncViews(flag) {
+            this.sync_views = flag;
+            if (this.sync_views === true) {
+                this.syncViewToCamera(0);
+            }
+        },
+
+        syncViewToCamera(idx) {
+            let position = this.views[idx].camera.position;
+            let target = this.views[idx].camera.target;
+            let up = this.views[idx].camera.upVector;
+            this.views.forEach((view, index) => {
+                if (index !== idx) {
+                    view.setCameraView(position, target, up);
                 }
             });
         },
@@ -473,6 +494,9 @@ export default {
         // Handle animation / shader uniform updates frame and per view (prior to render)
         this.scene.onBeforeRenderObservable.add(() => {
             ptcloud_mat.setVector3('hemi_light_direction', light.direction);
+            if (this.sync_views === true) {
+                this.syncViewToCamera(this.active_view);
+            }
         });
         this.scene.onBeforeCameraRenderObservable.add(() => {
             let view_idx = parseInt(this.scene.activeCamera.id.substring(6));
