@@ -186,12 +186,12 @@ export default {
                 <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
                 <button class="ui-slider-btn" type="button" @click="decrementNearClip"><img src="images/left-arrow.png" alt="left arrow"/></button>
                 <input class="ui-slider" type="range" :min="near_clip_start" :max="near_clip_end" v-model="near_clip_slider" @input="updateNearClip"/>
-                <button class="ui-slider-btn" type="button" @click="incrementNearClip"><img src="images/right-arrow.png" alt="left arrow"/></button>
+                <button class="ui-slider-btn" type="button" @click="incrementNearClip"><img src="images/right-arrow.png" alt="right arrow"/></button>
                 <br/>
                 <label>Timestep: {{ timestep }}</label><br/>
                 <button class="ui-slider-btn" type="button" @click="decrementTimestep"><img src="images/left-arrow.png" alt="left arrow"/></button>
                 <input class="ui-slider" type="range" :min="timestep_start" :max="timestep_end" v-model="timestep" @change="updateTimestep"/>
-                <button class="ui-slider-btn" type="button" @click="incrementTimestep"><img src="images/right-arrow.png" alt="left arrow"/></button>
+                <button class="ui-slider-btn" type="button" @click="incrementTimestep"><img src="images/right-arrow.png" alt="right arrow"/></button>
                 <br/>
                 <label>Simulation:</label><br/>
                 <select class="ui-element" v-model="selected_simulation" @change="updateSimulationStimulus">
