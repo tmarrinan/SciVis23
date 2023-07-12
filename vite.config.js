@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 
+import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -21,5 +22,13 @@ export default defineConfig({
   },
   server: {
     cors: true
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        statui: resolve(__dirname, 'statui.html')
+      }
+    }
   }
 })
