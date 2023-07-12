@@ -147,6 +147,7 @@ class NeuronView {
         this.neuron_ptcloud.material.setTexture('scalars', this.neuron_scalar_tex);
         this.neuron_ptcloud.material.setVector2('scalar_range', this.neuron_scalar_range);
         this.neuron_ptcloud.material.setTexture('colormap', this.colormap);
+        this.neuron_ptcloud.material.setInt('displace_to_center', 1);
     }
 }
 

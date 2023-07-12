@@ -19,6 +19,8 @@ const vertex_shader_src =
 'uniform vec3 camera_position;\n' +
 'uniform vec3 camera_up;\n' +
 'uniform float point_size;\n' +
+'uniform vec3 cloud_center;\n' +
+'uniform int displace_to_center;\n' +
 'uniform mat4 world;\n' +
 'uniform mat4 view;\n' +
 'uniform mat4 projection;\n' +
@@ -35,13 +37,14 @@ const vertex_shader_src =
 'out float model_size;\n' +
 '\n' +
 'void main() {\n' +
-'    vec3 world_point = (world * vec4(position, 1.0)).xyz;\n' +
+'    vec3 center_dir = float((gl_VertexID / 4) % 10) * (cloud_center - position);\n' +
+'    vec3 point_location = position + (displace_to_center > 0 ? 0.025 * center_dir : vec3(0.0));\n' +
+'    vec3 world_point = (world * vec4(point_location, 1.0)).xyz;\n' +
 '    vec3 vertex_direction = normalize(world_point - camera_position);\n' +
 '    vec3 cam_right = normalize(cross(vertex_direction, camera_up));\n' +
 '    vec3 cam_up = cross(cam_right, vertex_direction);\n' +
 '\n' +
-'    float dist_scale = clamp(((length(camera_position - world_point) - 1.3) / (10.0 - 1.3)) * (1.0 - 0.05) + 0.05, 0.05, 1.0);\n' +
-//'    float dist_scale = clamp(0.075 * length(camera_position - world_point), 0.05, 1.0);\n' + // make this variable somehow?
+'    float dist_scale = displace_to_center > 0 ? 1.0 : clamp(((length(camera_position - world_point) - 1.3) / (10.0 - 1.3)) * (1.0 - 0.05) + 0.05, 0.05, 1.0);\n' +
 '    model_size = dist_scale * point_size;\n' +
 '    world_position = world_point + (cam_right * uv2.x * model_size) +\n' +
 '                                   (cam_up * uv2.y * model_size);\n' +
@@ -96,7 +99,7 @@ const fragment_shader_src =
 '\n' +
 '    vec3 sphere_normal = vec3(norm_texcoord, sqrt(1.0 - magnitude));\n' +
 '    sphere_normal = normalize(world_normal_mat * sphere_normal);\n' +
-'    float sphere_radius = model_size / 2.0;\n' +
+'    float sphere_radius = 0.5 * model_size;\n' +
 '    vec3 sphere_position = (sphere_normal * sphere_radius) + model_center;\n' +
 '\n' +
 '    // Depth\n' +
@@ -142,7 +145,6 @@ export default {
         let vertex_idx_uv = new Array(positions.length * 8);
         let vertex_indices = new Array(positions.length * 6);
 
-        //let dims = Math.ceil(Math.sqrt(positions.length));
         let dims = nearestFactors(positions.length);
         let dims_y = dims[0];
         let dims_x = dims[1];

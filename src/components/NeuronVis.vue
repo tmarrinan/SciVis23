@@ -374,10 +374,16 @@ export default {
             console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);
             let neuron_areas = new Float32Array(neurons.length);
+            let neuron_center = new Vector3(93.336235, 73.324505, 77.186545);
             neurons.forEach((neuron, idx) => {
                 neuron_positions[idx] = new Vector3(parseFloat(neuron[0]),
                                                     parseFloat(neuron[1]),
                                                     parseFloat(neuron[2]));
+
+                let displace_fac = (idx % 10) * 0.025;
+                let toward_center = neuron_center.subtract(neuron_positions[idx]).scaleInPlace(displace_fac);
+                //neuron_positions[idx].addInPlace(toward_center);
+
                 neuron_areas[idx] = parseInt(neuron[3]);
             });
 
@@ -390,6 +396,7 @@ export default {
             point_cloud.position.z = 7.5;
             
             this.brain_center = point_cloud.getBoundingInfo().boundingBox.center;
+            ptcloud_mat.setVector3('cloud_center', this.brain_center);
 
             this.views.forEach((view) => {
                 view.setPointCloudMesh(point_cloud);
