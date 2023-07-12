@@ -186,6 +186,13 @@ export default {
                 this.views[view].setScalarRangeToLocal();
         },
 
+        displaceNeurons(event) {
+            let view = event.idx;
+            let value = event.data;
+
+            this.views[view].setDisplaceNeurons(+value);
+        },
+
         createBezierTube(start_pt, end_pt, num_divisions, scene) {
             let ctrl_point1 = start_pt.add(this.brain_center.subtract(start_pt).scale(0.67));
             let ctrl_point2 = end_pt.add(this.brain_center.subtract(end_pt).scale(0.67));
@@ -525,7 +532,8 @@ export default {
         <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>
         <UserInterface v-for="i in 8" v-show="i <= num_views" ref="ui" :idx="i - 1" :num_views="num_views" @update-near-clip="updateNearClip"
             @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"
-            @update-neuron-property="updateNeuronProperty" @use-global-scalar-range="useGlobalScalarRange"/>
+            @update-neuron-property="updateNeuronProperty" @use-global-scalar-range="useGlobalScalarRange"
+            @displace-neurons="displaceNeurons"/>
     </div>
 </template>
 

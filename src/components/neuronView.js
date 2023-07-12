@@ -18,6 +18,7 @@ class NeuronView {
         this.neuron_scalar_tex = null;
         this.neuron_scalar_range = new Vector2(0.0, 1.0);
         this.use_global_scalar_range = true;
+        this.displace_neurons = false;
         this.global_scalar_range = null;
         this.local_scalar_range = null;
         this.global_scalar_ranges = {
@@ -111,6 +112,10 @@ class NeuronView {
         this.neuron_scalar_range = new Vector2(range.min, range.max);
     }
 
+    setDisplaceNeurons(flag) {
+        this.displace_neurons = flag;
+    }
+
     setNeuronTexture(scalar_values, colormap) {
         let range = this.use_global_scalar_range ? this.global_scalar_ranges[this.neuron_property] : this.data_ranges[this.neuron_property];
 
@@ -147,7 +152,7 @@ class NeuronView {
         this.neuron_ptcloud.material.setTexture('scalars', this.neuron_scalar_tex);
         this.neuron_ptcloud.material.setVector2('scalar_range', this.neuron_scalar_range);
         this.neuron_ptcloud.material.setTexture('colormap', this.colormap);
-        this.neuron_ptcloud.material.setInt('displace_to_center', 1);
+        this.neuron_ptcloud.material.setInt('displace_to_center', this.displace_neurons);
     }
 }
 

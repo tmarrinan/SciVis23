@@ -17,6 +17,7 @@ export default {
             timestep_end: 9999,
             selected_simulation: 'viz-no-network',
             global_scalar_range: true,
+            displace_neurons: false,
             simulations: [
                 {name: 'viz-no-network', description: 'No Initial Connectivity'},
                 {name: 'viz-stimulus', description: 'Stimulation / Learning'},
@@ -58,7 +59,7 @@ export default {
         }
     },
     emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection', 'update-neuron-property',
-            'use-global-scalar-range'],
+            'use-global-scalar-range', 'displace-neurons'],
     methods: {
         getLocationRight() {
             let rows = (this.num_views > 2) ? 2 : 1;
@@ -157,6 +158,10 @@ export default {
             this.$emit('use-global-scalar-range', {idx: this.idx, data: this.global_scalar_range});
         },
 
+        updateDisplaceNeurons(event) {
+            this.$emit('displace-neurons', {idx: this.idx, data: this.displace_neurons});
+        },
+
         setLocalRanges(local_ranges) {
             this.neuron_local_ranges = local_ranges;
         }
@@ -204,7 +209,10 @@ export default {
                 </select>
                 <br/>
                 <label>Global Scalar Range:</label>
-                <input class="ui-checkbox last" type="checkbox" v-model="global_scalar_range" @change="updateScalarRangeType"/>
+                <input class="ui-checkbox" type="checkbox" v-model="global_scalar_range" @change="updateScalarRangeType"/>
+                <br/>
+                <label>Displace Neurons:</label>
+                <input class="ui-checkbox last" type="checkbox" v-model="displace_neurons" @change="updateDisplaceNeurons"/>
             </div>
             <div v-show="!show_ui">
                 <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="/images/left-arrow.png" alt="left arrow"/></button>
