@@ -14,7 +14,7 @@ export default {
             near_clip_end: 300,
             timestep: 0,
             timestep_start: 0,
-            timestep_end: 1000,
+            timestep_end: 9999,
             selected_simulation: 'viz-no-network',
             global_scalar_range: true,
             simulations: [
