@@ -247,7 +247,9 @@ class NeuronView {
         let dist = start_pt.subtract(end_pt).length();
         let c1_dist = start_pt.subtract(this.brain_center).length();
         let c2_dist = end_pt.subtract(this.brain_center).length();
-        let scale = Math.min(0.75 * (2.0 * dist) / (c1_dist + c2_dist), 0.75);
+        //let scale = Math.min(0.75 * (2.0 * dist) / (c1_dist + c2_dist), 0.75);
+        let scale = (2.0 * dist) / (c1_dist + c2_dist);
+        scale = Math.min(scale * scale, 0.75);
         let ctrl_point1 = start_pt.add(this.brain_center.subtract(start_pt).scale(scale));
         let ctrl_point2 = end_pt.add(this.brain_center.subtract(end_pt).scale(scale));
         let path = [];
