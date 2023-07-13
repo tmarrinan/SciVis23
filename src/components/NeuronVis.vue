@@ -20,7 +20,6 @@ import { NeuronView } from './neuronView'
 import uniqueColors from './uniqueColors'
 import areaCentroids from './areaCentroids'
 import imposterSpheres from './imposterSpheres'
-import { CreateTubeCollection } from './tubeCollection'
 import timeline from './timeline'
 
 const BASE_URL = import.meta.env.BASE_URL || '/';
@@ -140,13 +139,20 @@ export default {
             let view = event.idx;
             let value = event.data;
 
+            let old_conn_ts_idx = ~~(this.state[view].timestep / 100);
+            let new_conn_ts_idx = ~~(value / 100);
+            let fetch_connections = old_conn_ts_idx !== new_conn_ts_idx;
+
             this.state[view].timestep = value;
             this.syncState(view, this.state[view]);
             
             this.timeline.setTimestep(value);
-            this.timeline.getTimestep()
+            this.timeline.getData(fetch_connections)
             .then((table) => {
-                this.updateMonitorViz(view, table);
+                this.updateMonitorViz(view, table.neurons);
+                if (fetch_connections) {
+                    this.updateNetworkViz(view, table.connections);
+                }
             })
             .catch((reason) => { console.error(reason); });
         },
@@ -159,9 +165,10 @@ export default {
             this.syncState(view, this.state[view]);
 
             this.timeline.setSimulation(value);
-            this.timeline.getTimestep()
+            this.timeline.getData(true)
             .then((table) => {
-                this.updateMonitorViz(view, table);
+                this.updateMonitorViz(view, table.neurons);
+                this.updateNetworkViz(view, table.connections);
             })
             .catch((reason) => { console.error(reason); });
         },
@@ -191,43 +198,6 @@ export default {
             let value = event.data;
 
             this.views[view].setDisplaceNeurons(+value);
-        },
-
-        createBezierTube(start_pt, end_pt, num_divisions, scene) {
-            let ctrl_point1 = start_pt.add(this.brain_center.subtract(start_pt).scale(0.67));
-            let ctrl_point2 = end_pt.add(this.brain_center.subtract(end_pt).scale(0.67));
-            let path = [];
-            for (let i = 0; i < num_divisions; i++) {
-                let t = (i / (num_divisions - 1));
-                let one_minus_t = 1.0 - t;
-                let x = (one_minus_t * one_minus_t * one_minus_t * start_pt.x) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.x) +
-                        (3 * one_minus_t * t * t * ctrl_point2.x) + (t * t * t * end_pt.x);
-                let y = (one_minus_t * one_minus_t * one_minus_t * start_pt.y) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.y) +
-                        (3 * one_minus_t * t * t * ctrl_point2.y) + (t * t * t * end_pt.y);
-                let z = (one_minus_t * one_minus_t * one_minus_t * start_pt.z) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.z) +
-                        (3 * one_minus_t * t * t * ctrl_point2.z) + (t * t * t * end_pt.z);
-                path.push(new Vector3(x, y, z));
-            }
-            let tube = CreateTube('tube', {path: path, radius: 1.0, tessellation: 12, sideOrientation: Mesh.DOUBLESIDE}, scene);
-            return tube;
-        },
-
-        createBezierPath(start_pt, end_pt, num_divisions) {
-            let ctrl_point1 = start_pt.add(this.brain_center.subtract(start_pt).scale(0.67));
-            let ctrl_point2 = end_pt.add(this.brain_center.subtract(end_pt).scale(0.67));
-            let path = [];
-            for (let i = 0; i < num_divisions; i++) {
-                let t = (i / (num_divisions - 1));
-                let one_minus_t = 1.0 - t;
-                let x = (one_minus_t * one_minus_t * one_minus_t * start_pt.x) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.x) +
-                        (3 * one_minus_t * t * t * ctrl_point2.x) + (t * t * t * end_pt.x);
-                let y = (one_minus_t * one_minus_t * one_minus_t * start_pt.y) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.y) +
-                        (3 * one_minus_t * t * t * ctrl_point2.y) + (t * t * t * end_pt.y);
-                let z = (one_minus_t * one_minus_t * one_minus_t * start_pt.z) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.z) +
-                        (3 * one_minus_t * t * t * ctrl_point2.z) + (t * t * t * end_pt.z);
-                path.push(new Vector3(x, y, z));
-            }
-            return path;
         },
 
         LoadColormapTexture(filename, sample_mode) {
@@ -279,6 +249,17 @@ export default {
             this.$refs.ui[view].setLocalRanges(sim_data_ranges);
         },
 
+        updateNetworkViz(view, table) {
+            let conn_data = {};
+            let desired_columns = ['source_id', 'target_id', 'weight'];
+            for (let i = 0; i < table.schema.fields.length; i++) {
+                if (desired_columns.includes(table.schema.fields[i].name)) {
+                    conn_data[table.schema.fields[i].name] = table.data[0].children[i].values;
+                }
+            }
+            this.views[view].updateConnectionData(conn_data);
+        },
+
         setRoomId(id) {
             this.room_id = id;
         },
@@ -314,6 +295,7 @@ export default {
 
         // Create our first scene.
         this.scene = new Scene(engine);
+        this.scene.clearColor = new Color3(0.1, 0.1, 0.1);
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         let light = new HemisphericLight('light1', new Vector3(0, 1, 0), this.scene);
@@ -335,7 +317,7 @@ export default {
 
         // Create custom point cloud shader material
         let ptcloud_mat = imposterSpheres.CreateImposterSphereShaderMaterial(this.scene);
-        ptcloud_mat.setFloat('point_size', 0.2);
+        ptcloud_mat.setFloat('point_size', 0.15);
         ptcloud_mat.setInt('num_lights', 0);
         ptcloud_mat.setVector3('light_ambient', new Vector3(0.0, 0.0, 0.0));
         ptcloud_mat.setVector3('hemi_light_direction', light.direction);
@@ -356,6 +338,7 @@ export default {
                 wheel_precision: 30
             },
             neuron_ptcloud: {
+                positions: null,
                 mesh: null,
                 material: ptcloud_mat
             },
@@ -386,11 +369,6 @@ export default {
                 neuron_positions[idx] = new Vector3(parseFloat(neuron[0]),
                                                     parseFloat(neuron[1]),
                                                     parseFloat(neuron[2]));
-
-                let displace_fac = (idx % 10) * 0.025;
-                let toward_center = neuron_center.subtract(neuron_positions[idx]).scaleInPlace(displace_fac);
-                //neuron_positions[idx].addInPlace(toward_center);
-
                 neuron_areas[idx] = parseInt(neuron[3]);
             });
 
@@ -406,7 +384,7 @@ export default {
             ptcloud_mat.setVector3('cloud_center', this.brain_center);
 
             this.views.forEach((view) => {
-                view.setPointCloudMesh(point_cloud);
+                view.setPointCloudMesh(neuron_positions, point_cloud);
                 view.setNeuronAreas(neuron_areas, new Vector2(0, this.area_colors.length - 1));
             });
 
@@ -431,56 +409,6 @@ export default {
             mesh.layerMask = 1;
             // END area centroid
 
-            /*
-            // TEST - connections
-            let endpt1a = neuron_positions[this.area_centroids[5]];
-            let endpt1b = neuron_positions[this.area_centroids[9]];
-            let tube1 = this.createBezierTube(endpt1a, endpt1b, 16);
-            tube1.scaling = new Vector3(0.1, 0.1, 0.1);
-            tube1.rotation.x = -Math.PI / 2.0;
-            tube1.position.x = -10.0;
-            tube1.position.z = 7.5;
-
-            let endpt2a = neuron_positions[this.area_centroids[15]];
-            let endpt2b = neuron_positions[this.area_centroids[47]];
-            let tube2 = this.createBezierTube(endpt2a, endpt2b, 16);
-            tube2.scaling = new Vector3(0.1, 0.1, 0.1);
-            tube2.rotation.x = -Math.PI / 2.0;
-            tube2.position.x = -10.0;
-            tube2.position.z = 7.5;
-
-            let endpt3a = neuron_positions[this.area_centroids[14]];
-            let endpt3b = neuron_positions[this.area_centroids[31]];
-            let tube3 = this.createBezierTube(endpt3a, endpt3b, 16);
-            tube3.scaling = new Vector3(0.1, 0.1, 0.1);
-            tube3.rotation.x = -Math.PI / 2.0;
-            tube3.position.x = -10.0;
-            tube3.position.z = 7.5;
-            */
-
-            let tube_options = {
-                paths: [
-                    this.createBezierPath(neuron_positions[this.area_centroids[5]], neuron_positions[this.area_centroids[9]], 24),
-                    this.createBezierPath(neuron_positions[this.area_centroids[15]], neuron_positions[this.area_centroids[47]], 24),
-                    this.createBezierPath(neuron_positions[this.area_centroids[14]], neuron_positions[this.area_centroids[31]], 24)
-                ],
-                colors: {
-                    color_list: [
-                        new Color3(0.0, 0.0, 1.0),
-                        new Color3(1.0, 1.0, 1.0),
-                        new Color3(1.0, 0.0, 0.0)
-                    ],
-                    path_colors: [0, 0, 2]
-                },
-                radius: [1.0, 0.5, 2.0],
-                tessellation: 6
-            };
-            let conn = CreateTubeCollection('connections', tube_options, this.scene);
-            conn.scaling = new Vector3(0.1, 0.1, 0.1);
-            conn.rotation.x = -Math.PI / 2.0;
-            conn.position.x = -10.0;
-            conn.position.z = 7.5;
-
             // TEST
             // setTimeout(() => {
             //     console.log(conn.getVerticesData(VertexBuffer.UVKind));
@@ -498,9 +426,12 @@ export default {
         });
 
         this.timeline = new timeline.Timeline();
-        this.timeline.getTimestep()
+        this.timeline.getData(true)
         .then((table) => {
-            for (let v = 0; v < 8; v++) this.updateMonitorViz(v, table);
+            for (let v = 0; v < 8; v++) {
+                this.updateMonitorViz(v, table.neurons);
+                this.updateNetworkViz(v, table.connections);
+            }
         })
         .catch((reason) => { console.error(reason); });
 

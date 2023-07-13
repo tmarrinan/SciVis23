@@ -2,8 +2,11 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Viewport } from '@babylonjs/core/Maths/math.viewport';
 import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { RawTexture } from '@babylonjs/core/Materials/Textures/rawTexture';
+
+import { CreateTubeCollection } from './tubeCollection'
 
 class NeuronView {
     constructor(id, canvas, data) {
@@ -12,7 +15,9 @@ class NeuronView {
         this.scene = data.scene;
         this.camera_settings = data.camera;
         this.camera = null;
+        this.brain_center = new Vector3(0, 0, 0);
         this.neuron_ptcloud = data.neuron_ptcloud;
+        this.connections = null;
         this.area_values = null;
         this.neuron_property = 'area';
         this.neuron_scalar_tex = null;
@@ -73,8 +78,11 @@ class NeuronView {
         this.camera.upVector = up;
     }
 
-    setPointCloudMesh(point_cloud) {
+    setPointCloudMesh(positions, point_cloud) {
+        this.neuron_ptcloud.positions = positions
         this.neuron_ptcloud.mesh = point_cloud;
+
+        this.brain_center = point_cloud.getBoundingInfo().boundingBox.center;
         
         let dim_x = this.neuron_ptcloud.mesh.uv_dimensions.u;
         let dim_y = this.neuron_ptcloud.mesh.uv_dimensions.v;
@@ -144,6 +152,109 @@ class NeuronView {
         if (this.neuron_property !== 'area') {
             this.setNeuronTexture(this.simulation_data[this.neuron_property], this.colormap);
         }
+    }
+
+    updateConnectionData(conn_data) {
+        if (this.connections !== null) this.connections.dispose();
+
+        if (conn_data.source_id.length > 0) {
+            let cluster_conns = {};
+            let n = 0;
+            for (let i = 0; i < conn_data.source_id.length; i++) {
+                let src = conn_data.source_id[i] - 1;
+                let dest = conn_data.target_id[i] - 1;
+                
+                //let src_cluster = ~~(src / 10);
+                //let dest_cluster = ~~(dest / 10);
+                let src_cluster = this.area_values[src];
+                let dest_cluster = this.area_values[dest];
+                
+                let cluster_id = src_cluster + ':' + dest_cluster;
+                if (cluster_conns.hasOwnProperty(cluster_id)) {
+                    cluster_conns[cluster_id].weight += conn_data.weight[i];
+                }
+                else {
+                    cluster_conns[cluster_id] = {
+                        start: this.neuron_ptcloud.positions[src],
+                        end: this.neuron_ptcloud.positions[dest],
+                        weight: conn_data.weight[i]
+                    };
+                    n++;
+                }
+            }
+            console.log('done! ' + n);
+
+            let paths = [];
+            let radius = [];
+            let color = [];
+            for (let key in cluster_conns) {
+                let dx = Math.abs(cluster_conns[key].start.x - cluster_conns[key].end.x);
+                let dy = Math.abs(cluster_conns[key].start.y - cluster_conns[key].end.y);
+                let dz = Math.abs(cluster_conns[key].start.z - cluster_conns[key].end.z);
+                let col = (dx > dy && dx > dz) ? 0 : dy > dz ? 1 : 2;
+                paths.push(this.createBezierPath(cluster_conns[key].start, cluster_conns[key].end, 24));
+                radius.push(0.025 * Math.sqrt(cluster_conns[key].weight));
+                color.push(col);
+            }
+
+
+            // let paths = [];
+            // let radius = [];
+            // let color = [];
+            // let step = 100;
+            // for (let i = 0; i < conn_data.source_id.length; i += step) {
+            //     let src = conn_data.source_id[i] - 1;
+            //     let dest = conn_data.target_id[i] - 1;
+            //     let weight = conn_data.weight[i];
+            //     let start = this.neuron_ptcloud.positions[src];
+            //     let end = this.neuron_ptcloud.positions[dest];
+            //     paths.push(this.createBezierPath(start, end, 24));
+            //     radius.push(0.5 * weight);
+            //     color.push(1);
+            // }
+
+            let tube_options = {
+                paths: paths,
+                colors: {
+                    color_list: [
+                        new Color3(0.118, 0.839, 0.514),
+                        new Color3(0.929, 0.141, 0.349),
+                        new Color3(0.267, 0.322, 0.831)
+                    ],
+                    path_colors: color
+                },
+                radius: radius,
+                tessellation: 6
+            };
+
+            this.connections = CreateTubeCollection('connections', tube_options, this.scene);
+            this.connections.scaling = new Vector3(0.1, 0.1, 0.1);
+            this.connections.rotation.x = -Math.PI / 2.0;
+            this.connections.position.x = -10.0;
+            this.connections.position.z = 7.5;
+        }
+    }
+
+    createBezierPath(start_pt, end_pt, num_divisions) {
+        let dist = start_pt.subtract(end_pt).length();
+        let c1_dist = start_pt.subtract(this.brain_center).length();
+        let c2_dist = end_pt.subtract(this.brain_center).length();
+        let scale = Math.min(0.75 * (2.0 * dist) / (c1_dist + c2_dist), 0.75);
+        let ctrl_point1 = start_pt.add(this.brain_center.subtract(start_pt).scale(scale));
+        let ctrl_point2 = end_pt.add(this.brain_center.subtract(end_pt).scale(scale));
+        let path = [];
+        for (let i = 0; i < num_divisions; i++) {
+            let t = (i / (num_divisions - 1));
+            let one_minus_t = 1.0 - t;
+            let x = (one_minus_t * one_minus_t * one_minus_t * start_pt.x) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.x) +
+                    (3 * one_minus_t * t * t * ctrl_point2.x) + (t * t * t * end_pt.x);
+            let y = (one_minus_t * one_minus_t * one_minus_t * start_pt.y) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.y) +
+                    (3 * one_minus_t * t * t * ctrl_point2.y) + (t * t * t * end_pt.y);
+            let z = (one_minus_t * one_minus_t * one_minus_t * start_pt.z) + (3 * one_minus_t * one_minus_t * t * ctrl_point1.z) +
+                    (3 * one_minus_t * t * t * ctrl_point2.z) + (t * t * t * end_pt.z);
+            path.push(new Vector3(x, y, z));
+        }
+        return path;
     }
 
     beforeRender() {
