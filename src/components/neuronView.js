@@ -6,6 +6,7 @@ import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { RawTexture } from '@babylonjs/core/Materials/Textures/rawTexture';
 
+import areaCentroids from './areaCentroids'
 import { CreateTubeCollection } from './tubeCollection'
 
 class NeuronView {
@@ -173,10 +174,13 @@ class NeuronView {
                 if (cluster_conns.hasOwnProperty(cluster_id)) {
                     cluster_conns[cluster_id].weight += conn_data.weight[i];
                 }
-                else {
+                //else {
+                else if (src_cluster !== dest_cluster) {
                     cluster_conns[cluster_id] = {
                         start: this.neuron_ptcloud.positions[src],
                         end: this.neuron_ptcloud.positions[dest],
+                        //start: this.neuron_ptcloud.positions[areaCentroids[src_cluster]],
+                        //end: this.neuron_ptcloud.positions[areaCentroids[dest_cluster]],
                         weight: conn_data.weight[i]
                     };
                     n++;
@@ -217,9 +221,12 @@ class NeuronView {
                 paths: paths,
                 colors: {
                     color_list: [
-                        new Color3(0.118, 0.839, 0.514),
-                        new Color3(0.929, 0.141, 0.349),
-                        new Color3(0.267, 0.322, 0.831)
+                        // new Color3(0.118, 0.839, 0.514),
+                        // new Color3(0.929, 0.141, 0.349),
+                        // new Color3(0.267, 0.322, 0.831)
+                        new Color3(1.0, 1.0, 1.0),
+                        new Color3(1.0, 1.0, 1.0),
+                        new Color3(1.0, 1.0, 1.0)
                     ],
                     path_colors: color
                 },
@@ -232,6 +239,7 @@ class NeuronView {
             this.connections.rotation.x = -Math.PI / 2.0;
             this.connections.position.x = -10.0;
             this.connections.position.z = 7.5;
+            this.connections.layerMask = Math.pow(2, this.id);
         }
     }
 

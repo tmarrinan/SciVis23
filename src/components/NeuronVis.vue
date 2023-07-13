@@ -364,7 +364,6 @@ export default {
             console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);
             let neuron_areas = new Float32Array(neurons.length);
-            let neuron_center = new Vector3(93.336235, 73.324505, 77.186545);
             neurons.forEach((neuron, idx) => {
                 neuron_positions[idx] = new Vector3(parseFloat(neuron[0]),
                                                     parseFloat(neuron[1]),
