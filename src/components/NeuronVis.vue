@@ -299,7 +299,7 @@ export default {
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         let light = new HemisphericLight('light1', new Vector3(0, 1, 0), this.scene);
-        light.intensity = 0.85;
+        light.intensity = 1.0;
 
         // Create a grid material
         let grid_mat = new GridMaterial('grid', this.scene);

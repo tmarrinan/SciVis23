@@ -161,6 +161,7 @@ class NeuronView {
         if (conn_data.source_id.length > 0) {
             let cluster_conns = {};
             let n = 0;
+            let t_start = performance.now();
             for (let i = 0; i < conn_data.source_id.length; i++) {
                 let src = conn_data.source_id[i] - 1;
                 let dest = conn_data.target_id[i] - 1;
@@ -176,18 +177,29 @@ class NeuronView {
                 }
                 //else {
                 else if (src_cluster !== dest_cluster) {
+                    let src_pt = this.neuron_ptcloud.positions[areaCentroids[src_cluster]];
+                    let dest_pt = this.neuron_ptcloud.positions[areaCentroids[dest_cluster]];
+                    let to_center = this.brain_center.subtract(src_pt);
+                    to_center.normalize();
+                    let to_dest = dest_pt.subtract(src_pt);
+                    to_dest.normalize();
+                    let right = to_center.cross(to_dest);
+                    right.normalize();
+
                     cluster_conns[cluster_id] = {
-                        start: this.neuron_ptcloud.positions[src],
-                        end: this.neuron_ptcloud.positions[dest],
-                        //start: this.neuron_ptcloud.positions[areaCentroids[src_cluster]],
-                        //end: this.neuron_ptcloud.positions[areaCentroids[dest_cluster]],
+                        // start: this.neuron_ptcloud.positions[src],
+                        // end: this.neuron_ptcloud.positions[dest],
+                        start: src_pt.add(right.scale(5.0)),
+                        end: dest_pt.add(right.scale(5.0)),
                         weight: conn_data.weight[i]
                     };
                     n++;
                 }
             }
-            console.log('done! ' + n);
+            let t_end = performance.now();
+            console.log('done! ' + n + ' tubes (' + (t_end - t_start).toFixed(1) + 'ms)');
 
+            t_start = performance.now();
             let paths = [];
             let radius = [];
             let color = [];
@@ -197,7 +209,8 @@ class NeuronView {
                 let dz = Math.abs(cluster_conns[key].start.z - cluster_conns[key].end.z);
                 let col = (dx > dy && dx > dz) ? 0 : dy > dz ? 1 : 2;
                 paths.push(this.createBezierPath(cluster_conns[key].start, cluster_conns[key].end, 24));
-                radius.push(0.025 * Math.sqrt(cluster_conns[key].weight));
+                //radius.push(0.035 * Math.sqrt(cluster_conns[key].weight));
+                radius.push(0.025 * Math.pow(cluster_conns[key].weight, 0.667));
                 color.push(col);
             }
 
@@ -221,12 +234,12 @@ class NeuronView {
                 paths: paths,
                 colors: {
                     color_list: [
-                        // new Color3(0.118, 0.839, 0.514),
-                        // new Color3(0.929, 0.141, 0.349),
-                        // new Color3(0.267, 0.322, 0.831)
-                        new Color3(1.0, 1.0, 1.0),
-                        new Color3(1.0, 1.0, 1.0),
-                        new Color3(1.0, 1.0, 1.0)
+                        new Color3(0.118, 0.839, 0.514),
+                        new Color3(0.929, 0.141, 0.349),
+                        new Color3(0.267, 0.322, 0.831)
+                        // new Color3(1.0, 1.0, 1.0),
+                        // new Color3(1.0, 1.0, 1.0),
+                        // new Color3(1.0, 1.0, 1.0)
                     ],
                     path_colors: color
                 },
@@ -240,6 +253,9 @@ class NeuronView {
             this.connections.position.x = -10.0;
             this.connections.position.z = 7.5;
             this.connections.layerMask = Math.pow(2, this.id);
+            t_end = performance.now();
+            console.log('tubes mesh created! ' + (t_end - t_start).toFixed(1) + 'ms)');
+
         }
     }
 
@@ -247,9 +263,9 @@ class NeuronView {
         let dist = start_pt.subtract(end_pt).length();
         let c1_dist = start_pt.subtract(this.brain_center).length();
         let c2_dist = end_pt.subtract(this.brain_center).length();
-        //let scale = Math.min(0.75 * (2.0 * dist) / (c1_dist + c2_dist), 0.75);
         let scale = (2.0 * dist) / (c1_dist + c2_dist);
         scale = Math.min(scale * scale, 0.75);
+        //scale = Math.min(0.75 * scale, 0.75);
         let ctrl_point1 = start_pt.add(this.brain_center.subtract(start_pt).scale(scale));
         let ctrl_point2 = end_pt.add(this.brain_center.subtract(end_pt).scale(scale));
         let path = [];
