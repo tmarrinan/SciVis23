@@ -122,7 +122,7 @@ export function CreateTubeCollection(name, options, scene) {
         });
         let path_color_tex = new RawTexture(path_color_px, 2 * options.colors.color_list.length, 1, Engine.TEXTUREFORMAT_RGBA, scene,
                                             false, false, Texture.BILINEAR_SAMPLINGMODE);
-        let path_color_tex2 = new Texture(BASE_URL + 'images/connection_texture.png', scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
+        //let path_color_tex2 = new Texture(BASE_URL + 'images/connection_texture.png', scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
         //path_color_tex2.wrapU = Texture.CLAMP_ADDRESSMODE;
         //path_color_tex2.wrapV = Texture.CLAMP_ADDRESSMODE;
         tube_collection.material = new StandardMaterial(name + '_mat', scene);

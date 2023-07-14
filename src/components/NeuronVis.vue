@@ -250,7 +250,6 @@ export default {
         },
 
         updateNetworkViz(view, table) {
-            console.log(table);
             // let conn_data = {};
             // let desired_columns = ['source_id', 'target_id', 'weight'];
             // for (let i = 0; i < table.schema.fields.length; i++) {
@@ -259,6 +258,7 @@ export default {
             //     }
             // }
             // this.views[view].updateConnectionData(conn_data, this.state[view].simulation, this.state[view].timestep);
+            this.views[view].updateConnectionData(table)
         },
 
         setRoomId(id) {

@@ -155,9 +155,54 @@ class NeuronView {
         }
     }
 
-    updateConnectionData(conn_data, simulation, timestep) {
+    updateConnectionData(conn_data) {
         if (this.connections !== null) this.connections.dispose();
 
+        if (conn_data.values.length > 0) {
+            let paths = [];
+            let radius = [];
+            let color = [];
+            for (let i = 0; i < conn_data.values.length; i++) {
+                let src = this.neuron_ptcloud.positions[areaCentroids[parseInt(conn_data.values[i][0])]];
+                let dest = this.neuron_ptcloud.positions[areaCentroids[parseInt(conn_data.values[i][1])]];
+                let dx = Math.abs(src.x - dest.x);
+                let dy = Math.abs(src.y - dest.y);
+                let dz = Math.abs(src.z - dest.z);
+                let col = (dx > dy && dx > dz) ? 0 : dy > dz ? 1 : 2;
+
+                let to_center = this.brain_center.subtract(src);
+                to_center.normalize();
+                let to_dest = dest.subtract(src);
+                to_dest.normalize();
+                let right = to_center.cross(to_dest);
+                right.normalize();
+
+                paths.push(this.createBezierPath(src.add(right.scale(5.0)), dest.add(right.scale(5.0)), 24));
+                radius.push(0.025 * Math.pow(parseInt(conn_data.values[i][2]), 0.667));
+                color.push(col);
+            }
+
+            let tube_options = {
+                paths: paths,
+                colors: {
+                    color_list: [
+                        new Color3(0.118, 0.839, 0.514),
+                        new Color3(0.929, 0.141, 0.349),
+                        new Color3(0.267, 0.322, 0.831)
+                    ],
+                    path_colors: color
+                },
+                radius: radius,
+                tessellation: 6
+            };
+            this.connections = CreateTubeCollection('connections_' + this.id, tube_options, this.scene);
+            this.connections.scaling = new Vector3(0.1, 0.1, 0.1);
+            this.connections.rotation.x = -Math.PI / 2.0;
+            this.connections.position.x = -10.0;
+            this.connections.position.z = 7.5;
+            this.connections.layerMask = Math.pow(2, this.id);
+        }
+        /*
         if (conn_data.source_id.length > 0) {
             let cluster_conns = {};
             let n = 0;
@@ -268,6 +313,7 @@ class NeuronView {
             console.log('tubes mesh created! ' + (t_end - t_start).toFixed(1) + 'ms)');
 
         }
+        */
     }
 
     createBezierPath(start_pt, end_pt, num_divisions) {
