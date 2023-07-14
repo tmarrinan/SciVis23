@@ -141,8 +141,8 @@ export default {
 
             let old_conn_ts_idx = ~~(this.state[view].timestep / 100);
             let new_conn_ts_idx = ~~(value / 100);
-            let fetch_connections = old_conn_ts_idx !== new_conn_ts_idx;
 
+            let fetch_connections = old_conn_ts_idx !== new_conn_ts_idx;
             this.state[view].timestep = value;
             this.syncState(view, this.state[view]);
             
@@ -250,14 +250,15 @@ export default {
         },
 
         updateNetworkViz(view, table) {
-            let conn_data = {};
-            let desired_columns = ['source_id', 'target_id', 'weight'];
-            for (let i = 0; i < table.schema.fields.length; i++) {
-                if (desired_columns.includes(table.schema.fields[i].name)) {
-                    conn_data[table.schema.fields[i].name] = table.data[0].children[i].values;
-                }
-            }
-            this.views[view].updateConnectionData(conn_data);
+            console.log(table);
+            // let conn_data = {};
+            // let desired_columns = ['source_id', 'target_id', 'weight'];
+            // for (let i = 0; i < table.schema.fields.length; i++) {
+            //     if (desired_columns.includes(table.schema.fields[i].name)) {
+            //         conn_data[table.schema.fields[i].name] = table.data[0].children[i].values;
+            //     }
+            // }
+            // this.views[view].updateConnectionData(conn_data, this.state[view].simulation, this.state[view].timestep);
         },
 
         setRoomId(id) {

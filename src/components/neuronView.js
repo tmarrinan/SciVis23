@@ -155,7 +155,7 @@ class NeuronView {
         }
     }
 
-    updateConnectionData(conn_data) {
+    updateConnectionData(conn_data, simulation, timestep) {
         if (this.connections !== null) this.connections.dispose();
 
         if (conn_data.source_id.length > 0) {
@@ -203,7 +203,10 @@ class NeuronView {
             let paths = [];
             let radius = [];
             let color = [];
+            let conn_str = 'Source,Target,Weight\n';
             for (let key in cluster_conns) {
+                let areas = key.split(':');
+                conn_str += areas[0] + ',' + areas[1] + ',' + cluster_conns[key].weight + '\n';
                 let dx = Math.abs(cluster_conns[key].start.x - cluster_conns[key].end.x);
                 let dy = Math.abs(cluster_conns[key].start.y - cluster_conns[key].end.y);
                 let dz = Math.abs(cluster_conns[key].start.z - cluster_conns[key].end.z);
@@ -213,6 +216,14 @@ class NeuronView {
                 radius.push(0.025 * Math.pow(cluster_conns[key].weight, 0.667));
                 color.push(col);
             }
+
+            // let link = document.createElement('a');
+            // let file = new Blob([conn_str], { type: 'text/plain' });
+            // link.href = URL.createObjectURL(file);
+            // timestep = ~~(timestep / 100) * 10000;
+            // link.download = simulation + '_' + timestep.toString().padStart(6, '0') + '.csv';
+            // link.click();
+            // URL.revokeObjectURL(link.href);
 
 
             // let paths = [];

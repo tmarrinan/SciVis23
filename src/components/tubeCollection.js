@@ -9,6 +9,8 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { RawTexture } from '@babylonjs/core/Materials/Textures/rawTexture';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 
+const BASE_URL = import.meta.env.BASE_URL || '/';
+
 export function CreateTubeCollection(name, options, scene) {
     const path_array = options.paths;
     let radius_array = null;
@@ -86,6 +88,7 @@ export function CreateTubeCollection(name, options, scene) {
                 vertex_positions.push(point.vertex.x, point.vertex.y, point.vertex.z);
                 vertex_normals.push(point.normal.x, point.normal.y, point.normal.z);
                 vertex_texcoords.push(t * texcoord + (1.0 - t) * texcoord_end, 0.5);
+                //vertex_texcoords.push(t * texcoord + (1.0 - t) * texcoord_end, p_idx / (circle.length - 1));
                 if (c_idx < (tube.length - 1)) {
                     let p0 = t_offset + c_offset + p_idx;
                     let p1 = t_offset + c_offset + ((p_idx + 1) % tessellation);
@@ -119,6 +122,9 @@ export function CreateTubeCollection(name, options, scene) {
         });
         let path_color_tex = new RawTexture(path_color_px, 2 * options.colors.color_list.length, 1, Engine.TEXTUREFORMAT_RGBA, scene,
                                             false, false, Texture.BILINEAR_SAMPLINGMODE);
+        let path_color_tex2 = new Texture(BASE_URL + 'images/connection_texture.png', scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
+        //path_color_tex2.wrapU = Texture.CLAMP_ADDRESSMODE;
+        //path_color_tex2.wrapV = Texture.CLAMP_ADDRESSMODE;
         tube_collection.material = new StandardMaterial(name + '_mat', scene);
         tube_collection.material.backFaceCulling = false;
         //tube_collection.material.emissiveTexture = path_color_tex;
