@@ -12,7 +12,6 @@ const vertex_shader_src =
 '\n' +
 '// Attributes\n' +
 'in vec3 position;\n' +
-'in vec4 color;\n' +
 'in vec2 uv;\n' +
 'in vec2 uv2;\n' +
 '\n' +
@@ -20,9 +19,14 @@ const vertex_shader_src =
 'uniform vec3 camera_position;\n' +
 'uniform vec3 camera_up;\n' +
 'uniform float point_size;\n' +
+'uniform vec3 cloud_center;\n' +
+'uniform int displace_to_center;\n' +
 'uniform mat4 world;\n' +
 'uniform mat4 view;\n' +
 'uniform mat4 projection;\n' +
+'uniform vec2 scalar_range;\n' +
+'uniform sampler2D scalars;\n' +
+'uniform sampler2D colormap;\n' +
 '\n' +
 '// Output\n' +
 'out vec3 world_position;\n' +
@@ -33,12 +37,14 @@ const vertex_shader_src =
 'out float model_size;\n' +
 '\n' +
 'void main() {\n' +
-'    vec3 world_point = (world * vec4(position, 1.0)).xyz;\n' +
+'    vec3 center_dir = float((gl_VertexID / 4) % 10) * (cloud_center - position);\n' +
+'    vec3 point_location = position + (displace_to_center > 0 ? 0.025 * center_dir : vec3(0.0));\n' +
+'    vec3 world_point = (world * vec4(point_location, 1.0)).xyz;\n' +
 '    vec3 vertex_direction = normalize(world_point - camera_position);\n' +
 '    vec3 cam_right = normalize(cross(vertex_direction, camera_up));\n' +
 '    vec3 cam_up = cross(cam_right, vertex_direction);\n' +
 '\n' +
-'    float dist_scale = clamp(0.15 * length(camera_position - world_point), 0.05, 1.0);\n' + // make this variable somehow?
+'    float dist_scale = displace_to_center > 0 ? 1.0 : clamp(((length(camera_position - world_point) - 1.3) / (10.0 - 1.3)) * (1.0 - 0.05) + 0.05, 0.05, 1.0);\n' +
 '    model_size = dist_scale * point_size;\n' +
 '    world_position = world_point + (cam_right * uv2.x * model_size) +\n' +
 '                                   (cam_up * uv2.y * model_size);\n' +
@@ -49,8 +55,9 @@ const vertex_shader_src =
 '    world_normal_mat = mat3(u, v, n);\n' +
 '\n' +
 '    model_center = world_point;\n' +
-'    model_color = color;\n' +
-'    model_texcoord = uv;\n' +
+'    float scalar_value = (texture(scalars, uv).r - scalar_range.x) / (scalar_range.y - scalar_range.x);\n' +
+'    model_color = texture(colormap, vec2(scalar_value, 0.5));\n' +
+'    model_texcoord = uv2 + vec2(0.5, 0.5);\n' +
 '\n' +
 '    gl_Position = projection * view * vec4(world_position, 1.0);\n' +
 '    gl_Position.z = 0.0;\n' +
@@ -74,9 +81,9 @@ const fragment_shader_src =
 'uniform vec3 camera_position;\n' +
 'uniform int num_lights;\n' +
 'uniform vec3 light_ambient;\n' +
-'uniform vec3 hemispheric_light_direction;\n' +
-'uniform vec3 hemispheric_light_sky_color;\n' +
-'uniform vec3 hemispheric_light_ground_color;\n' +
+'uniform vec3 hemi_light_direction;\n' +
+'uniform vec3 hemi_light_sky_color;\n' +
+'uniform vec3 hemi_light_ground_color;\n' +
 'uniform vec3 point_light_position[8];\n' +
 'uniform vec3 point_light_color[8];\n' +
 '\n' +
@@ -92,7 +99,7 @@ const fragment_shader_src =
 '\n' +
 '    vec3 sphere_normal = vec3(norm_texcoord, sqrt(1.0 - magnitude));\n' +
 '    sphere_normal = normalize(world_normal_mat * sphere_normal);\n' +
-'    float sphere_radius = model_size / 2.0;\n' +
+'    float sphere_radius = 0.5 * model_size;\n' +
 '    vec3 sphere_position = (sphere_normal * sphere_radius) + model_center;\n' +
 '\n' +
 '    // Depth\n' +
@@ -106,8 +113,8 @@ const fragment_shader_src =
 '    }\n' +
 '    gl_FragDepth = frag_depth;\n' +
 '\n' +
-'    float hemi_weight = 0.5 + 0.5 * dot(sphere_normal, hemispheric_light_direction);\n' +
-'    vec3 light_diffuse = mix(hemispheric_light_ground_color, hemispheric_light_sky_color, hemi_weight);\n' +
+'    float hemi_weight = 0.5 + 0.5 * dot(sphere_normal, hemi_light_direction);\n' +
+'    vec3 light_diffuse = mix(hemi_light_ground_color, hemi_light_sky_color, hemi_weight);\n' +
 '    for (int i = 0; i < num_lights; i++) {\n' +
 '        vec3 light_direction = normalize(point_light_position[i] - sphere_position);\n' +
 '        float n_dot_l = max(dot(sphere_normal, light_direction), 0.0);\n' +
@@ -122,14 +129,26 @@ const fragment_shader_src =
 '    FragColor = vec4(final_color, model_color.a);\n' +
 '}'
 
+function nearestFactors(num) {
+    let fac1 = Math.floor(Math.sqrt(num));
+    while (num % fac1 > 0) {
+        fac1--;
+    }
+    return [fac1, num / fac1];
+}
+
 export default {
-    CreateImposterSphereMesh: (name, positions, colors, scene) => {
+    CreateImposterSphereMesh: (name, positions, scene) => {
         let is_mesh = new Mesh(name, scene);
         let vertex_positions = new Array(positions.length * 12);
         let quad_positions = new Array(positions.length * 8);
-        let vertex_colors = new Array(positions.length * 16);
-        let vertex_texcoords = new Array(positions.length * 8);
+        let vertex_idx_uv = new Array(positions.length * 8);
         let vertex_indices = new Array(positions.length * 6);
+
+        let dims = nearestFactors(positions.length);
+        let dims_y = dims[0];
+        let dims_x = dims[1];
+
         $.each(positions, (index) => {
             vertex_positions[12 * index +  0] = positions[index].x;
             vertex_positions[12 * index +  1] = positions[index].y;
@@ -153,31 +172,16 @@ export default {
             quad_positions[8 * index + 6] = -0.5;
             quad_positions[8 * index + 7] =  0.5;
 
-            vertex_colors[16 * index +  0] = colors[index].r;
-            vertex_colors[16 * index +  1] = colors[index].g;
-            vertex_colors[16 * index +  2] = colors[index].b;
-            vertex_colors[16 * index +  3] = colors[index].a;
-            vertex_colors[16 * index +  4] = colors[index].r;
-            vertex_colors[16 * index +  5] = colors[index].g;
-            vertex_colors[16 * index +  6] = colors[index].b;
-            vertex_colors[16 * index +  7] = colors[index].a;
-            vertex_colors[16 * index +  8] = colors[index].r;
-            vertex_colors[16 * index +  9] = colors[index].g;
-            vertex_colors[16 * index + 10] = colors[index].b;
-            vertex_colors[16 * index + 11] = colors[index].a;
-            vertex_colors[16 * index + 12] = colors[index].r;
-            vertex_colors[16 * index + 13] = colors[index].g;
-            vertex_colors[16 * index + 14] = colors[index].b;
-            vertex_colors[16 * index + 15] = colors[index].a;
-
-            vertex_texcoords[8 * index + 0] = 0.0;
-            vertex_texcoords[8 * index + 1] = 0.0;
-            vertex_texcoords[8 * index + 2] = 1.0;
-            vertex_texcoords[8 * index + 3] = 0.0;
-            vertex_texcoords[8 * index + 4] = 1.0;
-            vertex_texcoords[8 * index + 5] = 1.0;
-            vertex_texcoords[8 * index + 6] = 0.0;
-            vertex_texcoords[8 * index + 7] = 1.0;
+            let row = ~~(index / dims_x);
+            let col = index % dims_x;
+            vertex_idx_uv[8 * index + 0] = (col + 0.5) / dims_x;
+            vertex_idx_uv[8 * index + 1] = (row + 0.5) / dims_y;
+            vertex_idx_uv[8 * index + 2] = (col + 0.5) / dims_x;
+            vertex_idx_uv[8 * index + 3] = (row + 0.5) / dims_y;
+            vertex_idx_uv[8 * index + 4] = (col + 0.5) / dims_x;
+            vertex_idx_uv[8 * index + 5] = (row + 0.5) / dims_y;
+            vertex_idx_uv[8 * index + 6] = (col + 0.5) / dims_x;
+            vertex_idx_uv[8 * index + 7] = (row + 0.5) / dims_y;
 
             vertex_indices[6 * index + 0] = (4 * index);
             vertex_indices[6 * index + 1] = (4 * index) + 1;
@@ -189,17 +193,17 @@ export default {
 
         let vertex_data = new VertexData();
         vertex_data.positions = vertex_positions;
-        vertex_data.colors = vertex_colors;
-        vertex_data.uvs = vertex_texcoords;
+        vertex_data.uvs = vertex_idx_uv;
         vertex_data.uvs2 = quad_positions;
         vertex_data.indices = vertex_indices;
 
         vertex_data.applyToMesh(is_mesh);
 
+        is_mesh.num_points = positions.length;
+        is_mesh.uv_dimensions = {u: dims_x, v: dims_y};
         return is_mesh;
     },
     CreateImposterSphereShaderMaterial: (scene) => {
-        // TODO: use babylon lights rather than manually passing data to custom uniforms?
         Effect.ShadersStore['imposterspheresVertexShader'] = vertex_shader_src;
         Effect.ShadersStore['imposterspheresFragmentShader'] = fragment_shader_src;
 
@@ -211,8 +215,9 @@ export default {
                 fragment: 'imposterspheres'
             },
             {
-                attributes: ['position', 'color', 'uv', 'uv2'],
-                uniforms: ['world', 'view', 'projection']
+                attributes: ['position', 'uv', 'uv2'],
+                uniforms: ['world', 'view', 'projection'],
+                samplers: ['scalars', 'colormap']
             }
         );
 

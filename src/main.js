@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import HttpGetPlugin from './HttpGetPlugin'
 
+/*
 let init = false;
 
 function initializeApp() {
@@ -12,5 +13,8 @@ function initializeApp() {
     }
     init = true;
 }
+*/
 
-window.initializeApp = initializeApp;
+let app = createApp(App);
+app.use(HttpGetPlugin, {});
+app.mount('#app');
