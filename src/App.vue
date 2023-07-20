@@ -6,7 +6,8 @@ export default {
     data() {
         return {
             num_views: 1,
-            data_url: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
+            //data_url: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
+            data_url: 'https://web.cels.anl.gov/projects/VisWebData/scivis23/parquet/',
             ws: null,
             ws_open: false,
             room_id: ''
