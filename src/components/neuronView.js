@@ -58,7 +58,7 @@ class NeuronView {
 
     addCamera() {
         this.camera = new ArcRotateCamera('camera' + this.id.toString(), -Math.PI / 2.0,  3.0 * Math.PI / 8.0, 50.0, 
-                                          this.camera_settings.target, this.scene);
+                                          this.camera_settings.target.clone(), this.scene);
         this.camera.updateUpVectorFromRotation = true;
         this.camera.minZ = this.camera_settings.near;
         this.camera.maxZ = this.camera_settings.far;
@@ -74,9 +74,9 @@ class NeuronView {
     }
 
     setCameraView(position, target, up) {
-        this.camera.position = position;
-        this.camera.target = target;
-        this.camera.upVector = up;
+        this.camera.position = position.clone();
+        this.camera.target = target.clone();
+        this.camera.upVector = up.clone();
     }
 
     setPointCloudMesh(positions, point_cloud) {
