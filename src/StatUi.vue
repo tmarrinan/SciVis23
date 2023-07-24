@@ -1,5 +1,8 @@
 <script>
 import * as d3 from 'd3';
+import timeline from './components/timeline'
+
+
 
 export default {
     data() {
@@ -7,7 +10,7 @@ export default {
             ws: null,
             ws_open: false,
             joined_room: false,
-            room_id: ''
+            room_id: '', 
         }
     },
     methods: {
@@ -74,24 +77,167 @@ export default {
                 this.updateState(message.data);
             }
             else {
-                console.log(message);
+                console.log(message.data);
             }
-        };
 
-        // D3 chart
-        let data = [
-            {name: 'Thing 1', value: 6},
-            {name: 'Thing 2', value: 2},
-            {name: 'Thing 3', value: 9},
-            {name: 'Thing 4', value: 7}
-        ];
-        let margin = {top: 20, right: 20, bottom: 30, left: 40};
+        
+
+        console.log("simulation: " + message.data.state.simulation)
+        console.log("neuron property: " + message.data.state.neuron_property)
+        console.log("timestep: " + message.data.state.timestep)
+
+
+        this.timeline = new timeline.Timeline();
+        let global_mm = {};
+
+   
+    
+    //for(let i = 0; i<1000;i++){//for mins and maxes - delete after
+
+        
+
+        this.timeline.setTimestep(message.data.state.timestep);
+        //this.timeline.setTimestep(i);
+
+        this.timeline.setSimulation(message.data.state.simulation);
+        this.timeline.getTimestep()
+        .then((table) => {
+
+            //console.log(table)
+
+
+            let sim_data = {};
+            let desired_columns = ['current_calcium', 'target_calcium', 'fired', 'fired_fraction', 'grown_axons',
+                                   'grown_dendrites', 'connected_axons', 'connected_dendrites'];
+            for (let i = 0; i < table.schema.fields.length; i++) {
+                if (desired_columns.includes(table.schema.fields[i].name)) {
+                    sim_data[table.schema.fields[i].name] = table.data[0].children[i].values;
+                }
+            }
+
+            let sim_data_ranges = {};
+            for (let key in sim_data) {
+                if (sim_data.hasOwnProperty(key)) {
+                    if (key === 'target_calcium') {
+                        sim_data[key] = sim_data[key].map((value, index) => sim_data['current_calcium'][index] - value);
+                    }
+                    let d_min = sim_data[key][0];
+                    let d_max = sim_data[key][0];
+                    for (let i = 1; i < sim_data[key].length; i++) {
+                        let val = sim_data[key][i];
+                        d_min = val < d_min ? val : d_min;
+                        d_max = val > d_max ? val : d_max;
+                    }
+                    sim_data_ranges[key] = {min: d_min, max: d_max};
+
+                    //----globals-----
+                    // let g_min = null;
+                    // let g_max = null;
+                    // if(global_mm[key] == null || sim_data_ranges[key].min < global_mm[key].min){
+                    //     g_min = sim_data_ranges[key].min
+                    // } else {
+                    //     g_min = global_mm[key].min;
+                    // }
+                    
+                    // if(global_mm[key] == null || sim_data_ranges[key].max > global_mm[key].max){
+                    //     g_max = sim_data_ranges[key].max
+                    // } else {
+                    //     g_max = global_mm[key].max;
+                    // }
+                    // global_mm[key] = {min: g_min, max: g_max};
+                }
+            };
+
+            // console.log(i)
+          
+            // console.log(sim_data_ranges)
+            // console.log(global_mm)
+            
+            let data = [];
+
+            let fired = 0;
+            let notfired = 0;
+
+            let val_1 = 0;
+            let val_2 = 0;
+            let val_3 = 0;
+            let val_4 = 0;
+
+            let property = message.data.state.neuron_property;
+            if(message.data.state.neuron_property == 'fired'){
+                
+                for(let v = 0; v < table.numRows; v++){
+                    if(sim_data.fired[v] == 1){
+                        fired += 1
+                    } else { 
+                        notfired +=1
+                    }
+                    
+                    }
+
+                console.log("fired = " + fired)
+                console.log("not fired = " + notfired)
+                // D3 chart - for charts with binary values
+                data = [
+                    {name: 'True', value: fired},
+                    {name: 'False', value: notfired},
+                ];
+            } else {
+
+                // split into 4 'categories'?
+                let min = sim_data_ranges[property].min;
+                let max = sim_data_ranges[property].max;
+                
+                let split = (max - min) / 4.0;
+
+
+                for(let v = 0; v < table.numRows; v++){
+                    if(sim_data[property][v] <= (min + split)  ){
+                        val_1 += 1;
+                    } else if (sim_data[property][v] >= (min+split) && sim_data[property][v] <= (min+(split*2))) {
+                        val_2 += 1;
+                    } else if (sim_data[property][v] >= (min+(split*2)) && sim_data[property][v] <= (min+(split*3))) {
+                        val_3 += 1;
+                    } else {
+                        val_4 += 1;
+                    }
+                }
+                console.log("val 1 = " + parseFloat(val_1))
+                console.log("val 2 = " + parseFloat(val_2))
+                console.log("val 3 = " + parseFloat(val_3))
+                console.log("val 4 = " + parseFloat(val_4))
+
+                // D3 chart
+                data = [
+                    {name: min.toFixed(3) + ' - ' + (min + split).toFixed(3), value: val_1},
+                    {name: (min + split).toFixed(3) + ' - ' + (min + (split*2)).toFixed(3), value: val_2},
+                    {name: (min + (split*2)).toFixed(3) + ' - ' + (min + (split*3)).toFixed(3), value: val_3},
+                    {name: (min + (split*3)).toFixed(3) + ' - ' + (max).toFixed(3), value: val_4}
+                ];
+            }
+           
+
+           
+
+           
+    
+
+        
+            
+        d3.selectAll("svg > *").remove();
+
+    
+        
+        let margin = {top: 20, right: 20, bottom: 30, left: 150};
         let width = 600 - margin.left - margin.right;
         let height = 400 - margin.top - margin.bottom;
         let d3svg = d3.select('#d3-chart').attr('width', width + margin.left + margin.right)
                                           .attr('height', height + margin.bottom + margin.top)
                       .append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
+       
+                     
+                    
         let x_axis = d3.scaleBand().range([0, width]).padding(0.1);
         let y_axis = d3.scaleLinear().range([height, 0]);
 
@@ -105,6 +251,8 @@ export default {
              .attr('y', d =>  y_axis(d.value))
              .attr('height', d => (height - y_axis(d.value)))
              .style('stroke-dasharray', d => ((x_axis.bandwidth() + height - y_axis(d.value)) + ',' + x_axis.bandwidth()));
+               
+        
 
         d3svg.append('g').classed('d3axis', true)
                          .attr('transform', 'translate(0,' + height + ')')
@@ -112,7 +260,18 @@ export default {
 
         d3svg.append('g').classed('d3axis', true)
                          .call(d3.axisLeft(y_axis));
-    }
+  
+        
+        })
+        .catch((reason) => { console.error(reason); });
+        };
+
+        
+    //}//delete this for the for loop
+    
+        
+
+        }
 }
 </script>
 
