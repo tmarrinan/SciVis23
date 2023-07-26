@@ -29,14 +29,14 @@ class NeuronView {
         this.local_scalar_range = null;
         this.global_scalar_ranges = {
             area: {min: 0, max: 47},
-            current_calcium: {min: 0.0, max: 1.1},
-            target_calcium: {min: -0.7, max: 0.7},
+            current_calcium: {min: 0.000000, max: 0.790452},
+            target_calcium: {min: -0.700000, max: 0.700000},
             fired: {min: 0.0, max: 1.0},
-            fired_fraction: {min: 0.0, max: 0.1},
-            grown_axons: {min: 0, max: 50},
-            grown_dendrites: {min: 0, max: 50},
-            connected_axons: {min: 0, max: 50},
-            connected_dendrites: {min: 0, max: 50}
+            fired_fraction: {min: 0.019999, max: 0.060000},
+            grown_axons: {min: 0, max: 27},
+            grown_dendrites: {min: 0, max: 19},
+            connected_axons: {min: 0, max: 27},
+            connected_dendrites: {min: 0, max: 19}
         };
         this.colormap = null;
         this.colormaps = data.colormaps;

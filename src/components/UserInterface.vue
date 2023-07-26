@@ -28,14 +28,14 @@ export default {
             // TODO: enable local min/max on colormap legend scale
             neuron_properties: {
                 area: {name: 'Area', min: 0, max: 47},
-                current_calcium: {name: 'Calcium', min: 0.0, max: 1.1},
-                target_calcium: {name: 'Calcium to Target', min: -0.7, max: 0.7},
-                fired: {name: 'Fired', min: 0, max: 1},
-                fired_fraction: {name: 'Fired Rate', min: 0.0, max: 0.8},
-                grown_axons: {name: 'Axons', min: 0, max: 50},
-                grown_dendrites: {name: 'Dendrites', min: 0, max: 50},
-                connected_axons: {name: 'Incoming Connections', min: 0, max: 50},
-                connected_dendrites: {name: 'Outgoing Connections', min: 0, max: 50}
+                current_calcium: {name: 'Calcium', min: 0.000000, max: 0.790452},
+                target_calcium: {name: 'Calcium to Target', min: -0.700000, max: 0.700000},
+                fired: {name: 'Fired', min: 0.0, max: 1.0},
+                fired_fraction: {name: 'Fired Rate', min: 0.019999, max: 0.060000},
+                grown_axons: {name: 'Axons', min: 0, max: 27},
+                grown_dendrites: {name: 'Dendrites', min: 0, max: 19},
+                connected_axons: {name: 'Incoming Connections', min: 0, max: 27},
+                connected_dendrites: {name: 'Outgoing Connections', min: 0, max: 19}
             },
             neuron_local_ranges: null
         }
