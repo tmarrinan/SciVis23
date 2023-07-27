@@ -12,6 +12,8 @@ import { CreateTubeCollection } from './tubeCollection'
 class NeuronView {
     constructor(id, canvas, data) {
         this.id = id;
+        this.layer = Math.pow(2, this.id) | 0;
+        this.visibility_mode = 'neurons';
         this.canvas = canvas;
         this.scene = data.scene;
         this.camera_settings = data.camera;
@@ -63,7 +65,7 @@ class NeuronView {
         this.camera.minZ = this.camera_settings.near;
         this.camera.maxZ = this.camera_settings.far;
         this.camera.wheelPrecision = this.camera_settings.wheel_precision;
-        this.camera.layerMask = Math.pow(2, this.id);
+        this.camera.layerMask = this.layer;
         if (this.id === 0) {
             this.camera.attachControl(this.canvas, true);
             this.scene.activeCameras.push(this.camera);
@@ -146,6 +148,28 @@ class NeuronView {
         this.camera.viewport = new Viewport(x, y, w, h);
     }
 
+    setModelVisibility(mode) {
+        this.visibility_mode = mode;
+        if (mode === 'neurons') {
+            this.neuron_ptcloud.mesh.layerMask |= this.layer;
+            if (this.connections !== null) {
+                this.connections.visibility = 0;
+            }
+        }
+        else if (mode === 'connections') {
+            this.neuron_ptcloud.mesh.layerMask &= ~this.layer;
+            if (this.connections !== null) {
+                this.connections.visibility = 1;
+            }
+        }
+        else {
+            this.neuron_ptcloud.mesh.layerMask |= this.layer;
+            if (this.connections !== null) {
+                this.connections.visibility = 1;
+            }
+        }
+    }
+
     updateSimulationData(sim_data, data_ranges) {
         this.simulation_data = sim_data;
         this.data_ranges = data_ranges;
@@ -200,7 +224,10 @@ class NeuronView {
             this.connections.rotation.x = -Math.PI / 2.0;
             this.connections.position.x = -10.0;
             this.connections.position.z = 7.5;
-            this.connections.layerMask = Math.pow(2, this.id);
+            this.connections.layerMask = this.layer;
+            if (this.visibility_mode === 'neurons') {
+                this.connections.visibility = 0;
+            }
         }
         /*
         if (conn_data.source_id.length > 0) {
@@ -308,7 +335,7 @@ class NeuronView {
             this.connections.rotation.x = -Math.PI / 2.0;
             this.connections.position.x = -10.0;
             this.connections.position.z = 7.5;
-            this.connections.layerMask = Math.pow(2, this.id);
+            this.connections.layerMask = this.layer;
             t_end = performance.now();
             console.log('tubes mesh created! ' + (t_end - t_start).toFixed(1) + 'ms)');
 

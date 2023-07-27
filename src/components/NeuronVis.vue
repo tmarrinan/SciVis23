@@ -129,6 +129,12 @@ export default {
             console.log(state);
         },
 
+        updateVisibility(event) {
+            let view = event.idx;
+            let value = event.data;
+            this.views[view].setModelVisibility(value);
+        },
+
         updateNearClip(event) {
             let view = event.idx;
             let value = event.data;
@@ -374,6 +380,7 @@ export default {
 
             // Create point cloud data using neuron positions
             let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, this.scene);
+            point_cloud.layerMask = 255;
             point_cloud.material = ptcloud_mat;
             point_cloud.scaling = new Vector3(0.1, 0.1, 0.1);
             point_cloud.rotation.x = -Math.PI / 2.0;
@@ -461,7 +468,8 @@ export default {
         <canvas id="render-canvas" touch-action="none" tabindex="-1"></canvas>
         <div v-for="col in (view_columns - 1)" class="vertical-bar" :style="'left: ' + (100 * col / view_columns) + '%;'"></div>
         <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>
-        <UserInterface v-for="i in 8" v-show="i <= num_views" ref="ui" :idx="i - 1" :num_views="num_views" @update-near-clip="updateNearClip"
+        <UserInterface v-for="i in 8" v-show="i <= num_views" ref="ui" :idx="i - 1" :num_views="num_views" 
+            @update-visibility="updateVisibility" @update-near-clip="updateNearClip"
             @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"
             @update-neuron-property="updateNeuronProperty" @use-global-scalar-range="useGlobalScalarRange"
             @displace-neurons="displaceNeurons"/>

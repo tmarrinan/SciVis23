@@ -1,4 +1,6 @@
 <script>
+import NeuronVis from './NeuronVis.vue';
+
 const BASE_URL = import.meta.env.BASE_URL || '/';
 
 export default {
@@ -18,6 +20,12 @@ export default {
             selected_simulation: 'viz-no-network',
             global_scalar_range: true,
             displace_neurons: false,
+            visibility: [
+                {name: 'neurons', description: 'Neurons'},
+                {name: 'connections', description: 'Connections'},
+                {name: 'neuron-connections', description: 'Neurons & Connections'}
+            ],
+            selected_visibility: 'neurons',
             simulations: [
                 {name: 'viz-no-network', description: 'No Initial Connectivity'},
                 {name: 'viz-stimulus', description: 'Stimulation / Learning'},
@@ -58,8 +66,8 @@ export default {
             }
         }
     },
-    emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection', 'update-neuron-property',
-            'use-global-scalar-range', 'displace-neurons'],
+    emits: ['update-visibility', 'update-near-clip', 'update-timestep', 'update-simulation-selection',
+            'update-neuron-property', 'use-global-scalar-range', 'displace-neurons'],
     methods: {
         getLocationRight() {
             let rows = (this.num_views > 2) ? 2 : 1;
@@ -108,6 +116,10 @@ export default {
 
         toggleShowUi(event) {
             this.show_ui = !this.show_ui;
+        },
+
+        updateVisibility(event) {
+            this.$emit('update-visibility',  {idx: this.idx, data: this.selected_visibility});
         },
 
         updateNearClip(event) {
@@ -188,6 +200,14 @@ export default {
                 <div style="width: 16rem; text-align: right; margin-bottom: 0.5rem;">
                     <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="/images/down-arrow.png" alt="down arrow"/></button>
                 </div>
+                <label>Visibility:</label><br/>
+                <select class="ui-element" v-model="selected_visibility" @change="updateVisibility">
+                    <option v-for="item in visibility" :value="item.name">{{ item.description }}</option>
+                </select>
+                <br/>
+                <label>Displace Neurons:</label>
+                <input class="ui-checkbox" type="checkbox" v-model="displace_neurons" @change="updateDisplaceNeurons"/>
+                <br/>
                 <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
                 <button class="ui-slider-btn" type="button" @click="decrementNearClip"><img src="/images/left-arrow.png" alt="left arrow"/></button>
                 <input class="ui-slider" type="range" :min="near_clip_start" :max="near_clip_end" v-model="near_clip_slider" @input="updateNearClip"/>
@@ -209,10 +229,7 @@ export default {
                 </select>
                 <br/>
                 <label>Global Scalar Range:</label>
-                <input class="ui-checkbox" type="checkbox" v-model="global_scalar_range" @change="updateScalarRangeType"/>
-                <br/>
-                <label>Displace Neurons:</label>
-                <input class="ui-checkbox last" type="checkbox" v-model="displace_neurons" @change="updateDisplaceNeurons"/>
+                <input class="ui-checkbox last" type="checkbox" v-model="global_scalar_range" @change="updateScalarRangeType"/>
             </div>
             <div v-show="!show_ui">
                 <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="/images/left-arrow.png" alt="left arrow"/></button>
