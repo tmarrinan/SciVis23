@@ -14,9 +14,6 @@ import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 import { WebXRDefaultExperience } from '@babylonjs/core/XR/webXRDefaultExperience';
-import { WebXRExperienceHelper } from '@babylonjs/core/XR/webXRExperienceHelper';
-import { WebXRState } from '@babylonjs/core/XR/webXRTypes'; 
-import { WebXREnterExitUI } from '@babylonjs/core/XR/webXREnterExitUI';
 import { WebXRFeatureName } from '@babylonjs/core/XR/webXRFeaturesManager';
 import { WebXRControllerMovement } from '@babylonjs/core/XR/features/WebXRControllerMovement';
 import { WebXRMotionControllerTeleportation } from '@babylonjs/core/XR/features/WebXRControllerTeleportation';
@@ -60,7 +57,6 @@ export default {
         return {
             scene: null,
             views: [],
-            xr_view: null,
             active_view: 0,
             render_size: {width: 0, height: 0},
             area_colors: uniqueColors,
@@ -68,9 +64,7 @@ export default {
             brain_center: new Vector3(0.0, 0.0, 0.0),
             sync_views: false,
             room_id: '',
-            state: [],
-            in_xr: false,
-          has_loaded: false
+            state: []
         }
     },
     computed: {
@@ -280,12 +274,8 @@ export default {
                 }
             };
 
-            if(this.in_xr) {
-              this.xr_view.updateSimulationData(sim_data, sim_data_ranges);
-            } else {
-              //this.views[view].updateSimulationData(sim_data, sim_data_ranges);
-              //this.$refs.ui[view].setLocalRanges(sim_data_ranges);
-            }
+            this.views[view].updateSimulationData(sim_data, sim_data_ranges);
+            this.$refs.ui[view].setLocalRanges(sim_data_ranges);
         },
 
         updateNetworkViz(view, table) {
@@ -347,6 +337,7 @@ export default {
         // Built-in 'ground' shape.
         let ground = CreateGround('ground1', { width: 30, height: 30, subdivisions: 2 }, this.scene);
         ground.material = grid_mat;
+
         // Create colormap textures for neuron visualization
         // this.colormaps.area = new Texture('/images/areas_cmap.png', this.scene, true, false, Texture.NEAREST_SAMPLINGMODE);
         // this.colormaps.low_high = new Texture('/images/lowhigh_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
@@ -389,7 +380,7 @@ export default {
             }
         }
         for (let i = 0; i < 8; i++) {
-            this.views.push(new NeuronView(i, canvas, view_shared_data, false));
+            this.views.push(new NeuronView(i, canvas, view_shared_data));
             this.state.push({
                 simulation: 'viz-no-network',
                 timestep: 0,
@@ -398,86 +389,22 @@ export default {
         }
 
         // Initialize the XR view
-        this.xr_view = new NeuronView("webxr", canvas, view_shared_data, true);
-        this.xr_view.addCamera2(this.scene.activeCamera);
- 
-      WebXRDefaultExperience.CreateAsync(this.scene, {
-        floorMeshes: [ground]
-      }).then((xr) => {
-				xr.input.onControllerAddedObservable.add((controller) => {
-					controller.onMotionControllerInitObservable.add((motionController) => {
-						 if (motionController.handness === 'right') {
-									const xr_ids = motionController.getComponentIds();
-									let triggerComponent = motionController.getComponent(xr_ids[0]);//xr-standard-trigger
-									triggerComponent.onButtonStateChangedObservable.add(() => {
-											if (triggerComponent.pressed) {
-													//Box_Left_Trigger.scaling= new BABYLON.Vector3(1.2,1.2,1.2);
-											
-											}else{
-													//Box_Left_Trigger.scaling= new BABYLON.Vector3(1,1,1);
-											
-											}
-									});
-									let squeezeComponent = motionController.getComponent(xr_ids[1]);//xr-standard-squeeze
-									squeezeComponent.onButtonStateChangedObservable.add(() => {
-											if (squeezeComponent.pressed) {
-												console.log("squeeze");
-											}else{
-													///Box_Left_Squeeze.scaling=new BABYLON.Vector3(1,1,1);
-											}
-									});
-							}
-					});
-			});
-        const featureManager = xr.baseExperience.featuresManager;
-				//console.log(featureManager.getEnabledFeatures());
-				featureManager.disableFeature(WebXRMotionControllerTeleportation.Name);
-        const movementFeature = featureManager.enableFeature(WebXRFeatureName.MOVEMENT, 'latest', {
-          xrInput: xr.input,
-          // add options here
-          movementOrientationFollowsViewerPose: true, // default true
+        WebXRDefaultExperience.CreateAsync(this.scene, {
+            floorMeshes: [ground]
+        })
+        .then((xr) => {
+            const featureManager = xr.baseExperience.featuresManager;
+            featureManager.disableFeature(WebXRMotionControllerTeleportation.Name);
+            const movementFeature = featureManager.enableFeature(WebXRFeatureName.MOVEMENT, 'latest', {
+                xrInput: xr.input,
+                // add options here
+                movementOrientationFollowsViewerPose: true, // default true
+            });
+        })
+        .catch(error => {
+            // XR not supported
         });
-      });
-       /* 
-      WebXRExperienceHelper.CreateAsync(this.scene, {
-          floorMeshes: [ground],
-          optionalFeatures: true
-        }).then((xrHelper) => {
-          let renderTarget = xrHelper.sessionManager.getWebXRRenderTarget(xrHelper.onStateChangedObservable);
-          WebXREnterExitUI.CreateAsync(this.scene, xrHelper, {renderTarget: renderTarget});
-          //xrHelper.enterXRAsync("immersive-vr", "local-floor");
-          xrHelper.onStateChangedObservable.add((state) => {
-            switch (state) {
-              case WebXRState.IN_XR:
-                // XR is initialized and already submitted one frame
-                console.log("IN_XR");
-                this.in_xr = true;
-                this.views.get(0).detachCamera();
-                for(const cam in this.scene.cameras) {
-                  //console.log(this.scene.cameras[cam]);
-                }
-                break;
-              case WebXRState.ENTERING_XR:
-                // xr is being initialized, enter XR request was made
-                console.log("ENTERING_XR");
-                break;
-              case WebXRState.EXITING_XR:
-                // xr exit request was made. not yet done.
-                console.log("EXITIGN");
-                break;
-              case WebXRState.NOT_IN_XR:
-                // self explanatory - either out or not yet in XR
-                console.log("BOT_IN_XR");
-                break;
-             }
-          }); 
-         //xrHelper.enterXRAsync("immersive-vr").then((sessionManager) => {
-         // console.log("IN XR");
-          //}, (error) => {
-          //  console.log(error);
-          //});
-       });
-        */
+       
       // Download brain position data and create point cloud
         this.getCSV(BASE_URL + 'data/viz-no-network_positions.csv')
         .then((neurons) => {
@@ -507,8 +434,6 @@ export default {
                 view.setPointCloudMesh(neuron_positions, point_cloud);
                 view.setNeuronAreas(neuron_areas, new Vector2(0, this.area_colors.length - 1));
             });
-            this.xr_view.setPointCloudMesh(neuron_positions, point_cloud);
-            this.xr_view.setNeuronAreas(neuron_areas, new Vector2(0, this.area_colors.length - 1));
 
             // BEGIN area centroid - precomputed
             let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
@@ -542,7 +467,6 @@ export default {
             //                1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5]
             //     conn.updateVerticesData(VertexBuffer.UVKind, uvs);
             // }, 3000);
-            this.has_loaded = true;
         })
         .catch((err) => {
             console.log(err);
@@ -552,8 +476,8 @@ export default {
         this.timeline.getData(true)
         .then((table) => {
             for (let v = 0; v < 8; v++) {
-                //this.updateMonitorViz(v, table.neurons);
-                //this.updateNetworkViz(v, table.connections);
+                this.updateMonitorViz(v, table.neurons);
+                this.updateNetworkViz(v, table.connections);
             }
         })
         .catch((reason) => { console.error(reason); });
@@ -568,19 +492,10 @@ export default {
         });
         this.scene.onBeforeCameraRenderObservable.add(() => {
             let view_id = this.scene.activeCamera.id;
-            //console.log(view_id);
-          if(view_id == "webxr" || this.in_xr && this.has_loaded) {
-              this.xr_view.beforeRender();
-            } else {
-              let view_id = this.scene.activeCamera.id;
-              let view_idx = 0;
-              if(view_id == "webxr" || view_id.includes("XR")) {
-                view_idx = 0;
-              } else {
-                view_idx = parseInt(view_id.substring(6));
-              }
-              this.views[view_idx].beforeRender();
-            }
+            let view_idx = (view_id.includes("xr") || view_id.includes("XR")) ? 
+                0 : 
+                parseInt(view_id.substring(6));
+            this.views[view_idx].beforeRender();
         });
 
         // Render every frame
