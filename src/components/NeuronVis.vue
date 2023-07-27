@@ -13,6 +13,11 @@ import { Scene } from '@babylonjs/core/scene';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
+import { WebXRDefaultExperience } from '@babylonjs/core/XR/webXRDefaultExperience';
+import { WebXRExperienceHelper } from '@babylonjs/core/XR/webXRExperienceHelper';
+import { WebXRState } from '@babylonjs/core/XR/webXRTypes'; 
+import { WebXREnterExitUI } from '@babylonjs/core/XR/webXREnterExitUI';
+
 
 import UserInterface from './UserInterface.vue'
 
@@ -24,6 +29,24 @@ import timeline from './timeline'
 
 const BASE_URL = import.meta.env.BASE_URL || '/';
 
+// Required for EnvironmentHelper
+import "@babylonjs/core/Materials/Textures/Loaders"
+
+// Required for loading controller models from WebXR registry
+import '@babylonjs/loaders/glTF'
+
+// Without this next import, error message when loading controller models:
+//  "Build of NodeMaterial failed" error when loading controller model"
+//  "Uncaught (in promise) Build of NodeMaterial failed: input rgba from block FragmentOutput[FragmentOutputBlock] is not connected and is not optional."
+import '@babylonjs/core/Materials/Node/Blocks'
+
+// Import animatable side effects with recent babylon v5.0.x releases for
+// loading controllers, else:
+//  "TypeError: sceneToRenderTo.beginAnimation is not a function
+//   at WebXRMotionControllerTeleportation2._createDefaultTargetMesh (WebXRControllerTeleportation.ts:751:29)"
+import '@babylonjs/core/Animations/animatable'
+
+
 export default {
     props: {
         num_views: {type: Number},
@@ -33,7 +56,8 @@ export default {
     data() {
         return {
             scene: null,
-            views: [],
+            views: new Map(),
+            xr_view: null,
             active_view: 0,
             render_size: {width: 0, height: 0},
             area_colors: uniqueColors,
@@ -41,7 +65,9 @@ export default {
             brain_center: new Vector3(0.0, 0.0, 0.0),
             sync_views: false,
             room_id: '',
-            state: []
+            state: [],
+            in_xr: false,
+          has_loaded: false
         }
     },
     computed: {
@@ -245,8 +271,12 @@ export default {
                 }
             };
 
-            this.views[view].updateSimulationData(sim_data, sim_data_ranges);
-            this.$refs.ui[view].setLocalRanges(sim_data_ranges);
+            if(this.in_xr) {
+              this.xr_view.updateSimulationData(sim_data, sim_data_ranges);
+            } else {
+              //this.views[view].updateSimulationData(sim_data, sim_data_ranges);
+              //this.$refs.ui[view].setLocalRanges(sim_data_ranges);
+            }
         },
 
         updateNetworkViz(view, table) {
@@ -308,7 +338,6 @@ export default {
         // Built-in 'ground' shape.
         let ground = CreateGround('ground1', { width: 30, height: 30, subdivisions: 2 }, this.scene);
         ground.material = grid_mat;
-
         // Create colormap textures for neuron visualization
         // this.colormaps.area = new Texture('/images/areas_cmap.png', this.scene, true, false, Texture.NEAREST_SAMPLINGMODE);
         // this.colormaps.low_high = new Texture('/images/lowhigh_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
@@ -351,15 +380,62 @@ export default {
             }
         }
         for (let i = 0; i < 8; i++) {
-            this.views.push(new NeuronView(i, canvas, view_shared_data));
+            this.views.set(i, new NeuronView(i, canvas, view_shared_data, false));
             this.state.push({
                 simulation: 'viz-no-network',
                 timestep: 0,
                 neuron_property: 'area'
             });
         }
-        
-        // Download brain position data and create point cloud
+
+        // Initialize the XR view
+        this.xr_view = new NeuronView("webxr", canvas, view_shared_data, true);
+        this.xr_view.addCamera2(this.scene.activeCamera);
+ 
+      WebXRDefaultExperience.CreateAsync(this.scene, {
+        floorMeshes: [ground]
+      });
+       /* 
+      WebXRExperienceHelper.CreateAsync(this.scene, {
+          floorMeshes: [ground],
+          optionalFeatures: true
+        }).then((xrHelper) => {
+          let renderTarget = xrHelper.sessionManager.getWebXRRenderTarget(xrHelper.onStateChangedObservable);
+          WebXREnterExitUI.CreateAsync(this.scene, xrHelper, {renderTarget: renderTarget});
+          //xrHelper.enterXRAsync("immersive-vr", "local-floor");
+          xrHelper.onStateChangedObservable.add((state) => {
+            switch (state) {
+              case WebXRState.IN_XR:
+                // XR is initialized and already submitted one frame
+                console.log("IN_XR");
+                this.in_xr = true;
+                this.views.get(0).detachCamera();
+                for(const cam in this.scene.cameras) {
+                  //console.log(this.scene.cameras[cam]);
+                }
+                break;
+              case WebXRState.ENTERING_XR:
+                // xr is being initialized, enter XR request was made
+                console.log("ENTERING_XR");
+                break;
+              case WebXRState.EXITING_XR:
+                // xr exit request was made. not yet done.
+                console.log("EXITIGN");
+                break;
+              case WebXRState.NOT_IN_XR:
+                // self explanatory - either out or not yet in XR
+                console.log("BOT_IN_XR");
+                break;
+             }
+          }); 
+         //xrHelper.enterXRAsync("immersive-vr").then((sessionManager) => {
+         // console.log("IN XR");
+          //}, (error) => {
+          //  console.log(error);
+          //});
+       });
+        */
+      // Download brain position data and create point cloud
         this.getCSV(BASE_URL + 'data/viz-no-network_positions.csv')
         .then((neurons) => {
             console.log(neurons.length + ' points');
@@ -387,6 +463,8 @@ export default {
                 view.setPointCloudMesh(neuron_positions, point_cloud);
                 view.setNeuronAreas(neuron_areas, new Vector2(0, this.area_colors.length - 1));
             });
+            this.xr_view.setPointCloudMesh(neuron_positions, point_cloud);
+            this.xr_view.setNeuronAreas(neuron_areas, new Vector2(0, this.area_colors.length - 1));
 
             // BEGIN area centroid - precomputed
             let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
@@ -420,6 +498,7 @@ export default {
             //                1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5]
             //     conn.updateVerticesData(VertexBuffer.UVKind, uvs);
             // }, 3000);
+            this.has_loaded = true;
         })
         .catch((err) => {
             console.log(err);
@@ -429,8 +508,8 @@ export default {
         this.timeline.getData(true)
         .then((table) => {
             for (let v = 0; v < 8; v++) {
-                this.updateMonitorViz(v, table.neurons);
-                this.updateNetworkViz(v, table.connections);
+                //this.updateMonitorViz(v, table.neurons);
+                //this.updateNetworkViz(v, table.connections);
             }
         })
         .catch((reason) => { console.error(reason); });
@@ -444,8 +523,20 @@ export default {
             }
         });
         this.scene.onBeforeCameraRenderObservable.add(() => {
-            let view_idx = parseInt(this.scene.activeCamera.id.substring(6));
-            this.views[view_idx].beforeRender();
+            let view_id = this.scene.activeCamera.id;
+            //console.log(view_id);
+          if(view_id == "webxr" || this.in_xr && this.has_loaded) {
+              this.xr_view.beforeRender();
+            } else {
+              let view_id = this.scene.activeCamera.id;
+              let view_idx = 0;
+              if(view_id == "webxr" || view_id.includes("XR")) {
+                view_idx = 0;
+              } else {
+                view_idx = parseInt(view_id.substring(6));
+              }
+              this.views.get(view_idx).beforeRender();
+            }
         });
 
         // Render every frame

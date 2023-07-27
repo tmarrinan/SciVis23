@@ -10,7 +10,7 @@ import areaCentroids from './areaCentroids'
 import { CreateTubeCollection } from './tubeCollection'
 
 class NeuronView {
-    constructor(id, canvas, data) {
+    constructor(id, canvas, data, is_xr) {
         this.id = id;
         this.canvas = canvas;
         this.scene = data.scene;
@@ -53,10 +53,16 @@ class NeuronView {
             connected_dendrites: 'low_high2'
         }
 
+       //if (!is_xr) this.addCamera();
         this.addCamera();
     }
 
+    addCamera2(cam) {
+      this.camera = cam;
+    }
+
     addCamera() {
+        console.log("addCamera");
         this.camera = new ArcRotateCamera('camera' + this.id.toString(), -Math.PI / 2.0,  3.0 * Math.PI / 8.0, 50.0, 
                                           this.camera_settings.target, this.scene);
         this.camera.updateUpVectorFromRotation = true;
@@ -66,11 +72,18 @@ class NeuronView {
         this.camera.layerMask = Math.pow(2, this.id);
         if (this.id === 0) {
             this.camera.attachControl(this.canvas, true);
-            this.scene.activeCameras.push(this.camera);
+            //this.scene.activeCameras.push(this.camera);
         }
         else {
             this.camera.detachControl();
         }
+    }
+
+    detachCamera() {
+      console.log(this.camera);
+      console.log(this.scene.activeCameras);
+      //this.camera.attachControl(this.canvas, true);
+      //this.camera.detachControl();
     }
 
     setCameraView(position, target, up) {
@@ -135,6 +148,7 @@ class NeuronView {
 
     setActive(is_active) {
         if (is_active) {
+            console.log("attach");
             this.camera.attachControl(this.canvas, true);
         }
         else {

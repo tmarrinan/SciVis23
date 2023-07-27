@@ -1,7 +1,7 @@
 import { tableFromIPC } from 'apache-arrow';
 import { readParquet } from 'parquet-wasm';
 
-const BASE_URL = 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/';
+const BASE_URL = 'https://web.cels.anl.gov/projects/VisWebData/scivis23/';
 
 class Timeline {
     constructor() {
