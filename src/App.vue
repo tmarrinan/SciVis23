@@ -6,6 +6,7 @@ export default {
     data() {
         return {
             num_views: 1,
+            //data_url: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
             data_url: 'https://web.cels.anl.gov/projects/VisWebData/scivis23/parquet/',
             ws: null,
             ws_open: false,
@@ -35,7 +36,8 @@ export default {
         }
     },
     mounted() {
-        this.ws = new WebSocket('wss://gliese.cs.stthomas.edu:8008');
+        //this.ws = new WebSocket('wss://gliese.cs.stthomas.edu:8008');
+        this.ws = new WebSocket('wss://scivis23-ws.onrender.com');
         this.ws.onopen = (event) => {
             console.log('WebSocket connected!');
             this.ws_open = true;

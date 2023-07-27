@@ -17,6 +17,9 @@ import { WebXRDefaultExperience } from '@babylonjs/core/XR/webXRDefaultExperienc
 import { WebXRExperienceHelper } from '@babylonjs/core/XR/webXRExperienceHelper';
 import { WebXRState } from '@babylonjs/core/XR/webXRTypes'; 
 import { WebXREnterExitUI } from '@babylonjs/core/XR/webXREnterExitUI';
+import { WebXRFeatureName } from '@babylonjs/core/XR/webXRFeaturesManager';
+import { WebXRControllerMovement } from '@babylonjs/core/XR/features/WebXRControllerMovement';
+import { WebXRMotionControllerTeleportation } from '@babylonjs/core/XR/features/WebXRControllerTeleportation';
 
 
 import UserInterface from './UserInterface.vue'
@@ -56,7 +59,7 @@ export default {
     data() {
         return {
             scene: null,
-            views: new Map(),
+            views: [],
             xr_view: null,
             active_view: 0,
             render_size: {width: 0, height: 0},
@@ -153,6 +156,12 @@ export default {
 
         updateState(state) {
             console.log(state);
+        },
+
+        updateVisibility(event) {
+            let view = event.idx;
+            let value = event.data;
+            this.views[view].setModelVisibility(value);
         },
 
         updateNearClip(event) {
@@ -380,7 +389,7 @@ export default {
             }
         }
         for (let i = 0; i < 8; i++) {
-            this.views.set(i, new NeuronView(i, canvas, view_shared_data, false));
+            this.views.push(new NeuronView(i, canvas, view_shared_data, false));
             this.state.push({
                 simulation: 'viz-no-network',
                 timestep: 0,
@@ -394,6 +403,40 @@ export default {
  
       WebXRDefaultExperience.CreateAsync(this.scene, {
         floorMeshes: [ground]
+      }).then((xr) => {
+				xr.input.onControllerAddedObservable.add((controller) => {
+					controller.onMotionControllerInitObservable.add((motionController) => {
+						 if (motionController.handness === 'right') {
+									const xr_ids = motionController.getComponentIds();
+									let triggerComponent = motionController.getComponent(xr_ids[0]);//xr-standard-trigger
+									triggerComponent.onButtonStateChangedObservable.add(() => {
+											if (triggerComponent.pressed) {
+													//Box_Left_Trigger.scaling= new BABYLON.Vector3(1.2,1.2,1.2);
+											
+											}else{
+													//Box_Left_Trigger.scaling= new BABYLON.Vector3(1,1,1);
+											
+											}
+									});
+									let squeezeComponent = motionController.getComponent(xr_ids[1]);//xr-standard-squeeze
+									squeezeComponent.onButtonStateChangedObservable.add(() => {
+											if (squeezeComponent.pressed) {
+												console.log("squeeze");
+											}else{
+													///Box_Left_Squeeze.scaling=new BABYLON.Vector3(1,1,1);
+											}
+									});
+							}
+					});
+			});
+        const featureManager = xr.baseExperience.featuresManager;
+				//console.log(featureManager.getEnabledFeatures());
+				featureManager.disableFeature(WebXRMotionControllerTeleportation.Name);
+        const movementFeature = featureManager.enableFeature(WebXRFeatureName.MOVEMENT, 'latest', {
+          xrInput: xr.input,
+          // add options here
+          movementOrientationFollowsViewerPose: true, // default true
+        });
       });
        /* 
       WebXRExperienceHelper.CreateAsync(this.scene, {
@@ -450,6 +493,7 @@ export default {
 
             // Create point cloud data using neuron positions
             let point_cloud = imposterSpheres.CreateImposterSphereMesh('pc', neuron_positions, this.scene);
+            point_cloud.layerMask = 255;
             point_cloud.material = ptcloud_mat;
             point_cloud.scaling = new Vector3(0.1, 0.1, 0.1);
             point_cloud.rotation.x = -Math.PI / 2.0;
@@ -535,7 +579,7 @@ export default {
               } else {
                 view_idx = parseInt(view_id.substring(6));
               }
-              this.views.get(view_idx).beforeRender();
+              this.views[view_idx].beforeRender();
             }
         });
 
@@ -552,7 +596,8 @@ export default {
         <canvas id="render-canvas" touch-action="none" tabindex="-1"></canvas>
         <div v-for="col in (view_columns - 1)" class="vertical-bar" :style="'left: ' + (100 * col / view_columns) + '%;'"></div>
         <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>
-        <UserInterface v-for="i in 8" v-show="i <= num_views" ref="ui" :idx="i - 1" :num_views="num_views" @update-near-clip="updateNearClip"
+        <UserInterface v-for="i in 8" v-show="i <= num_views" ref="ui" :idx="i - 1" :num_views="num_views" 
+            @update-visibility="updateVisibility" @update-near-clip="updateNearClip"
             @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"
             @update-neuron-property="updateNeuronProperty" @use-global-scalar-range="useGlobalScalarRange"
             @displace-neurons="displaceNeurons"/>
