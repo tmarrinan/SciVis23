@@ -68,7 +68,9 @@ class NeuronView {
         this.camera.layerMask = this.layer;
         if (this.id === 0) {
             this.camera.attachControl(this.canvas, true);
-            this.scene.activeCameras.push(this.camera);
+            // XXX - Victor: is this needed? If I comment out, everything
+            // works. If I uncomment, WebXR breaks.
+            //this.scene.activeCameras.push(this.camera);
         }
         else {
             this.camera.detachControl();

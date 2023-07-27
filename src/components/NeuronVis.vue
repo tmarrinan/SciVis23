@@ -13,6 +13,11 @@ import { Scene } from '@babylonjs/core/scene';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
+import { WebXRDefaultExperience } from '@babylonjs/core/XR/webXRDefaultExperience';
+import { WebXRFeatureName } from '@babylonjs/core/XR/webXRFeaturesManager';
+import { WebXRControllerMovement } from '@babylonjs/core/XR/features/WebXRControllerMovement';
+import { WebXRMotionControllerTeleportation } from '@babylonjs/core/XR/features/WebXRControllerTeleportation';
+
 
 import UserInterface from './UserInterface.vue'
 
@@ -23,6 +28,24 @@ import imposterSpheres from './imposterSpheres'
 import timeline from './timeline'
 
 const BASE_URL = import.meta.env.BASE_URL || '/';
+
+// Required for EnvironmentHelper
+import "@babylonjs/core/Materials/Textures/Loaders"
+
+// Required for loading controller models from WebXR registry
+import '@babylonjs/loaders/glTF'
+
+// Without this next import, error message when loading controller models:
+//  "Build of NodeMaterial failed" error when loading controller model"
+//  "Uncaught (in promise) Build of NodeMaterial failed: input rgba from block FragmentOutput[FragmentOutputBlock] is not connected and is not optional."
+import '@babylonjs/core/Materials/Node/Blocks'
+
+// Import animatable side effects with recent babylon v5.0.x releases for
+// loading controllers, else:
+//  "TypeError: sceneToRenderTo.beginAnimation is not a function
+//   at WebXRMotionControllerTeleportation2._createDefaultTargetMesh (WebXRControllerTeleportation.ts:751:29)"
+import '@babylonjs/core/Animations/animatable'
+
 
 export default {
     props: {
@@ -364,8 +387,25 @@ export default {
                 neuron_property: 'area'
             });
         }
-        
-        // Download brain position data and create point cloud
+
+        // Initialize the XR view
+        WebXRDefaultExperience.CreateAsync(this.scene, {
+            floorMeshes: [ground]
+        })
+        .then((xr) => {
+            const featureManager = xr.baseExperience.featuresManager;
+            featureManager.disableFeature(WebXRMotionControllerTeleportation.Name);
+            const movementFeature = featureManager.enableFeature(WebXRFeatureName.MOVEMENT, 'latest', {
+                xrInput: xr.input,
+                // add options here
+                movementOrientationFollowsViewerPose: true, // default true
+            });
+        })
+        .catch(error => {
+            // XR not supported
+        });
+       
+      // Download brain position data and create point cloud
         this.getCSV(BASE_URL + 'data/viz-no-network_positions.csv')
         .then((neurons) => {
             console.log(neurons.length + ' points');
@@ -451,7 +491,10 @@ export default {
             }
         });
         this.scene.onBeforeCameraRenderObservable.add(() => {
-            let view_idx = parseInt(this.scene.activeCamera.id.substring(6));
+            let view_id = this.scene.activeCamera.id;
+            let view_idx = (view_id.includes("xr") || view_id.includes("XR")) ? 
+                0 : 
+                parseInt(view_id.substring(6));
             this.views[view_idx].beforeRender();
         });
 
