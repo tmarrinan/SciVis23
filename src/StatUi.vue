@@ -101,18 +101,19 @@ export default {
         //this.timeline.setTimestep(i);
 
         this.timeline.setSimulation(message.data.state.simulation);
-        this.timeline.getTimestep()
+        //this.timeline.getTimestep()
+        this.timeline.getData()
         .then((table) => {
 
-            //console.log(table)
+            console.log(table)
 
 
             let sim_data = {};
             let desired_columns = ['current_calcium', 'target_calcium', 'fired', 'fired_fraction', 'grown_axons',
                                    'grown_dendrites', 'connected_axons', 'connected_dendrites'];
-            for (let i = 0; i < table.schema.fields.length; i++) {
-                if (desired_columns.includes(table.schema.fields[i].name)) {
-                    sim_data[table.schema.fields[i].name] = table.data[0].children[i].values;
+            for (let i = 0; i < table.neurons.schema.fields.length; i++) {
+                if (desired_columns.includes(table.neurons.schema.fields[i].name)) {
+                    sim_data[table.neurons.schema.fields[i].name] = table.neurons.data[0].children[i].values;
                 }
             }
 
@@ -167,7 +168,7 @@ export default {
             let property = message.data.state.neuron_property;
             if(message.data.state.neuron_property == 'fired'){
                 
-                for(let v = 0; v < table.numRows; v++){
+                for(let v = 0; v < table.neurons.numRows; v++){
                     if(sim_data.fired[v] == 1){
                         fired += 1
                     } else { 
@@ -192,7 +193,7 @@ export default {
                 let split = (max - min) / 4.0;
 
 
-                for(let v = 0; v < table.numRows; v++){
+                for(let v = 0; v < table.neurons.numRows; v++){
                     if(sim_data[property][v] <= (min + split)  ){
                         val_1 += 1;
                     } else if (sim_data[property][v] >= (min+split) && sim_data[property][v] <= (min+(split*2))) {
