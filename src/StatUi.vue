@@ -81,8 +81,8 @@ export default {
                 console.log(message.data);
             }
 
-        
-
+        let view = message.data.view +1
+        console.log("view: " + view)
         console.log("simulation: " + message.data.state.simulation)
         console.log("neuron property: " + message.data.state.neuron_property)
         console.log("timestep: " + message.data.state.timestep)
@@ -260,10 +260,36 @@ export default {
                          .attr('transform', 'translate(0,' + height + ')')
                          .call(d3.axisBottom(x_axis));
 
+
+    d3svg.append("text")
+        .attr("x", width/2)
+        .attr("y", -height)
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style('fill', 'DarkCyan')
+        .text("Displaying View " + view);
+
+        // text label for the x axis
+        d3svg.append("text")      
+            .attr("transform", "translate(" + (width/2) + " ," + (height+40) + ")")
+            .attr("text-anchor", "middle")
+            .style("font-size", "16px")
+            .attr("text-anchor", "middle")
+            .style("font-size", "30px")
+            .style('fill', 'DarkCyan')
+            .text(property);
+
         d3svg.append('g').classed('d3axis', true)
                          .call(d3.axisLeft(y_axis));
   
-        
+        d3svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -(height/2))
+            .attr("y", -60)
+            .style("font-size", "30px")
+            .style("text-anchor", "middle")   
+            .style('fill', 'DarkCyan')        
+            .text("Number of Neurons");
         })
         .catch((reason) => { console.error(reason); });
         };
