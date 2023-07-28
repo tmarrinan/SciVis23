@@ -1,4 +1,6 @@
 <script>
+import NeuronVis from './NeuronVis.vue';
+
 const BASE_URL = import.meta.env.BASE_URL || '/';
 
 export default {
@@ -14,9 +16,16 @@ export default {
             near_clip_end: 300,
             timestep: 0,
             timestep_start: 0,
-            timestep_end: 1000,
+            timestep_end: 9999,
             selected_simulation: 'viz-no-network',
             global_scalar_range: true,
+            displace_neurons: false,
+            visibility: [
+                {name: 'neurons', description: 'Neurons'},
+                {name: 'connections', description: 'Connections'},
+                {name: 'neuron-connections', description: 'Neurons & Connections'}
+            ],
+            selected_visibility: 'neurons',
             simulations: [
                 {name: 'viz-no-network', description: 'No Initial Connectivity'},
                 {name: 'viz-stimulus', description: 'Stimulation / Learning'},
@@ -27,14 +36,14 @@ export default {
             // TODO: enable local min/max on colormap legend scale
             neuron_properties: {
                 area: {name: 'Area', min: 0, max: 47},
-                current_calcium: {name: 'Calcium', min: 0.0, max: 1.1},
-                target_calcium: {name: 'Calcium to Target', min: -0.7, max: 0.7},
-                fired: {name: 'Fired', min: 0, max: 1},
-                fired_fraction: {name: 'Fired Rate', min: 0.0, max: 0.8},
-                grown_axons: {name: 'Axons', min: 0, max: 50},
-                grown_dendrites: {name: 'Dendrites', min: 0, max: 50},
-                connected_axons: {name: 'Incoming Connections', min: 0, max: 50},
-                connected_dendrites: {name: 'Outgoing Connections', min: 0, max: 50}
+                current_calcium: {name: 'Calcium', min: 0.000000, max: 0.790452},
+                target_calcium: {name: 'Calcium to Target', min: -0.700000, max: 0.700000},
+                fired: {name: 'Fired', min: 0.0, max: 1.0},
+                fired_fraction: {name: 'Fired Rate', min: 0.019999, max: 0.060000},
+                grown_axons: {name: 'Axons', min: 0, max: 27},
+                grown_dendrites: {name: 'Dendrites', min: 0, max: 19},
+                connected_axons: {name: 'Incoming Connections', min: 0, max: 27},
+                connected_dendrites: {name: 'Outgoing Connections', min: 0, max: 19}
             },
             neuron_local_ranges: null
         }
@@ -57,8 +66,8 @@ export default {
             }
         }
     },
-    emits: ['update-near-clip', 'update-timestep', 'update-simulation-selection', 'update-neuron-property',
-            'use-global-scalar-range'],
+    emits: ['update-visibility', 'update-near-clip', 'update-timestep', 'update-simulation-selection',
+            'update-neuron-property', 'use-global-scalar-range', 'displace-neurons'],
     methods: {
         getLocationRight() {
             let rows = (this.num_views > 2) ? 2 : 1;
@@ -109,6 +118,10 @@ export default {
             this.show_ui = !this.show_ui;
         },
 
+        updateVisibility(event) {
+            this.$emit('update-visibility',  {idx: this.idx, data: this.selected_visibility});
+        },
+
         updateNearClip(event) {
             this.$emit('update-near-clip', {idx: this.idx, data: this.near_clip});
         },
@@ -157,6 +170,10 @@ export default {
             this.$emit('use-global-scalar-range', {idx: this.idx, data: this.global_scalar_range});
         },
 
+        updateDisplaceNeurons(event) {
+            this.$emit('displace-neurons', {idx: this.idx, data: this.displace_neurons});
+        },
+
         setLocalRanges(local_ranges) {
             this.neuron_local_ranges = local_ranges;
         }
@@ -181,17 +198,25 @@ export default {
         <div class="widgets">
             <div v-show="show_ui">
                 <div style="width: 16rem; text-align: right; margin-bottom: 0.5rem;">
-                    <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="images/down-arrow.png" alt="down arrow"/></button>
+                    <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="/images/down-arrow.png" alt="down arrow"/></button>
                 </div>
+                <label>Visibility:</label><br/>
+                <select class="ui-element" v-model="selected_visibility" @change="updateVisibility">
+                    <option v-for="item in visibility" :value="item.name">{{ item.description }}</option>
+                </select>
+                <br/>
+                <label>Displace Neurons:</label>
+                <input class="ui-checkbox" type="checkbox" v-model="displace_neurons" @change="updateDisplaceNeurons"/>
+                <br/>
                 <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
-                <button class="ui-slider-btn" type="button" @click="decrementNearClip"><img src="images/left-arrow.png" alt="left arrow"/></button>
+                <button class="ui-slider-btn" type="button" @click="decrementNearClip"><img src="/images/left-arrow.png" alt="left arrow"/></button>
                 <input class="ui-slider" type="range" :min="near_clip_start" :max="near_clip_end" v-model="near_clip_slider" @input="updateNearClip"/>
-                <button class="ui-slider-btn" type="button" @click="incrementNearClip"><img src="images/right-arrow.png" alt="right arrow"/></button>
+                <button class="ui-slider-btn" type="button" @click="incrementNearClip"><img src="/images/right-arrow.png" alt="right arrow"/></button>
                 <br/>
                 <label>Timestep: {{ timestep }}</label><br/>
-                <button class="ui-slider-btn" type="button" @click="decrementTimestep"><img src="images/left-arrow.png" alt="left arrow"/></button>
+                <button class="ui-slider-btn" type="button" @click="decrementTimestep"><img src="/images/left-arrow.png" alt="left arrow"/></button>
                 <input class="ui-slider" type="range" :min="timestep_start" :max="timestep_end" v-model="timestep" @change="updateTimestep"/>
-                <button class="ui-slider-btn" type="button" @click="incrementTimestep"><img src="images/right-arrow.png" alt="right arrow"/></button>
+                <button class="ui-slider-btn" type="button" @click="incrementTimestep"><img src="/images/right-arrow.png" alt="right arrow"/></button>
                 <br/>
                 <label>Simulation:</label><br/>
                 <select class="ui-element" v-model="selected_simulation" @change="updateSimulationStimulus">
@@ -207,7 +232,7 @@ export default {
                 <input class="ui-checkbox last" type="checkbox" v-model="global_scalar_range" @change="updateScalarRangeType"/>
             </div>
             <div v-show="!show_ui">
-                <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="images/left-arrow.png" alt="left arrow"/></button>
+                <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="/images/left-arrow.png" alt="left arrow"/></button>
             </div>
         </div>
     </div>

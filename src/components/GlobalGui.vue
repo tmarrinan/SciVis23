@@ -9,16 +9,17 @@ export default {
             num_views: 1,
             prev_views: 1,
             max_views: 1,
-            data_url: 'stthomas',
-            data_url_list: {
-                stthomas: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
-                add_new: '... Add new'
-            },
+            sync_views: false,
+            // data_url: 'stthomas',
+            // data_url_list: {
+            //     stthomas: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
+            //     add_new: '... Add new'
+            // },
             joined_room: false,
             room_id: ''
         }
     },
-    emits: ['update-num-views', 'update-data-url', 'update-room-id'],
+    emits: ['update-num-views', 'update-sync-views', 'update-data-url', 'update-room-id'],
     methods: {
         updateNumViews(event) {
             if ([3, 5, 7].includes(this.num_views)) {
@@ -32,6 +33,10 @@ export default {
                 this.$emit('update-num-views', this.num_views);
             }
             this.prev_views = this.num_views;
+        },
+
+        updateSyncViews(event) {
+            this.$emit('update-sync-views', this.sync_views);
         },
 
         updateDataUrl(event) {
@@ -96,10 +101,14 @@ export default {
         <span id="gui-title">Brain Plasticity</span>
         <label>Views:</label>
         <input class="number-input" type="number" min="1" :max="max_views" v-model="num_views" @input="updateNumViews"/>
+        <label>Sync Views:</label>
+        <input class="checkbox-input" type="checkbox" v-model="sync_views" @change="updateSyncViews"/>
+        <!--
         <label>Data URL:</label>
         <select class="dropdown-input" v-model="data_url" @change="updateDataUrl">
             <option v-for="(url, name) in data_url_list" :value="name">{{ url }}</option>
         </select>
+        -->
         <label>Room:</label>
         <div v-if="!joined_room" style="display: inline;">
             <input class="text-input" type="text" placeholder="Enter ID" v-model="room_id"/>
@@ -131,6 +140,10 @@ input, select, option, button {
 
 .number-input {
     width: 3.5rem;
+    margin: 0 2rem 0 0.5rem;
+}
+
+.checkbox-input {
     margin: 0 2rem 0 0.5rem;
 }
 

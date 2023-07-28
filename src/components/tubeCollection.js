@@ -1,5 +1,6 @@
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Vector3, TmpVectors, Matrix } from '@babylonjs/core/Maths/math.vector.js';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { VertexBuffer } from '@babylonjs/core/Meshes/buffer';
@@ -7,6 +8,8 @@ import { Path3D } from '@babylonjs/core/Maths/math.path.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { RawTexture } from '@babylonjs/core/Materials/Textures/rawTexture';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+
+const BASE_URL = import.meta.env.BASE_URL || '/';
 
 export function CreateTubeCollection(name, options, scene) {
     const path_array = options.paths;
@@ -72,15 +75,20 @@ export function CreateTubeCollection(name, options, scene) {
     let t_offset = 0;
     tube_circles_array.forEach((tube, t_idx) => {
         let texcoord = (t_idx + 0.5) / tube_circles_array.length;
+        let texcoord_end = texcoord;
         if (options.hasOwnProperty('colors') && options.colors.hasOwnProperty('color_list') && options.colors.hasOwnProperty('path_colors')) {
-            texcoord = (options.colors.path_colors[t_idx] + 0.5) / options.colors.color_list.length;
+            texcoord = (2.0 * options.colors.path_colors[t_idx] + 0.5) / (2.0 * options.colors.color_list.length);
+            texcoord_end = texcoord + (1.0 / (2.0 * options.colors.color_list.length));
         }
         tube.forEach((circle, c_idx) => {
             let c_offset = c_idx * tessellation;
             circle.forEach((point, p_idx) => {
+                let t = (1.0 - (c_idx / (tube.length - 1)));
+                t = t * t;
                 vertex_positions.push(point.vertex.x, point.vertex.y, point.vertex.z);
                 vertex_normals.push(point.normal.x, point.normal.y, point.normal.z);
-                vertex_texcoords.push(texcoord, 0.5);
+                vertex_texcoords.push(t * texcoord + (1.0 - t) * texcoord_end, 0.5);
+                //vertex_texcoords.push(t * texcoord + (1.0 - t) * texcoord_end, p_idx / (circle.length - 1));
                 if (c_idx < (tube.length - 1)) {
                     let p0 = t_offset + c_offset + p_idx;
                     let p1 = t_offset + c_offset + ((p_idx + 1) % tessellation);
@@ -101,18 +109,28 @@ export function CreateTubeCollection(name, options, scene) {
     vertex_data.applyToMesh(tube_collection, true);
 
     if (options.hasOwnProperty('colors') && options.colors.hasOwnProperty('color_list') && options.colors.hasOwnProperty('path_colors')) {
-        let path_color_px = new Uint8Array(options.colors.color_list.length * 4);
+        let path_color_px = new Uint8Array(options.colors.color_list.length * 8);
         options.colors.color_list.forEach((color, index) => {
-            path_color_px[4 * index + 0] = 255 * color.r;
-            path_color_px[4 * index + 1] = 255 * color.g;
-            path_color_px[4 * index + 2] = 255 * color.b;
-            path_color_px[4 * index + 3] = 255;
+            path_color_px[8 * index + 0] = 255 * color.r;
+            path_color_px[8 * index + 1] = 255 * color.g;
+            path_color_px[8 * index + 2] = 255 * color.b;
+            path_color_px[8 * index + 3] = 255;
+            path_color_px[8 * index + 4] = 255;
+            path_color_px[8 * index + 5] = 255;
+            path_color_px[8 * index + 6] = 255;
+            path_color_px[8 * index + 7] = 255;
         });
-        let path_color_tex = new RawTexture(path_color_px, options.colors.color_list.length, 1, Engine.TEXTUREFORMAT_RGBA, scene,
-                                            false, false, Texture.NEAREST_NEAREST);
+        let path_color_tex = new RawTexture(path_color_px, 2 * options.colors.color_list.length, 1, Engine.TEXTUREFORMAT_RGBA, scene,
+                                            false, false, Texture.BILINEAR_SAMPLINGMODE);
+        //let path_color_tex2 = new Texture(BASE_URL + 'images/connection_texture.png', scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
+        //path_color_tex2.wrapU = Texture.CLAMP_ADDRESSMODE;
+        //path_color_tex2.wrapV = Texture.CLAMP_ADDRESSMODE;
         tube_collection.material = new StandardMaterial(name + '_mat', scene);
         tube_collection.material.backFaceCulling = false;
+        //tube_collection.material.emissiveTexture = path_color_tex;
+        //tube_collection.material.diffuseColor = new Color3(0.0, 0.0, 0.0);
         tube_collection.material.diffuseTexture = path_color_tex;
+        tube_collection.material.specularColor = new Color3(0.0, 0.0, 0.0);
     }
 
     return tube_collection;

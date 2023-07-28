@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 
+import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -8,7 +9,7 @@ import topLevelAwait from "vite-plugin-top-level-await";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/dist/',
+  base: '/SciVis23/',
   plugins: [
     vue(),
     wasm(),
@@ -21,5 +22,13 @@ export default defineConfig({
   },
   server: {
     cors: true
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        statui: resolve(__dirname, 'statui.html')
+      }
+    }
   }
 })

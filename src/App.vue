@@ -6,7 +6,8 @@ export default {
     data() {
         return {
             num_views: 1,
-            data_url: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
+            //data_url: 'https://gliese.cs.stthomas.edu:8008/datasets/scivis23/parquet/',
+            data_url: 'https://web.cels.anl.gov/projects/VisWebData/scivis23/parquet/',
             ws: null,
             ws_open: false,
             room_id: ''
@@ -21,6 +22,10 @@ export default {
             this.num_views = value;
         },
 
+        updateSyncViews(value) {
+            this.$refs.neuron_vis.syncViews(value);
+        },
+
         updateDataUrl(value) {
             this.data_url = value;
         },
@@ -31,7 +36,8 @@ export default {
         }
     },
     mounted() {
-        this.ws = new WebSocket('wss://gliese.cs.stthomas.edu:8008');
+        //this.ws = new WebSocket('wss://gliese.cs.stthomas.edu:8008');
+        this.ws = new WebSocket('wss://scivis23-ws.onrender.com');
         this.ws.onopen = (event) => {
             console.log('WebSocket connected!');
             this.ws_open = true;
@@ -62,7 +68,7 @@ export default {
 <template>
     <div class="box">
         <div class="row header">
-            <GlobalGui ref="global_gui" :ws="ws" :ws_open="ws_open" @update-num-views="updateNumViews" @update-data-url="updateDataUrl" @update-room-id="updateRoomId"/>
+            <GlobalGui ref="global_gui" :ws="ws" :ws_open="ws_open" @update-num-views="updateNumViews" @update-sync-views="updateSyncViews" @update-data-url="updateDataUrl" @update-room-id="updateRoomId"/>
         </div>
         <div class="row content">
             <NeuronVis ref="neuron_vis" :ws="ws" :num_views="num_views" :data_url="data_url"/>

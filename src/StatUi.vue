@@ -56,7 +56,8 @@ export default {
     },
     mounted() {
         // WebSocket
-        this.ws = new WebSocket('wss://gliese.cs.stthomas.edu:8008');
+        //this.ws = new WebSocket('wss://gliese.cs.stthomas.edu:8008');
+        this.ws = new WebSocket('wss://scivis23-ws.onrender.com');
         this.ws.onopen = (event) => {
             console.log('WebSocket connected!');
             this.ws_open = true;
