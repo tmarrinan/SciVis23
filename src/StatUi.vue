@@ -230,7 +230,7 @@ export default {
 
     
         
-        let margin = {top: 20, right: 20, bottom: 30, left: 150};
+        let margin = {top: 20, right: 20, bottom: 150, left: 150};
         let width = 600 - margin.left - margin.right;
         let height = 400 - margin.top - margin.bottom;
         let d3svg = d3.select('#d3-chart').attr('width', width + margin.left + margin.right)
