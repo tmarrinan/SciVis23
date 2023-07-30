@@ -7,7 +7,57 @@ export default {
             ws: null,
             ws_open: false,
             joined_room: false,
-            room_id: ''
+            room_id: '',
+            area_colors: [
+                '#808080',
+                '#2f4f4f',
+                '#556b2f',
+                '#6b8e23',
+                '#a0522d',
+                '#8b0000',
+                '#483d8b',
+                '#008000',
+                '#3cb371',
+                '#b8860b',
+                '#bdb76b',
+                '#008b8b',
+                '#4682b4',
+                '#000080',
+                '#d2691e',
+                '#9acd32',
+                '#32cd32',
+                '#8fbc8f',
+                '#8b008b',
+                '#b03060',
+                '#ff4500',
+                '#ffa500',
+                '#ffd700',
+                '#6a5acd',
+                '#ffff00',
+                '#0000cd',
+                '#00ff00',
+                '#ba55d3',
+                '#8a2be2',
+                '#00ff7f',
+                '#dc143c',
+                '#00ffff',
+                '#00bfff',
+                '#f4a460',
+                '#f08080',
+                '#adff2f',
+                '#ff6347',
+                '#b0c4de',
+                '#ff00ff',
+                '#6495ed',
+                '#dda0dd',
+                '#ff1493',
+                '#afeeee',
+                '#98fb98',
+                '#7fffd4',
+                '#ffe4b5',
+                '#ff69b4',
+                '#ffb6c1'
+            ]
         }
     },
     methods: {
@@ -152,10 +202,13 @@ export default {
                 type: 'box',
                 name: i.toString(),
                 y: values,
+                marker: {
+                    color: this.area_colors[i]
+                },
                 boxpoints: false
             });
         }
-        let layout3 = this.generatePlotlyLayout('Calcium Per Area', 'Areas', 'Calcium', [0.0, 1.01]);
+        let layout3 = this.generatePlotlyLayout('Calcium Per Area', 'Area ID', 'Calcium', [0.0, 1.01]);
 
         Plotly.newPlot('histogram', data1, layout1, {responsive: true});
         Plotly.newPlot('test', data2, layout2, {responsive: true});
