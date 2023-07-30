@@ -49,6 +49,53 @@ export default {
 
         updateState(state) {
             console.log(state);
+        },
+
+        generatePlotlyLayout(title, x_axis, y_axis) {
+            return {
+                paper_bgcolor: 'rgba(0, 0, 0, 0.0)',
+                plot_bgcolor: 'rgba(0, 0, 0, 0.0)',
+                title: {
+                    text: title,
+                    font: {
+                        family: 'Arial, Helvetica, sans-serif',
+                        size: 24,
+                        color: '#FFFFFF'
+                    }
+                },
+                xaxis: {
+                    title: {
+                        text: x_axis,
+                        font: {
+                            family: 'Arial, Helvetica, sans-serif',
+                            size: 16,
+                            color: '#FFFFFF'
+                        }
+                    },
+                    tickfont: {
+                        family: 'Arial, Helvetica, sans-serif',
+                        size: 12,
+                        color: '#FFFFFF'
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: y_axis,
+                        font: {
+                            family: 'Arial, Helvetica, sans-serif',
+                            size: 16,
+                            color: '#FFFFFF'
+                        }
+                    },
+                    zerolinecolor: '#FFFFFF',
+                    tickcolor: '#FFFFFF',
+                    tickfont: {
+                        family: 'Arial, Helvetica, sans-serif',
+                        size: 12,
+                        color: '#FFFFFF'
+                    }
+                }
+            };
         }
     },
     mounted() {
@@ -80,54 +127,34 @@ export default {
         };
 
         // Plotly JS chart
-        let data = [{
+        let data1 = [{
             type: 'bar',
             x: ['Thing 1', 'Thing 2', 'Thing 3', 'Thing 4'],
             y: [6, 2, 9, 7]
         }];
-        let layout = {
-            paper_bgcolor: 'rgba(0, 0, 0, 0.0)',
-            plot_bgcolor: 'rgba(0, 0, 0, 0.0)',
-            title: {
-                text: 'Calcium',
-                font: {
-                    family: 'Arial, Helvetica, sans-serif',
-                    size: 24,
-                    color: '#FFFFFF'
-                }
-            },
-            xaxis: {
-                tickfont: {
-                    family: 'Arial, Helvetica, sans-serif',
-                    size: 12,
-                    color: '#FFFFFF'
-                }
-            },
-            yaxis: {
-                title: {
-                    text: '# Nuerons',
-                    font: {
-                        family: 'Arial, Helvetica, sans-serif',
-                        size: 16,
-                        color: '#FFFFFF'
-                    }
-                },
-                zerolinecolor: '#FFFFFF',
-                tickcolor: '#FFFFFF',
-                tickfont: {
-                    family: 'Arial, Helvetica, sans-serif',
-                    size: 12,
-                    color: '#FFFFFF'
-                }
-            }
-        }
+        let layout1 = this.generatePlotlyLayout('Calcium', null, '# Neurons');
 
-        Plotly.newPlot('histogram', data, layout, {responsive: true});
-        Plotly.newPlot('areas', data, layout, {responsive: true});
-        Plotly.newPlot('test', data, layout, {responsive: true});
+        let data2 = [{
+            type: 'bar',
+            x: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+            y: [42, 200, 97, 71, 28, 168, 101]
+        }];
+        let layout2 = this.generatePlotlyLayout('Calcium', 'Areas', '# Neurons');
+
+        let data3 = [{
+            type: 'bar',
+            x: ['Test1', 'Test2', 'Test3'],
+            y: [16, 8, 12]
+        }];
+        let layout3 = this.generatePlotlyLayout('Calcium', 'Something', '# Neurons');
+
+        Plotly.newPlot('histogram', data1, layout1, {responsive: true});
+        Plotly.newPlot('areas', data2, layout2, {responsive: true});
+        Plotly.newPlot('test', data3, layout3, {responsive: true});
 
         setTimeout(() => {
-            data[0].y[1] = 4;
+            data1[0].y[1] = 4;
+            layout1.title.text = 'Fired Rate'
             Plotly.redraw('histogram');
         }, 2000);
     }
