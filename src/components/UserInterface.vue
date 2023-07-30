@@ -126,6 +126,12 @@ export default {
             this.$emit('update-near-clip', {idx: this.idx, data: this.near_clip});
         },
 
+        setUiValues(data) {
+            this.timestep = data.timestep;
+            this.selected_simulation = data.simulation;
+            this.selected_neuron_prop = data.neuron_property;
+        },
+
         decrementNearClip(event) {
             if (this.near_clip_slider > this.near_clip_start) {
                 this.near_clip_slider--;

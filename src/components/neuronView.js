@@ -131,7 +131,6 @@ class NeuronView {
 
     setNeuronTexture(scalar_values, colormap) {
         let range = this.use_global_scalar_range ? this.global_scalar_ranges[this.neuron_property] : this.data_ranges[this.neuron_property];
-
         this.neuron_scalar_tex.update(scalar_values);
         this.neuron_scalar_range = new Vector2(range.min, range.max);
         this.colormap = colormap;

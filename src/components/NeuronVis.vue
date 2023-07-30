@@ -149,7 +149,11 @@ export default {
         },
 
         updateState(state) {
-            console.log(state);
+            state.state.timestep = parseInt(state.state.timestep);
+            this.views[state.view].setNeuronProperty(state.state.neuron_property);
+            this.updateSimulationSelection({idx: state.view, data: state.state.simulation}, true);
+            this.updateTimestep({idx: state.view, data: state.state.timestep}, true);
+            this.$refs.ui[state.view].setUiValues(state.state);
         },
 
         updateVisibility(event) {
@@ -164,7 +168,7 @@ export default {
             this.views[view].camera.minZ = value;
         },
 
-        updateTimestep(event) {
+        updateTimestep(event, no_sync) {
             let view = event.idx;
             let value = event.data;
 
@@ -173,7 +177,7 @@ export default {
 
             let fetch_connections = old_conn_ts_idx !== new_conn_ts_idx;
             this.state[view].timestep = value;
-            this.syncState(view, this.state[view]);
+            if (no_sync !== true) this.syncState(view, this.state[view]);
             
             this.timeline.setTimestep(value);
             this.timeline.getData(fetch_connections)
@@ -186,12 +190,12 @@ export default {
             .catch((reason) => { console.error(reason); });
         },
 
-        updateSimulationSelection(event) {
+        updateSimulationSelection(event, no_sync) {
             let view = event.idx;
             let value = event.data;
             
             this.state[view].simulation = value;
-            this.syncState(view, this.state[view]);
+            if (no_sync !== true) this.syncState(view, this.state[view]);
 
             this.timeline.setSimulation(value);
             this.timeline.getData(true)
@@ -209,7 +213,7 @@ export default {
             this.state[view].neuron_property = value;
             this.syncState(view, this.state[view]);
 
-            this.views[view].setNeuronProperty(value, new Vector2(0.0, 1.1)); // TODO: update range!
+            this.views[view].setNeuronProperty(value);
         },
 
         useGlobalScalarRange(event) {
