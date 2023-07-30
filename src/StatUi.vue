@@ -231,18 +231,16 @@ export default {
                         chart.update('none');
                     }
 
-                    console.log(myChart.data.datasets[0].label = property)
+                   
 
                     function removeData(chart) {
-                        chart.data.labels.pop();
-                        chart.data.datasets.forEach((dataset) => {
-                            dataset.data.pop();
-                        });
+                        chart.data.labels = [];
+                        chart.data.datasets[0].data = [];
                         chart.update('none');
                     }
 
 
-
+                 console.log(myChart.data.datasets[0].label = property)
 
                     var label = data.map(function (e) {
                         return e.name;
@@ -252,11 +250,11 @@ export default {
                     })
 
 
+                    console.log(myChart.data)
 
-
-                    for (let i = 0; i < data.length; i++) {
-                        removeData(myChart)
-                    }
+                    
+                removeData(myChart)
+                    
 
 
                     for (let i = 0; i < data.length; i++) {
