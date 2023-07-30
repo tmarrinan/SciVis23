@@ -118,20 +118,23 @@ export default {
 </script>
 
 <template>
-    <div class="box">
-        <div class="row header">
-            <label>Room:</label>
-            <div v-if="!joined_room" style="display: inline;">
-                <input class="text-input" type="text" placeholder="Enter ID" v-model="room_id"/>
+    <div id="main">
+        <div id="gui" class="row">
+            <div class="col-12 col-4-m padding-top-0-25rem">
+                <h1 id="gui-title">Brain Plasticity</h1>
+            </div>
+            <div v-if="!joined_room" class="col-12 col-8-m padding-top-1rem padding-top-0-25rem-m">
+                <label>Room:</label>
+                <input class="text-input space-left space-right-half" type="text" placeholder="Enter ID" v-model="room_id"/>
                 <button :class="'button-input ' + (ws_open ? 'join-btn' : 'disable-btn')" type="button" @click="joinRoom">Join</button>
                 <button :class="'button-input ' + (ws_open ? 'create-btn' : 'disable-btn')" type="button" @click="createRoom">Create</button>
             </div>
-            <div v-else style="display: inline;">
+            <div v-else class="col-12 col-8-m padding-top-1rem padding-top-0-25rem-m">
                 <label class="text-display">{{ room_id }}</label>
                 <button :class="'button-input ' + (ws_open ? 'leave-btn' : 'disable-btn')" type="button" @click="leaveRoom">Leave</button>
             </div>
         </div>
-        <div class="row content">
+        <div id="content" class="row">
             <svg id="d3-chart"></svg>
         </div>
     </div>
@@ -156,6 +159,83 @@ svg :deep(.d3axis) {
     font-size: 1rem;
 }
 
+#main {
+    width: 100%;
+    height: 100%;
+    background-color: #3C3C3C;
+    color: #FFFFFF;
+}
+
+#gui {
+    padding: 0.5rem;
+}
+
+#content {
+    background-color: #1A1A1A;
+}
+
+#gui-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.row {
+    margin: 0;
+}
+
+.space-right {
+    margin-right: 2rem;
+}
+
+.space-right-half {
+    margin-right: 1rem;
+}
+
+.space-left {
+    margin-left: 0.5rem;
+}
+
+
+.text-input {
+    width: 8rem;
+}
+
+.button-input {
+    display: inline-block;
+    width: 4.5rem;
+    height: 1.5rem;
+    border-radius: 0.25rem;
+    border: none;
+    color: #FFFFFF;
+    margin: 0 0.5rem 0 0;
+}
+
+.join-btn {
+    background-color: #4A9056;
+}
+
+.create-btn {
+    background-color: #585EAC;
+}
+
+.leave-btn {
+    background-color: #931F1F;
+}
+
+.disable-btn {
+    background-color: #CDCDCD;
+    color: #636363;
+}
+
+.text-display {
+    display: inline-block;
+    background-color: #DCDCDC;
+    color: #000000;
+    width: 7.6rem;
+    margin: 0 0.5rem;
+    padding: 0.2rem;
+}
+/*
 .box {
     display: flex;
     flex-flow: column;
@@ -216,4 +296,5 @@ svg :deep(.d3axis) {
     margin: 0 0.5rem;
     padding: 0.2rem;
 }
+*/
 </style>

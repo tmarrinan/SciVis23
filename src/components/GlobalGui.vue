@@ -97,27 +97,28 @@ export default {
 </script>
 
 <template>
-    <div id="global-gui">
-        <span id="gui-title">Brain Plasticity</span>
-        <label>Views:</label>
-        <input class="number-input" type="number" min="1" :max="max_views" v-model="num_views" @input="updateNumViews"/>
-        <label>Sync Views:</label>
-        <input class="checkbox-input" type="checkbox" v-model="sync_views" @change="updateSyncViews"/>
-        <!--
-        <label>Data URL:</label>
-        <select class="dropdown-input" v-model="data_url" @change="updateDataUrl">
-            <option v-for="(url, name) in data_url_list" :value="name">{{ url }}</option>
-        </select>
-        -->
-        <label>Room:</label>
-        <div v-if="!joined_room" style="display: inline;">
-            <input class="text-input" type="text" placeholder="Enter ID" v-model="room_id"/>
-            <button :class="'button-input ' + (ws_open ? 'join-btn' : 'disable-btn')" type="button" @click="joinRoom">Join</button>
-            <button :class="'button-input ' + (ws_open ? 'create-btn' : 'disable-btn')" type="button" @click="createRoom">Create</button>
-        </div>
-        <div v-else style="display: inline;">
-            <label class="text-display">{{ room_id }}</label>
-            <button :class="'button-input ' + (ws_open ? 'leave-btn' : 'disable-btn')" type="button" @click="leaveRoom">Leave</button>
+    <div id="global-gui" class="container">
+        <div class="row">
+            <div class="col-12 col-4-m col-3-l padding-top-0-25rem">
+                <h1 id="gui-title">Brain Plasticity</h1>
+            </div>
+            <div class="col-12 col-8-m col-4-l padding-top-1rem padding-top-0-25rem-m">
+                <label class="text-right middle">Views:</label>
+                <input class="number-input space-left space-right" type="number" min="1" :max="max_views" v-model="num_views" @input="updateNumViews"/>
+                <label>Sync Views:</label>
+                <input class="space-left space-right" type="checkbox" v-model="sync_views" @change="updateSyncViews"/>
+            </div>
+            <div v-if="!joined_room" class="col-12 col-12-m col-5-l padding-top-1rem padding-top-0-25rem-l">
+                <label>Room:</label>
+                <input class="text-input space-left space-right-half" type="text" placeholder="Enter ID" v-model="room_id"/>
+                <button :class="'button-input ' + (ws_open ? 'join-btn' : 'disable-btn')" type="button" @click="joinRoom">Join</button>
+                <button :class="'button-input ' + (ws_open ? 'create-btn' : 'disable-btn')" type="button" @click="createRoom">Create</button>
+            </div>
+            <div v-else class="col-12 col-12-m col-5-l padding-top-1rem padding-top-0-25rem-l">
+                <label>Room:</label>
+                <label class="text-display">{{ room_id }}</label>
+                <button :class="'button-input ' + (ws_open ? 'leave-btn' : 'disable-btn')" type="button" @click="leaveRoom">Leave</button>
+            </div>
         </div>
     </div>
 </template>
@@ -130,35 +131,45 @@ input, select, option, button {
 #gui-title {
     font-size: 1.2rem;
     font-weight: bold;
-    margin-right: 8rem;
 }
 
 #global-gui {
+    width: 100%;
     padding: 0.5rem;
     font-size: 1rem;
 }
 
-.number-input {
-    width: 3.5rem;
-    margin: 0 2rem 0 0.5rem;
+.row {
+    margin: 0;
 }
 
-.checkbox-input {
-    margin: 0 2rem 0 0.5rem;
+.space-right {
+    margin-right: 2rem;
+}
+
+.space-right-half {
+    margin-right: 1rem;
+}
+
+.space-left {
+    margin-left: 0.5rem;
+}
+
+.number-input {
+    width: 3.5rem;
 }
 
 .dropdown-input {
     width: 17.5rem;
-    margin: 0 2rem 0 0.5rem;
 }
 
 .text-input {
     width: 8rem;
-    margin: 0 0.5rem;
 }
 
 .button-input {
-    width: 5rem;
+    display: inline-block;
+    width: 4.5rem;
     height: 1.5rem;
     border-radius: 0.25rem;
     border: none;

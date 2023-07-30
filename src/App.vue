@@ -66,6 +66,7 @@ export default {
 </script>
 
 <template>
+    <!--
     <div class="box">
         <div class="row header">
             <GlobalGui ref="global_gui" :ws="ws" :ws_open="ws_open" @update-num-views="updateNumViews" @update-sync-views="updateSyncViews" @update-data-url="updateDataUrl" @update-room-id="updateRoomId"/>
@@ -74,27 +75,34 @@ export default {
             <NeuronVis ref="neuron_vis" :ws="ws" :num_views="num_views" :data_url="data_url"/>
         </div>
     </div>
+    -->
+    <div id="main">
+        <div class="row">
+            <div class="col-12 no-padding">
+                <GlobalGui ref="global_gui" :ws="ws" :ws_open="ws_open" @update-num-views="updateNumViews" @update-sync-views="updateSyncViews" @update-data-url="updateDataUrl" @update-room-id="updateRoomId"/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 no-padding">
+                <NeuronVis ref="neuron_vis" :ws="ws" :num_views="num_views" :data_url="data_url"/>
+            </div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
-.box {
-    display: flex;
-    flex-flow: column;
+#main {
     width: 100%;
     height: 100%;
     background-color: #3C3C3C;
     color: #FFFFFF;
 }
 
-/*.box .row {
-    border: 1px dotted #FF0000;
-}*/
-
-.box .row.header {
-    flex: 0 1 auto;
+.row {
+    margin: 0;
 }
 
-.box .row.content {
-    flex: 1 1 auto;
+.no-padding {
+    padding: 0;
 }
 </style>
