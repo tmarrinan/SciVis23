@@ -51,7 +51,7 @@ export default {
             console.log(state);
         },
 
-        generatePlotlyLayout(title, x_axis, y_axis) {
+        generatePlotlyLayout(title, x_axis, y_axis, range) {
             return {
                 paper_bgcolor: 'rgba(0, 0, 0, 0.0)',
                 plot_bgcolor: 'rgba(0, 0, 0, 0.0)',
@@ -93,7 +93,8 @@ export default {
                         family: 'Arial, Helvetica, sans-serif',
                         size: 12,
                         color: '#FFFFFF'
-                    }
+                    },
+                    range: range
                 }
             };
         }
@@ -132,25 +133,33 @@ export default {
             x: ['Thing 1', 'Thing 2', 'Thing 3', 'Thing 4'],
             y: [6, 2, 9, 7]
         }];
-        let layout1 = this.generatePlotlyLayout('Calcium', null, '# Neurons');
+        let layout1 = this.generatePlotlyLayout('Histogram: Calcium', null, '# Neurons');
 
         let data2 = [{
-            type: 'bar',
-            x: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-            y: [42, 200, 97, 71, 28, 168, 101]
-        }];
-        let layout2 = this.generatePlotlyLayout('Calcium', 'Areas', '# Neurons');
-
-        let data3 = [{
             type: 'bar',
             x: ['Test1', 'Test2', 'Test3'],
             y: [16, 8, 12]
         }];
-        let layout3 = this.generatePlotlyLayout('Calcium', 'Something', '# Neurons');
+        let layout2 = this.generatePlotlyLayout('Calcium', 'Something', '# Neurons');
+
+        let data3 = [];
+        for (let i = 0; i < 48; i++) {
+            let values = [];
+            for (let j = 0; j < 12; j++) {
+                values.push(0.6 * Math.random() + 0.3);
+            }
+            data3.push({
+                type: 'box',
+                name: i.toString(),
+                y: values,
+                boxpoints: false
+            });
+        }
+        let layout3 = this.generatePlotlyLayout('Calcium Per Area', 'Areas', 'Calcium', [0.0, 1.01]);
 
         Plotly.newPlot('histogram', data1, layout1, {responsive: true});
-        Plotly.newPlot('areas', data2, layout2, {responsive: true});
-        Plotly.newPlot('test', data3, layout3, {responsive: true});
+        Plotly.newPlot('test', data2, layout2, {responsive: true});
+        Plotly.newPlot('areas', data3, layout3, {responsive: true});
 
         setTimeout(() => {
             data1[0].y[1] = 4;
@@ -179,9 +188,9 @@ export default {
             </div>
         </div>
         <div id="content" class="row">
-            <div id="histogram" class="col-12 col-6-m col-4-l"></div>
-            <div id="areas" class="col-12 col-6-m col-4-l"></div>
-            <div id="test" class="col-12 col-6-m col-4-l"></div>
+            <div id="histogram" class="col-12 col-6-m no-padding"></div>
+            <div id="test" class="col-12 col-6-m no-padding"></div>
+            <div id="areas" class="col-12 no-padding"></div>
         </div>
     </div>
 </template>
@@ -191,24 +200,9 @@ input, select, option, button {
     font-size: 1rem;
 }
 
-/*
-svg :deep(.d3bar) {
-    stroke: #4362A4;
-    stroke-width: 5px;
-    fill: #2687E8;
-}
-
-svg :deep(.d3bar:hover) {
-    stroke: #6F43A4;
-}
-
-svg :deep(.d3axis) {
-    font-size: 1rem;
-}
-*/
-
 #main {
     width: 100%;
+    min-height: 100%;
     background-color: #3C3C3C;
     color: #FFFFFF;
 }
@@ -220,7 +214,8 @@ svg :deep(.d3axis) {
 #content {
     background-color: #1A1A1A;
     width: 100%;
-    height: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
 }
 
 #gui-title {
@@ -230,12 +225,6 @@ svg :deep(.d3axis) {
 
 .row {
     margin: 0;
-}
-
-.chart-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
 }
 
 .space-right {
@@ -250,6 +239,9 @@ svg :deep(.d3axis) {
     margin-left: 0.5rem;
 }
 
+.no-padding {
+    padding: 0;
+}
 
 .text-input {
     width: 8rem;
