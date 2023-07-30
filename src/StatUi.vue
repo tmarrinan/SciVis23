@@ -1,5 +1,5 @@
 <script>
-import * as d3 from 'd3';
+import Plotly from 'plotly.js-dist'
 
 export default {
     data() {
@@ -79,40 +79,57 @@ export default {
             }
         };
 
-        // D3 chart
-        let data = [
-            {name: 'Thing 1', value: 6},
-            {name: 'Thing 2', value: 2},
-            {name: 'Thing 3', value: 9},
-            {name: 'Thing 4', value: 7}
-        ];
-        let margin = {top: 20, right: 20, bottom: 30, left: 40};
-        let width = 600 - margin.left - margin.right;
-        let height = 400 - margin.top - margin.bottom;
-        let d3svg = d3.select('#d3-chart').attr('width', width + margin.left + margin.right)
-                                          .attr('height', height + margin.bottom + margin.top)
-                      .append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+        // Plotly JS chart
+        let data = [{
+            type: 'bar',
+            x: ['Thing 1', 'Thing 2', 'Thing 3', 'Thing 4'],
+            y: [6, 2, 9, 7]
+        }];
+        let layout = {
+            paper_bgcolor: 'rgba(0, 0, 0, 0.0)',
+            plot_bgcolor: 'rgba(0, 0, 0, 0.0)',
+            title: {
+                text: 'Calcium',
+                font: {
+                    family: 'Arial, Helvetica, sans-serif',
+                    size: 24,
+                    color: '#FFFFFF'
+                }
+            },
+            xaxis: {
+                tickfont: {
+                    family: 'Arial, Helvetica, sans-serif',
+                    size: 12,
+                    color: '#FFFFFF'
+                }
+            },
+            yaxis: {
+                title: {
+                    text: '# Nuerons',
+                    font: {
+                        family: 'Arial, Helvetica, sans-serif',
+                        size: 16,
+                        color: '#FFFFFF'
+                    }
+                },
+                zerolinecolor: '#FFFFFF',
+                tickcolor: '#FFFFFF',
+                tickfont: {
+                    family: 'Arial, Helvetica, sans-serif',
+                    size: 12,
+                    color: '#FFFFFF'
+                }
+            }
+        }
 
-        let x_axis = d3.scaleBand().range([0, width]).padding(0.1);
-        let y_axis = d3.scaleLinear().range([height, 0]);
+        Plotly.newPlot('histogram', data, layout, {responsive: true});
+        Plotly.newPlot('areas', data, layout, {responsive: true});
+        Plotly.newPlot('test', data, layout, {responsive: true});
 
-        x_axis.domain(data.map(elem => elem.name));
-        y_axis.domain([0, d3.max(data, d => d.value)]);
-        
-        d3svg.selectAll('.d3bar').data(data).enter().append('rect')
-             .classed('d3bar', true)
-             .attr('x', d => x_axis(d.name))
-             .attr('width', x_axis.bandwidth())
-             .attr('y', d =>  y_axis(d.value))
-             .attr('height', d => (height - y_axis(d.value)))
-             .style('stroke-dasharray', d => ((x_axis.bandwidth() + height - y_axis(d.value)) + ',' + x_axis.bandwidth()));
-
-        d3svg.append('g').classed('d3axis', true)
-                         .attr('transform', 'translate(0,' + height + ')')
-                         .call(d3.axisBottom(x_axis));
-
-        d3svg.append('g').classed('d3axis', true)
-                         .call(d3.axisLeft(y_axis));
+        setTimeout(() => {
+            data[0].y[1] = 4;
+            Plotly.redraw('histogram');
+        }, 2000);
     }
 }
 </script>
@@ -135,7 +152,9 @@ export default {
             </div>
         </div>
         <div id="content" class="row">
-            <svg id="d3-chart"></svg>
+            <div id="histogram" class="col-12 col-6-m col-4-l"></div>
+            <div id="areas" class="col-12 col-6-m col-4-l"></div>
+            <div id="test" class="col-12 col-6-m col-4-l"></div>
         </div>
     </div>
 </template>
@@ -145,6 +164,7 @@ input, select, option, button {
     font-size: 1rem;
 }
 
+/*
 svg :deep(.d3bar) {
     stroke: #4362A4;
     stroke-width: 5px;
@@ -158,10 +178,10 @@ svg :deep(.d3bar:hover) {
 svg :deep(.d3axis) {
     font-size: 1rem;
 }
+*/
 
 #main {
     width: 100%;
-    height: 100%;
     background-color: #3C3C3C;
     color: #FFFFFF;
 }
@@ -172,6 +192,8 @@ svg :deep(.d3axis) {
 
 #content {
     background-color: #1A1A1A;
+    width: 100%;
+    height: 100%;
 }
 
 #gui-title {
@@ -181,6 +203,12 @@ svg :deep(.d3axis) {
 
 .row {
     margin: 0;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 .space-right {
@@ -235,66 +263,4 @@ svg :deep(.d3axis) {
     margin: 0 0.5rem;
     padding: 0.2rem;
 }
-/*
-.box {
-    display: flex;
-    flex-flow: column;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    background-color: #3C3C3C;
-    color: #FFFFFF;
-}
-
-.box .row.header {
-    flex: 0 1 auto;
-    width: 100%;
-    padding: 0.5rem;
-    border-bottom: solid 1px #CCCCCC;
-}
-
-.box .row.content {
-    flex: 1 1 auto;
-}
-
-.text-input {
-    width: 8rem;
-    margin: 0 0.5rem;
-}
-
-.button-input {
-    width: 5rem;
-    height: 1.5rem;
-    border-radius: 0.25rem;
-    border: none;
-    color: #FFFFFF;
-    margin: 0 0.5rem 0 0;
-}
-
-.join-btn {
-    background-color: #4A9056;
-}
-
-.create-btn {
-    background-color: #585EAC;
-}
-
-.leave-btn {
-    background-color: #931F1F;
-}
-
-.disable-btn {
-    background-color: #CDCDCD;
-    color: #636363;
-}
-
-.text-display {
-    display: inline-block;
-    background-color: #DCDCDC;
-    color: #000000;
-    width: 7.6rem;
-    margin: 0 0.5rem;
-    padding: 0.2rem;
-}
-*/
 </style>
