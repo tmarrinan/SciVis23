@@ -1,7 +1,7 @@
 <script>
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
-import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Vector2, Vector3, Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { VertexBuffer } from '@babylonjs/core/Meshes/buffer';
 import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSystem';
@@ -13,6 +13,7 @@ import { Scene } from '@babylonjs/core/scene';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
+import { BoundingSphere } from '@babylonjs/core/Culling/boundingSphere';
 import { WebXRDefaultExperience } from '@babylonjs/core/XR/webXRDefaultExperience';
 import { WebXRFeatureName } from '@babylonjs/core/XR/webXRFeaturesManager';
 import { WebXRControllerMovement } from '@babylonjs/core/XR/features/WebXRControllerMovement';
@@ -45,6 +46,7 @@ import '@babylonjs/core/Materials/Node/Blocks'
 //  "TypeError: sceneToRenderTo.beginAnimation is not a function
 //   at WebXRMotionControllerTeleportation2._createDefaultTargetMesh (WebXRControllerTeleportation.ts:751:29)"
 import '@babylonjs/core/Animations/animatable'
+import { Vector } from 'apache-arrow';
 
 
 export default {
@@ -61,6 +63,7 @@ export default {
             render_size: {width: 0, height: 0},
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
+            neuron_colliders: [],
             brain_center: new Vector3(0.0, 0.0, 0.0),
             sync_views: false,
             room_id: '',
@@ -319,6 +322,19 @@ export default {
         // Attach user control to proper view when mouse presses down or wheel scrolls
         canvas.addEventListener('pointerdown', (event) => {
             this.selectView(event.offsetX, event.offsetY);
+            // middle-click OR ctrl + left-click
+            if (event.pointerType === 'mouse' && (event.button === 1 || (event.button === 0 && event.ctrlKey))) {
+                let ray = this.scene.createPickingRay(this.scene.pointerX, this.scene.pointerY, null,
+                                                      this.views[this.active_view].camera);
+                console.log(ray);
+                this.neuron_colliders.forEach((collider, idx) => {
+                    if (ray.intersectsSphere(collider)) {
+                        let neuron_1 = 10 * idx;
+                        let neuron_2 = neuron_1 + 9;
+                        console.log('intersection: [' + neuron_1 + ',' + neuron_2 + ']; area: ' + this.views[0].area_values[neuron_1]);
+                    }
+                });
+            }
         });
         canvas.addEventListener('wheel', (event) => {
             this.selectView(event.offsetX, event.offsetY);
@@ -409,17 +425,26 @@ export default {
             // XR not supported
         });
        
-      // Download brain position data and create point cloud
+        // Download brain position data and create point cloud
         this.getCSV(BASE_URL + 'data/viz-no-network_positions.csv')
         .then((neurons) => {
             console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);
             let neuron_areas = new Float32Array(neurons.length);
+            let rotation_q = Quaternion.FromEulerVector(new Vector3(-Math.PI / 2.0, 0.0, 0.0));
             neurons.forEach((neuron, idx) => {
                 neuron_positions[idx] = new Vector3(parseFloat(neuron[0]),
                                                     parseFloat(neuron[1]),
                                                     parseFloat(neuron[2]));
                 neuron_areas[idx] = parseInt(neuron[3]);
+
+                if (idx % 10 === 0) {
+                    let np = neuron_positions[idx].scale(0.1);
+                    np.applyRotationQuaternionInPlace(rotation_q);
+                    np.addInPlace(new Vector3(-10.0, 0.0, 7.5));
+                    let collider = BoundingSphere.CreateFromCenterAndRadius(np, 0.075);//, point_cloud_world_matrix);
+                    this.neuron_colliders.push(collider);
+                }
             });
 
             // Create point cloud data using neuron positions
@@ -430,6 +455,7 @@ export default {
             point_cloud.rotation.x = -Math.PI / 2.0;
             point_cloud.position.x = -10.0;
             point_cloud.position.z = 7.5;
+            point_cloud.isPickable = false;
             
             this.brain_center = point_cloud.getBoundingInfo().boundingBox.center;
             ptcloud_mat.setVector3('cloud_center', this.brain_center);
