@@ -1,5 +1,8 @@
 <script>
 import Plotly from 'plotly.js-dist'
+import timeline from './components/timeline'
+
+const BASE_URL = import.meta.env.BASE_URL || '/';
 
 export default {
     data() {
@@ -8,6 +11,23 @@ export default {
             ws_open: false,
             joined_room: false,
             room_id: '',
+            view_idx: 0,
+            timeline: null,
+            sim_data: {},
+            sim_data_ranges: {},
+            sim_property: 'area',
+            property_names: {
+                area: 'Area',
+                current_calcium: 'Calcium',
+                target_calcium: 'Calcium to Target',
+                fired: 'Fired',
+                fired_fraction: 'Fired Rate',
+                grown_axons: 'Axons',
+                grown_dendrites: 'Dendrites',
+                connected_acons: 'Incoming Connections',
+                connected_dendrites: 'Outgoing Connections'
+            },
+            neuron_areas: [],
             area_colors: [
                 '#808080',
                 '#2f4f4f',
@@ -150,6 +170,113 @@ export default {
         }
     },
     mounted() {
+        // Plotly - chart update
+        let updateChartData = (table) => {
+            let sim_data = {};
+            let desired_columns = ['current_calcium', 'target_calcium', 'fired', 'fired_fraction', 'grown_axons',
+                                   'grown_dendrites', 'connected_acons', 'connected_dendrites'];
+            for (let i = 0; i < table.schema.fields.length; i++) {
+                if (desired_columns.includes(table.schema.fields[i].name)) {
+                    sim_data[table.schema.fields[i].name] = table.data[0].children[i].values;
+                }
+            }
+            let sim_data_ranges = {};
+            for (let key in sim_data) {
+                if (sim_data.hasOwnProperty(key)) {
+                    if (key === 'target_calcium') {
+                        sim_data[key] = sim_data[key].map((value, index) => sim_data['current_calcium'][index] - value);
+                    }
+                    let d_min = sim_data[key][0];
+                    let d_max = sim_data[key][0];
+                    for (let i = 1; i < sim_data[key].length; i++) {
+                        let val = sim_data[key][i];
+                        d_min = val < d_min ? val : d_min;
+                        d_max = val > d_max ? val : d_max;
+                    }
+                    //if (d_min < 0 && d_max < 0) d_max = 0;
+                    //else if (d_min > 0 && d_max > 0) d_min = 0;
+                    d_max += 0.01 * (d_max - d_min);
+                    sim_data_ranges[key] = {min: d_min, max: d_max};
+                }
+            };
+
+            this.sim_data = sim_data;
+            this.sim_data_ranges = sim_data_ranges;
+        };
+
+        let redrawCharts = () => {
+            let hist_x, hist_y;
+            let area_values = new Array(48);
+            for (let i = 0; i < 48; i++) area_values[i] = [];
+            let area_range = [0, 0];
+            if (this.sim_property === 'area') {
+                hist_x = ['N/A'];
+                hist_y = [0];
+            }
+            else if (this.sim_property === 'fired') {
+                hist_x = ['True', 'False'];
+                hist_y = [0, 0];
+                for (let i = 0; i < this.sim_data.fired.length; i++) {
+                    hist_y[1 - this.sim_data.fired[i]]++;
+                    area_values[this.neuron_areas[i]].push(this.sim_data.fired[i]);
+                }
+                area_range[0] = 0;
+                area_range[1] = 1;
+            }
+            else {
+                let num_categories = 5;
+                let min = this.sim_data_ranges[this.sim_property].min;
+                let max = this.sim_data_ranges[this.sim_property].max;
+                let split = (max - min) / num_categories;
+
+                hist_x = [
+                    '[' + min.toFixed(3) + ',' + (min + split).toFixed(3) + ']',
+                    '[' + (min + split).toFixed(3) + ',' + (min + (2 * split)).toFixed(3) + ']',
+                    '[' + (min + (2 * split)).toFixed(3) + ',' + (min + (3 * split)).toFixed(3) + ']',
+                    '[' + (min + (3 * split)).toFixed(3) + ',' + (min + (4 * split)).toFixed(3) + ']',
+                    '[' + (min + (4 * split)).toFixed(3) + ',' + max.toFixed(3) + ']'
+                ];
+                hist_y = [0, 0, 0, 0, 0];
+                for (let i = 0; i < this.sim_data[this.sim_property].length; i++) {
+                    let prop_value = this.sim_data[this.sim_property][i];
+                    let hist_idx = 4;
+                    if (prop_value < (min + split)) hist_idx = 0;
+                    else if (prop_value < (min + (2 *split))) hist_idx = 1;
+                    else if (prop_value < (min + (3 * split))) hist_idx = 2;
+                    else if (prop_value < (min + (4 * split))) hist_idx = 3;
+
+                    hist_y[hist_idx]++;
+                    area_values[this.neuron_areas[i]].push(prop_value);
+                }
+                area_range[0] = min;
+                area_range[1] = max;
+            }
+            data1[0].x = hist_x;
+            data1[0].y = hist_y;
+            layout1.title.text = 'Histogram: ' + this.property_names[this.sim_property];
+            Plotly.redraw('histogram');
+
+            for (let i = 0; i < 48; i++) {
+                data3[i].y = area_values[i];
+            }
+            layout3.title.text = this.property_names[this.sim_property] + ' per Area';
+            layout3.yaxis.range = area_range;
+            Plotly.redraw('areas');
+        };
+
+        // Neuron Areas
+        this.getCSV(BASE_URL + 'data/viz-no-network_positions.csv')
+        .then((neurons) => {
+            console.log(neurons.length + ' points');
+            neurons.forEach((neuron) => {
+                this.neuron_areas.push(parseInt(neuron[3]));
+            });
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+
+
         // WebSocket
         //this.ws = new WebSocket('wss://gliese.cs.stthomas.edu:8008');
         this.ws = new WebSocket('wss://scivis23-ws.onrender.com');
@@ -170,7 +297,18 @@ export default {
                 this.joinedRoom(message.type, message.response === 'success');
             }
             else if (message.type === 'updateState') {
-                this.updateState(message.data);
+                //this.updateState(message.data);
+                console.log(message.data);
+                this.view_idx = message.data.view;
+                this.sim_property = message.data.state.neuron_property;
+                this.timeline.setTimestep(message.data.state.timestep);
+                this.timeline.setSimulation(message.data.state.simulation);
+                this.timeline.getData()
+                .then((table) => {
+                    updateChartData(table.neurons);
+                    redrawCharts();
+                })
+                .catch((reason) => { console.error(reason); });
             }
             else {
                 console.log(message);
@@ -180,10 +318,10 @@ export default {
         // Plotly JS chart
         let data1 = [{
             type: 'bar',
-            x: ['Thing 1', 'Thing 2', 'Thing 3', 'Thing 4'],
-            y: [6, 2, 9, 7]
+            x: ['N/A'],
+            y: [0]
         }];
-        let layout1 = this.generatePlotlyLayout('Histogram: Calcium', null, '# Neurons');
+        let layout1 = this.generatePlotlyLayout('Histogram: Area', null, '# Neurons');
 
         let data2 = [{
             type: 'bar',
@@ -194,10 +332,7 @@ export default {
 
         let data3 = [];
         for (let i = 0; i < 48; i++) {
-            let values = [];
-            for (let j = 0; j < 12; j++) {
-                values.push(0.6 * Math.random() + 0.3);
-            }
+            let values = [0];
             data3.push({
                 type: 'box',
                 name: i.toString(),
@@ -208,17 +343,20 @@ export default {
                 boxpoints: false
             });
         }
-        let layout3 = this.generatePlotlyLayout('Calcium Per Area', 'Area ID', 'Calcium', [0.0, 1.01]);
+        let layout3 = this.generatePlotlyLayout('Area per Area', 'Area ID', 'Calcium', [0.0, 1.01]);
 
         Plotly.newPlot('histogram', data1, layout1, {responsive: true});
         Plotly.newPlot('test', data2, layout2, {responsive: true});
         Plotly.newPlot('areas', data3, layout3, {responsive: true});
 
-        setTimeout(() => {
-            data1[0].y[1] = 4;
-            layout1.title.text = 'Fired Rate'
-            Plotly.redraw('histogram');
-        }, 2000);
+        // Timeline
+        this.timeline = new timeline.Timeline();
+        this.timeline.getData()
+        .then((table) => {
+            updateChartData(table.neurons);
+            redrawCharts();
+        })
+        .catch((reason) => { console.error(reason); });
     }
 }
 </script>
@@ -238,6 +376,11 @@ export default {
             <div v-else class="col-12 col-8-m padding-top-1rem padding-top-0-25rem-m">
                 <label class="text-display">{{ room_id }}</label>
                 <button :class="'button-input ' + (ws_open ? 'leave-btn' : 'disable-btn')" type="button" @click="leaveRoom">Leave</button>
+            </div>
+        </div>
+        <div id="info-container" class="row">
+            <div class="col-12">
+                <h2 id="info-bar"><span class="bold">View: </span>{{ view_idx }}, <span class="bold">Simulation: </span>"{{ timeline ? timeline.simulation : '--' }}", <span class="bold">Timestep: </span>{{ timeline ? timeline.timestep / 100: '--' }}</h2>
             </div>
         </div>
         <div id="content" class="row">
@@ -276,8 +419,24 @@ input, select, option, button {
     font-weight: bold;
 }
 
+#info-container {
+    border-bottom: solid 1px #DCDCDC;
+    border-top: solid 1px #DCDCDC;
+    padding: 0.5em 0;
+}
+
+#info-bar {
+    font-size: 1rem;
+    font-weight: normal;
+    margin-left: 0.5rem;
+}
+
 .row {
     margin: 0;
+}
+
+.bold {
+    font-weight: bold;
 }
 
 .space-right {

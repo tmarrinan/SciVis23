@@ -255,7 +255,7 @@ export default {
 
             let sim_data = {};
             let desired_columns = ['current_calcium', 'target_calcium', 'fired', 'fired_fraction', 'grown_axons',
-                                   'grown_dendrites', 'connected_axons', 'connected_dendrites'];
+                                   'grown_dendrites', 'connected_acons', 'connected_dendrites'];
             for (let i = 0; i < table.schema.fields.length; i++) {
                 if (desired_columns.includes(table.schema.fields[i].name)) {
                     sim_data[table.schema.fields[i].name] = table.data[0].children[i].values;

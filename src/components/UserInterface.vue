@@ -42,7 +42,7 @@ export default {
                 fired_fraction: {name: 'Fired Rate', min: 0.019999, max: 0.060000},
                 grown_axons: {name: 'Axons', min: 0, max: 27},
                 grown_dendrites: {name: 'Dendrites', min: 0, max: 19},
-                connected_axons: {name: 'Incoming Connections', min: 0, max: 27},
+                connected_acons: {name: 'Incoming Connections', min: 0, max: 27},
                 connected_dendrites: {name: 'Outgoing Connections', min: 0, max: 19}
             },
             neuron_local_ranges: null
@@ -58,7 +58,7 @@ export default {
                 return BASE_URL + 'images/areas_cmap.png';
             }
             else if (['current_calcium', 'fired_fraction', 'grown_axons', 'grown_dendrites',
-                      'connected_axons', 'connected_dendrites'].includes(this.selected_neuron_prop)) {
+                      'connected_acons', 'connected_dendrites'].includes(this.selected_neuron_prop)) {
                 return BASE_URL + 'images/lowhigh2_cmap.png';
             }
             else {

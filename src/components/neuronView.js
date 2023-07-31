@@ -37,7 +37,7 @@ class NeuronView {
             fired_fraction: {min: 0.019999, max: 0.060000},
             grown_axons: {min: 0, max: 27},
             grown_dendrites: {min: 0, max: 19},
-            connected_axons: {min: 0, max: 27},
+            connected_acons: {min: 0, max: 27},
             connected_dendrites: {min: 0, max: 19}
         };
         this.colormap = null;
@@ -51,7 +51,7 @@ class NeuronView {
             fired_fraction: 'low_high2',
             grown_axons: 'low_high2',
             grown_dendrites: 'low_high2',
-            connected_axons: 'low_high2',
+            connected_acons: 'low_high2',
             connected_dendrites: 'low_high2'
         }
 
