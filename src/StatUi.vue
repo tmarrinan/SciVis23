@@ -27,6 +27,12 @@ export default {
                 connected_acons: 'Incoming Connections',
                 connected_dendrites: 'Outgoing Connections'
             },
+            simulation_names: {
+                'viz-no-network': 'No Initial Connectivity',
+                'viz-stimulus': 'Stimulation / Learning',
+                'viz-disable': 'Disable Areas / Injury',
+                'viz-calcium': 'Per-Neuron Calcium Targets'
+            },
             neuron_areas: [],
             area_colors: [
                 '#808080',
@@ -274,10 +280,10 @@ export default {
             //     axons_sub[i] = this.sim_data.grown_axons[neuron_idx];
             //     dendrites_sub[i] = this.sim_data.grown_dendrites[neuron_idx];
             // }
-            data2[0].dimensions[0].values = this.sim_data.current_calcium;
-            data2[0].dimensions[1].values = this.sim_data.fired_fraction;
-            data2[0].dimensions[2].values = this.sim_data.grown_axons;
-            data2[0].dimensions[3].values = this.sim_data.grown_dendrites;
+            data2[0].dimensions[1].values = this.sim_data.current_calcium;
+            data2[0].dimensions[2].values = this.sim_data.fired_fraction;
+            data2[0].dimensions[3].values = this.sim_data.grown_axons;
+            data2[0].dimensions[4].values = this.sim_data.grown_dendrites;
             Plotly.redraw('parallel');
 
             for (let i = 0; i < 48; i++) {
@@ -295,6 +301,8 @@ export default {
             neurons.forEach((neuron) => {
                 this.neuron_areas.push(parseInt(neuron[3]));
             });
+            data2[0].dimensions[0].values = this.neuron_areas;
+            Plotly.redraw('parallel');
         })
         .catch((err) => {
             console.log(err);
@@ -322,17 +330,18 @@ export default {
             }
             else if (message.type === 'updateState') {
                 //this.updateState(message.data);
-                console.log(message.data);
-                this.view_idx = message.data.view;
-                this.sim_property = message.data.state.neuron_property;
-                this.timeline.setTimestep(message.data.state.timestep);
-                this.timeline.setSimulation(message.data.state.simulation);
-                this.timeline.getData()
-                .then((table) => {
-                    updateChartData(table.neurons);
-                    redrawCharts();
-                })
-                .catch((reason) => { console.error(reason); });
+                if (message.hasOwnProperty('data') && message.data !== null) {
+                    this.view_idx = message.data.view;
+                    this.sim_property = message.data.state.neuron_property;
+                    this.timeline.setTimestep(message.data.state.timestep);
+                    this.timeline.setSimulation(message.data.state.simulation);
+                    this.timeline.getData()
+                    .then((table) => {
+                        updateChartData(table.neurons);
+                        redrawCharts();
+                    })
+                    .catch((reason) => { console.error(reason); });
+                }
             }
             else {
                 console.log(message);
@@ -354,7 +363,7 @@ export default {
             },
             labelfont: {
                 family: 'Arial, Helvetica, sans-serif',
-                size: 16,
+                size: 14,
                 color: '#FFFFFF'
             },
             rangefont: {
@@ -369,6 +378,11 @@ export default {
             },
             tickcolor: '#FFFFFF',
             dimensions: [
+                {
+                    label: 'Area',
+                    range: [0, 47],
+                    values: [0]
+                },
                 {
                     label: 'Calcium',
                     range: [0.0, 0.790452],
@@ -443,7 +457,7 @@ export default {
         </div>
         <div id="info-container" class="row">
             <div class="col-12">
-                <h2 id="info-bar"><span class="bold">View: </span>{{ view_idx }}, <span class="bold">Simulation: </span>"{{ timeline ? timeline.simulation : '--' }}", <span class="bold">Timestep: </span>{{ timeline ? timeline.timestep / 100: '--' }}</h2>
+                <h2 id="info-bar"><span class="bold">View: </span>{{ view_idx }}, <span class="bold">Simulation: </span>"{{ timeline ? simulation_names[timeline.simulation] : '--' }}", <span class="bold">Timestep: </span>{{ timeline ? timeline.timestep / 100: '--' }}</h2>
             </div>
         </div>
         <div id="content" class="row">
