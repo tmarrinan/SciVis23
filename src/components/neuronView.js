@@ -32,9 +32,9 @@ class NeuronView {
         this.global_scalar_ranges = {
             area: {min: 0, max: 47},
             current_calcium: {min: 0.000000, max: 0.790452},
-            target_calcium: {min: -0.700000, max: 0.700000},
+            target_calcium: {min: -0.70, max: 0.70},
             fired: {min: 0.0, max: 1.0},
-            fired_fraction: {min: 0.019999, max: 0.060000},
+            fired_fraction: {min: 0.00, max: 0.06},
             grown_axons: {min: 0, max: 27},
             grown_dendrites: {min: 0, max: 19},
             connected_acons: {min: 0, max: 27},

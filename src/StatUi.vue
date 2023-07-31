@@ -142,6 +142,11 @@ export default {
                             color: '#FFFFFF'
                         }
                     },
+                    linecolor: '#FFFFFF',
+                    linewidth: 1,
+                    minor: {
+                        tickcolor: '#FFFFFF',
+                    },
                     tickfont: {
                         family: 'Arial, Helvetica, sans-serif',
                         size: 12,
@@ -157,7 +162,8 @@ export default {
                             color: '#FFFFFF'
                         }
                     },
-                    zerolinecolor: '#FFFFFF',
+                    linecolor: '#FFFFFF',
+                    linewidth: 1,
                     tickcolor: '#FFFFFF',
                     tickfont: {
                         family: 'Arial, Helvetica, sans-serif',
@@ -256,6 +262,24 @@ export default {
             layout1.title.text = 'Histogram: ' + this.property_names[this.sim_property];
             Plotly.redraw('histogram');
 
+            // let sub_size = this.neuron_areas.length / 10;
+            // let calcium_sub = new Float32Array(sub_size);
+            // let fired_rate_sub = new Float32Array(sub_size);
+            // let axons_sub = new Float32Array(sub_size);
+            // let dendrites_sub = new Float32Array(sub_size);
+            // for (let i = 0; i < sub_size; i++) {
+            //     let neuron_idx = i * 10;
+            //     calcium_sub[i] = this.sim_data.current_calcium[neuron_idx];
+            //     fired_rate_sub[i] = this.sim_data.fired_fraction[neuron_idx];
+            //     axons_sub[i] = this.sim_data.grown_axons[neuron_idx];
+            //     dendrites_sub[i] = this.sim_data.grown_dendrites[neuron_idx];
+            // }
+            data2[0].dimensions[0].values = this.sim_data.current_calcium;
+            data2[0].dimensions[1].values = this.sim_data.fired_fraction;
+            data2[0].dimensions[2].values = this.sim_data.grown_axons;
+            data2[0].dimensions[3].values = this.sim_data.grown_dendrites;
+            Plotly.redraw('parallel');
+
             for (let i = 0; i < 48; i++) {
                 data3[i].y = area_values[i];
             }
@@ -324,11 +348,50 @@ export default {
         let layout1 = this.generatePlotlyLayout('Histogram: Area', null, '# Neurons');
 
         let data2 = [{
-            type: 'bar',
-            x: ['Test1', 'Test2', 'Test3'],
-            y: [16, 8, 12]
+            type: 'parcoords',
+            line: {
+                color: '#E7462A'
+            },
+            labelfont: {
+                family: 'Arial, Helvetica, sans-serif',
+                size: 16,
+                color: '#FFFFFF'
+            },
+            rangefont: {
+                family: 'Arial, Helvetica, sans-serif',
+                size: 12,
+                color: '#FFFFFF'
+            },
+            tickfont: {
+                family: 'Arial, Helvetica, sans-serif',
+                size: 12,
+                color: '#FFFFFF'
+            },
+            tickcolor: '#FFFFFF',
+            dimensions: [
+                {
+                    label: 'Calcium',
+                    range: [0.0, 0.790452],
+                    values: [0]
+                },
+                {
+                    label: 'Fired Rate',
+                    range: [0.0, 0.06],
+                    values: [0.0]
+                },
+                {
+                    label: 'Axons',
+                    range: [0, 27],
+                    values: [0]
+                },
+                {
+                    label: 'Dendrites',
+                    range: [0, 19],
+                    values: [0]
+                }
+            ]
         }];
-        let layout2 = this.generatePlotlyLayout('Calcium', 'Something', '# Neurons');
+        let layout2 = this.generatePlotlyLayout('Neuron Properties', null, null);
 
         let data3 = [];
         for (let i = 0; i < 48; i++) {
@@ -346,7 +409,7 @@ export default {
         let layout3 = this.generatePlotlyLayout('Area per Area', 'Area ID', 'Calcium', [0.0, 1.01]);
 
         Plotly.newPlot('histogram', data1, layout1, {responsive: true});
-        Plotly.newPlot('test', data2, layout2, {responsive: true});
+        Plotly.newPlot('parallel', data2, layout2, {responsive: true});
         Plotly.newPlot('areas', data3, layout3, {responsive: true});
 
         // Timeline
@@ -385,7 +448,7 @@ export default {
         </div>
         <div id="content" class="row">
             <div id="histogram" class="col-12 col-6-m no-padding"></div>
-            <div id="test" class="col-12 col-6-m no-padding"></div>
+            <div id="parallel" class="col-12 col-6-m no-padding"></div>
             <div id="areas" class="col-12 no-padding"></div>
         </div>
     </div>

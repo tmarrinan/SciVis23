@@ -439,6 +439,7 @@ export default {
                 view.setNeuronAreas(neuron_areas, new Vector2(0, this.area_colors.length - 1));
             });
 
+            /*
             // BEGIN area centroid - precomputed
             let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
             let sps = new SolidParticleSystem('sps', this.scene);
@@ -459,6 +460,7 @@ export default {
             mesh.position.z = 7.5;
             mesh.layerMask = 1;
             // END area centroid
+            */
 
             // TEST
             // setTimeout(() => {

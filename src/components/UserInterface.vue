@@ -37,9 +37,9 @@ export default {
             neuron_properties: {
                 area: {name: 'Area', min: 0, max: 47},
                 current_calcium: {name: 'Calcium', min: 0.000000, max: 0.790452},
-                target_calcium: {name: 'Calcium to Target', min: -0.700000, max: 0.700000},
+                target_calcium: {name: 'Calcium to Target', min: -0.70, max: 0.70},
                 fired: {name: 'Fired', min: 0.0, max: 1.0},
-                fired_fraction: {name: 'Fired Rate', min: 0.019999, max: 0.060000},
+                fired_fraction: {name: 'Fired Rate', min: 0.00, max: 0.06},
                 grown_axons: {name: 'Axons', min: 0, max: 27},
                 grown_dendrites: {name: 'Dendrites', min: 0, max: 19},
                 connected_acons: {name: 'Incoming Connections', min: 0, max: 27},
