@@ -45,7 +45,7 @@ wss.on('connection', (ws) => {
             if (room !== '') {
                 state = rooms[room].state;
             }
-            ws.send(JSON.stringify({type: 'state', data: state}));
+            ws.send(JSON.stringify({type: 'updateState', data: state}));
         }
         else {
             if (packet.type === 'updateState') {
