@@ -6,11 +6,12 @@ import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { VertexBuffer } from '@babylonjs/core/Meshes/buffer';
 import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSystem';
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
-import { CreateTube } from '@babylonjs/core/Meshes/Builders/tubeBuilder';
+import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 import { BoundingSphere } from '@babylonjs/core/Culling/boundingSphere';
@@ -326,14 +327,22 @@ export default {
             if (event.pointerType === 'mouse' && (event.button === 1 || (event.button === 0 && event.ctrlKey))) {
                 let ray = this.scene.createPickingRay(this.scene.pointerX, this.scene.pointerY, null,
                                                       this.views[this.active_view].camera);
-                console.log(ray);
+                let min_dist = 9.9e12;
+                let hit = -1;
                 this.neuron_colliders.forEach((collider, idx) => {
                     if (ray.intersectsSphere(collider)) {
-                        let neuron_1 = 10 * idx;
-                        let neuron_2 = neuron_1 + 9;
-                        console.log('intersection: [' + neuron_1 + ',' + neuron_2 + ']; area: ' + this.views[0].area_values[neuron_1]);
+                        let dist = Vector3.Distance(ray.origin, collider.center);
+                        if (dist < min_dist) {
+                            min_dist = dist;
+                            hit = idx;
+                        }
                     }
                 });
+                if (hit >= 0) {
+                    let neuron_1 = 10 * hit;
+                    let neuron_2 = neuron_1 + 9;
+                    this.views[this.active_view].showNeuronInfo(neuron_1, neuron_2);
+                }
             }
         });
         canvas.addEventListener('wheel', (event) => {
@@ -357,6 +366,26 @@ export default {
         // Built-in 'ground' shape.
         let ground = CreateGround('ground1', { width: 30, height: 30, subdivisions: 2 }, this.scene);
         ground.material = grid_mat;
+
+        /*
+        // Pop-up info box
+        let info_texture = new DynamicTexture('info-texture', {width: 512, height: 1024}, this.scene, true);
+        var info_texture_ctx = info_texture.getContext();
+        console.log(info_texture_ctx);
+        info_texture_ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+        info_texture_ctx.fillRect(0, 0, 512, 1024)
+        info_texture.drawText('Testing', 10, 102, 'normal 92px sans-serif', '#000000', null);
+        let info_material = new StandardMaterial('info-material', this.scene);
+        info_material.diffuseTexture = info_texture;
+        info_material.specularColor = new Color3(0, 0, 0);
+        info_material.emissiveColor = new Color3(1, 1, 1);
+        info_material.backFaceCulling = false;
+
+        let info_plane = CreatePlane('info-plane', {width: 15, height: 30}, this.scene);
+        info_plane.billboardMode = Mesh.BILLBOARDMODE_ALL;
+        info_plane.material = info_material;
+        info_plane.scaling = new Vector3(0.1, 0.1, 0.1);
+        */
 
         // Create colormap textures for neuron visualization
         // this.colormaps.area = new Texture('/images/areas_cmap.png', this.scene, true, false, Texture.NEAREST_SAMPLINGMODE);

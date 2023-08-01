@@ -171,6 +171,23 @@ class NeuronView {
         }
     }
 
+    showNeuronInfo(min_id, max_id) {
+        let info = 'Area: ' + this.area_values[min_id] + '\n';
+
+        if (this.neuron_property === 'area') {
+            for (let i = min_id; i <= max_id; i++) {
+                info += ' neuron ' + i.toString().padStart(5) + ': ' + this.area_values[i] + '\n';
+            }
+        }
+        else {
+            for (let i = min_id; i <= max_id; i++) {
+                info += ' neuron ' + i.toString().padStart(5) + ': ' + this.simulation_data[this.neuron_property][i].toFixed(4) + '\n';
+            }
+        }
+
+        alert(info);
+    }
+
     updateSimulationData(sim_data, data_ranges) {
         this.simulation_data = sim_data;
         this.data_ranges = data_ranges;
