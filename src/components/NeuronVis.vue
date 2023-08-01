@@ -202,6 +202,7 @@ export default {
             this.state[view].simulation = value;
             if (no_sync !== true) this.syncState(view, this.state[view]);
 
+            this.views[view].setSimulation(value);
             this.timeline.setSimulation(value);
             this.timeline.getData(true)
             .then((table) => {
@@ -467,6 +468,7 @@ export default {
             console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);
             let neuron_areas = new Float32Array(neurons.length);
+            let translation = new Vector3(-10.0, 0.0, 7.5);
             let rotation_q = Quaternion.FromEulerVector(new Vector3(-Math.PI / 2.0, 0.0, 0.0));
             neurons.forEach((neuron, idx) => {
                 neuron_positions[idx] = new Vector3(parseFloat(neuron[0]),
@@ -477,7 +479,7 @@ export default {
                 if (idx % 10 === 0) {
                     let np = neuron_positions[idx].scale(0.1);
                     np.applyRotationQuaternionInPlace(rotation_q);
-                    np.addInPlace(new Vector3(-10.0, 0.0, 7.5));
+                    np.addInPlace(translation);
                     let collider = BoundingSphere.CreateFromCenterAndRadius(np, 0.075);//, point_cloud_world_matrix);
                     this.neuron_colliders.push(collider);
                 }
@@ -496,8 +498,23 @@ export default {
             this.brain_center = point_cloud.getBoundingInfo().boundingBox.center;
             ptcloud_mat.setVector3('cloud_center', this.brain_center);
 
+            // TODO: show area centroids for Stimulus and Disable cases
+            //  - Stimulus: areas 8, 30, 34
+            //  - Disable: areas 5, 8
+            let sphere_regions = [5, 8, 30, 34];
+            let spheres = {};
+            sphere_regions.forEach((region) => {
+                let position = neuron_positions[this.area_centroids[region]].scale(0.1);
+                position.applyRotationQuaternionInPlace(rotation_q);
+                position.addInPlace(translation);
+                spheres[region] = CreateSphere('sphere_' + region, {diameter: 0.4, segments: 8});
+                spheres[region].position = position;
+                spheres[region].layerMask = 0;
+            });
+
             this.views.forEach((view) => {
                 view.setPointCloudMesh(neuron_positions, point_cloud);
+                view.setAreaCenters(spheres);
                 view.setNeuronAreas(neuron_areas, new Vector2(0, this.area_colors.length - 1));
             });
 
