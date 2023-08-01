@@ -65,6 +65,7 @@ export default {
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
             neuron_colliders: [],
+            neuron_info: null,
             brain_center: new Vector3(0.0, 0.0, 0.0),
             sync_views: false,
             room_id: '',
@@ -307,6 +308,10 @@ export default {
                 let message = {type: 'updateState', data: {view: view_idx, state: state}};
                 this.ws.send(JSON.stringify(message));
             }
+        },
+
+        closeInfoDialog(event) {
+            document.getElementById('neuron-info-dialog').close();
         }
     },
     mounted() {
@@ -341,7 +346,9 @@ export default {
                 if (hit >= 0) {
                     let neuron_1 = 10 * hit;
                     let neuron_2 = neuron_1 + 9;
-                    this.views[this.active_view].showNeuronInfo(neuron_1, neuron_2);
+                    this.neuron_info = this.views[this.active_view].getNeuronInfo(neuron_1, neuron_2);
+                    //alert(JSON.stringify(info, null, 4));
+                    document.getElementById('neuron-info-dialog').showModal();
                 }
             }
         });
@@ -577,10 +584,51 @@ export default {
             @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"
             @update-neuron-property="updateNeuronProperty" @use-global-scalar-range="useGlobalScalarRange"
             @displace-neurons="displaceNeurons"/>
+        <dialog id="neuron-info-dialog">
+            <h2 class="dialog-title">Area: {{ neuron_info !== null ? neuron_info.area : 'N/A' }}</h2>
+            <table class="dialog-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Calcium</th>
+                        <th>To Target</th>
+                        <th>Fired</th>
+                        <th>Fired Rate</th>
+                        <th>Axons</th>
+                        <th>Dendrites</th>
+                        <th>In Conns.</th>
+                        <th>Out Conns.</th>
+                    </tr>
+                </thead>
+                <tbody v-if="neuron_info !== null">
+                    <tr v-for="item in neuron_info.properties">
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.current_calcium.toFixed(4) }}</td>
+                        <td>{{ item.target_calcium.toFixed(4) }}</td>
+                        <td>{{ item.fired > 0 ? 'True' : 'False' }}</td>
+                        <td>{{ (100 * item.fired_fraction).toFixed(2) + '%' }}</td>
+                        <td>{{ item.grown_axons.toFixed(3) }}</td>
+                        <td>{{ item.grown_dendrites.toFixed(3) }}</td>
+                        <td>{{ parseInt(item.connected_acons) }}</td>
+                        <td>{{ parseInt(item.connected_dendrites) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" @click="closeInfoDialog">Close</button>
+        </dialog>
     </div>
 </template>
 
 <style scoped>
+dialog {
+    top: 4rem;
+    padding: 0.5rem;
+}
+
+dialog button {
+    font-size: 1rem;
+}
+
 #canvas-container {
     position: relative;
     left: 0px;
@@ -614,5 +662,31 @@ export default {
     border-left: 4px solid #FFFFFF;
     margin-left: -2px;
     z-index: 2;
+}
+
+.dialog-title {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.dialog-table {
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+}
+
+.dialog-table thead tr th {
+    width: 6rem;
+    font-size: 1rem;
+    background-color: #83BFE7;
+    border: solid 1px #000000;
+    width: 6rem;
+}
+
+.dialog-table tbody tr td {
+    width: 6rem;
+    font-size: 1rem;
+    background-color: #CECECE;
+    border: solid 1px #000000;
+    width: 6rem;
 }
 </style>

@@ -171,7 +171,28 @@ class NeuronView {
         }
     }
 
-    showNeuronInfo(min_id, max_id) {
+    getNeuronInfo(min_id, max_id) {
+        let info = {
+            area: this.area_values[min_id],
+            properties: []
+        };
+        for (let i = min_id; i <= max_id; i++) {
+            let neuron_data = {
+                id: i,
+                current_calcium: this.simulation_data.current_calcium[i],
+                target_calcium: this.simulation_data.target_calcium[i],
+                fired: this.simulation_data.fired[i],
+                fired_fraction: this.simulation_data.fired_fraction[i],
+                grown_axons: this.simulation_data.grown_axons[i],
+                grown_dendrites: this.simulation_data.grown_dendrites[i],
+                connected_acons: this.simulation_data.connected_acons[i],
+                connected_dendrites: this.simulation_data.connected_dendrites[i]
+            }
+            info.properties.push(neuron_data);
+        }
+        return info;
+
+        /*
         let info = 'Area: ' + this.area_values[min_id] + '\n';
 
         if (this.neuron_property === 'area') {
@@ -186,6 +207,7 @@ class NeuronView {
         }
 
         alert(info);
+        */
     }
 
     updateSimulationData(sim_data, data_ranges) {
