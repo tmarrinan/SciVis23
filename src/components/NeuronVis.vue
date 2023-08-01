@@ -503,12 +503,16 @@ export default {
             //  - Disable: areas 5, 8
             let sphere_regions = [5, 8, 30, 34];
             let spheres = {};
+            let spheres_mat = new StandardMaterial('spheres_mat');
+            spheres_mat.emissiveColor = new Color3(1.0, 1.0, 1.0);
+            spheres_mat.wireframe = true;
             sphere_regions.forEach((region) => {
                 let position = neuron_positions[this.area_centroids[region]].scale(0.1);
                 position.applyRotationQuaternionInPlace(rotation_q);
                 position.addInPlace(translation);
-                spheres[region] = CreateSphere('sphere_' + region, {diameter: 0.4, segments: 8});
+                spheres[region] = CreateSphere('sphere_' + region, {diameter: 0.4, segments: 2});
                 spheres[region].position = position;
+                spheres[region].material = spheres_mat;
                 spheres[region].layerMask = 0;
             });
 
