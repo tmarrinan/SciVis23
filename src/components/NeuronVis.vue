@@ -5,7 +5,7 @@ import { Vector2, Vector3, Quaternion } from '@babylonjs/core/Maths/math.vector'
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { VertexBuffer } from '@babylonjs/core/Meshes/buffer';
 import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSystem';
-import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
+import { CreateTube } from '@babylonjs/core/Meshes/Builders/tubeBuilder';
 import { CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
@@ -494,19 +494,28 @@ export default {
             }
             let boundaries = {};
             let boundary_mat = new StandardMaterial('boundary_mat');
-            boundary_mat.diffuseColor = new Color3(0.0, 0.0, 0.0);
-            boundary_mat.emissiveColor = new Color3(0.2, 1.0, 0.2);
+            boundary_mat.diffuseColor = new Color3(0.2, 1.0, 0.4);
+            boundary_mat.specularColor = new Color3(0.0, 0.0, 0.0);
+            boundary_mat.emissiveColor = new Color3(0.2, 1.0, 0.4);
+            boundary_mat.alpha = 0.6;
+            boundary_mat.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
             for (let region in area_regions) {
                 let boundary_ids = area_regions[region];
                 let points = [];
                 boundary_ids.forEach((id) => {
-                    let position = neuron_positions[id].scale(0.1);
-                    position.applyRotationQuaternionInPlace(rotation_q);
-                    position.addInPlace(translation);
-                    points.push(position);
+                    //let position = neuron_positions[id].scale(0.1);
+                    //position.applyRotationQuaternionInPlace(rotation_q);
+                    //position.addInPlace(translation);
+                    //points.push(position);
+                    points.push(neuron_positions[id]);
                 });
-                boundaries[region] = CreateLines('lines_' + region, {points: points});
+                //boundaries[region] = CreateLines('lines_' + region, {points: points});
+                boundaries[region] = CreateTube('tube_' + region, {path: points, radius: 0.25, tessellation: 4}, this.scene);
                 boundaries[region].material = boundary_mat;
+                boundaries[region].scaling = new Vector3(0.1, 0.1, 0.1);
+                boundaries[region].rotation.x = -Math.PI / 2.0;
+                boundaries[region].position.x = -10.0;
+                boundaries[region].position.z = 7.5;
                 boundaries[region].layerMask = 0;
             };
 
