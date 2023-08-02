@@ -14,6 +14,8 @@ export default {
             near_clip_slider: 5,
             near_clip_start: 5,
             near_clip_end: 300,
+            show_diff: false,
+            show_tab: 1,
             timestep: 0,
             timestep_start: 0,
             timestep_end: 9999,
@@ -180,6 +182,18 @@ export default {
             this.$emit('displace-neurons', {idx: this.idx, data: this.displace_neurons});
         },
 
+        toggleDiffCheckbox(event) {
+            this.show_diff = !this.show_diff;
+        },
+
+        showDiffTab1(event) {
+            this.show_tab = 1;
+        },
+
+        showDiffTab2(event) {
+            this.show_tab = 2;
+        },
+
         setLocalRanges(local_ranges) {
             this.neuron_local_ranges = local_ranges;
         }
@@ -203,39 +217,58 @@ export default {
         </div>
         <div class="widgets">
             <div v-show="show_ui">
-                <div style="width: 16rem; text-align: right; margin-bottom: 0.5rem;">
+                <div style="width: 16.5rem; text-align: right; margin-bottom: 0.5rem;">
                     <button class="show-hide-ui" type="button" @click="toggleShowUi"><img class="show-hide-arrow" src="/images/down-arrow.png" alt="down arrow"/></button>
                 </div>
-                <label>Visibility:</label><br/>
-                <select class="ui-element" v-model="selected_visibility" @change="updateVisibility">
-                    <option v-for="item in visibility" :value="item.name">{{ item.description }}</option>
-                </select>
-                <br/>
-                <label>Displace Neurons:</label>
-                <input class="ui-checkbox" type="checkbox" v-model="displace_neurons" @change="updateDisplaceNeurons"/>
-                <br/>
-                <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
-                <button class="ui-slider-btn" type="button" @click="decrementNearClip"><img src="/images/left-arrow.png" alt="left arrow"/></button>
-                <input class="ui-slider" type="range" :min="near_clip_start" :max="near_clip_end" v-model="near_clip_slider" @input="updateNearClip"/>
-                <button class="ui-slider-btn" type="button" @click="incrementNearClip"><img src="/images/right-arrow.png" alt="right arrow"/></button>
-                <br/>
-                <label>Timestep: {{ timestep }}</label><br/>
-                <button class="ui-slider-btn" type="button" @click="decrementTimestep"><img src="/images/left-arrow.png" alt="left arrow"/></button>
-                <input class="ui-slider" type="range" :min="timestep_start" :max="timestep_end" v-model="timestep" @change="updateTimestep"/>
-                <button class="ui-slider-btn" type="button" @click="incrementTimestep"><img src="/images/right-arrow.png" alt="right arrow"/></button>
-                <br/>
-                <label>Simulation:</label><br/>
-                <select class="ui-element" v-model="selected_simulation" @change="updateSimulationStimulus">
-                    <option v-for="item in simulations" :value="item.name">{{ item.description }}</option>
-                </select>
-                <br/>
-                <label>Neuron Property:</label><br/>
-                <select class="ui-element" v-model="selected_neuron_prop" @change="updateNeuronProperty">
-                    <option v-for="(item, key) in neuron_properties" :value="key">{{ item.name }}</option>
-                </select>
-                <br/>
-                <label>Global Scalar Range:</label>
-                <input class="ui-checkbox last" type="checkbox" v-model="global_scalar_range" @change="updateScalarRangeType"/>
+                <div class="sim-group-clear">
+                    <label>Visibility:</label><br/>
+                    <select class="ui-element" v-model="selected_visibility" @change="updateVisibility">
+                        <option v-for="item in visibility" :value="item.name">{{ item.description }}</option>
+                    </select>
+                    <br/>
+                    <label>Displace Neurons:</label>
+                    <input class="ui-checkbox" type="checkbox" v-model="displace_neurons" @change="updateDisplaceNeurons"/>
+                    <br/>
+                    <label>Near Clip: {{ near_clip.toFixed(1) }}</label><br/>
+                    <button class="ui-slider-btn last" type="button" @click="decrementNearClip"><img src="/images/left-arrow.png" alt="left arrow"/></button>
+                    <input class="ui-slider last" type="range" :min="near_clip_start" :max="near_clip_end" v-model="near_clip_slider" @input="updateNearClip"/>
+                    <button class="ui-slider-btn last" type="button" @click="incrementNearClip"><img src="/images/right-arrow.png" alt="right arrow"/></button>
+                </div>
+                <div class="sim-group">
+                    <div class="border-top-left"></div>
+                    <div class="center-title">
+                        <label>Single</label>
+                        <div class="ui-check-slide-container">
+                            <div class="ui-check-slide" :selected="show_diff" @click="toggleDiffCheckbox"></div>
+                        </div>
+                        <label>Diff</label>
+                    </div>
+                    <div class="border-top-right"></div>
+                    <div v-if="show_diff" class="diff-tab-container">
+                        <label class="diff-tab" :selected="show_tab === 1" @click="showDiffTab1">Data Set 1</label>
+                        <label class="diff-tab" :selected="show_tab === 2" @click="showDiffTab2">Data Set 2</label>
+                    </div>
+                    <div v-show="!show_diff || show_tab === 1">
+                        <label>Timestep: {{ timestep }}</label><br/>
+                        <button class="ui-slider-btn" type="button" @click="decrementTimestep"><img src="/images/left-arrow.png" alt="left arrow"/></button>
+                        <input class="ui-slider" type="range" :min="timestep_start" :max="timestep_end" v-model="timestep" @change="updateTimestep"/>
+                        <button class="ui-slider-btn" type="button" @click="incrementTimestep"><img src="/images/right-arrow.png" alt="right arrow"/></button>
+                        <br/>
+                        <label>Simulation:</label><br/>
+                        <select class="ui-element last" v-model="selected_simulation" @change="updateSimulationStimulus">
+                            <option v-for="item in simulations" :value="item.name">{{ item.description }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="sim-group-clear">
+                    <label>Neuron Property:</label><br/>
+                    <select class="ui-element" v-model="selected_neuron_prop" @change="updateNeuronProperty">
+                        <option v-for="(item, key) in neuron_properties" :value="key">{{ item.name }}</option>
+                    </select>
+                    <br/>
+                    <label>Global Scalar Range:</label>
+                    <input class="ui-checkbox last" type="checkbox" v-model="global_scalar_range" @change="updateScalarRangeType"/>
+                </div>
             </div>
             <div v-show="!show_ui">
                 <button class="show-hide-ui" type="button"  @click="toggleShowUi"><img class="show-hide-arrow" src="/images/left-arrow.png" alt="left arrow"/></button>
@@ -256,7 +289,7 @@ label, input, select, option {
 
 .widgets {
     position: relative;
-    padding: 0.5rem;
+    padding: 0.5rem 0.25rem;
     border-radius: 0.5rem;
     background-color: rgba(255, 255, 255, 0.8);
     color: #000000;
@@ -320,6 +353,82 @@ label, input, select, option {
     margin: 0 0 1rem 0.75rem;
 }
 
+.center-title {
+    display: inline-block;
+    position: relative;
+    top: -1rem;
+    width: 80%;
+    text-align: center;
+}
+
+.diff-tab-container {
+    position: relative;
+    top: -0.75rem;
+    width: 100%;
+    text-align: center;
+    border-bottom: solid 1px #3A3A3A;
+}
+
+.diff-tab {
+    display: inline-block;
+    border: solid 1px #3A3A3A;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    border-bottom: none;
+    width: 45%;
+}
+
+.diff-tab[selected=true] {
+    background-color: rgba(132, 132, 132, 0.5);
+}
+
+.border-top-left {
+    display: inline-block;
+    position: relative;
+    top: -0.5rem;
+    left: -0.5rem;
+    width: 10%;
+    height: 1rem;
+    border-top: solid 1px #3A3A3A;
+}
+
+.border-top-right {
+    display: inline-block;
+    position: relative;
+    top: -0.5rem;
+    left: 0.5rem;
+    width: 10%;
+    height: 1rem;
+    border-top: solid 1px #3A3A3A;
+}
+
+.ui-check-slide-container {
+    display: inline-block;
+    background-color: #FFFFFF;
+    width: 3rem;
+    height: 1rem;
+    border: solid 1px #3A3A3A;
+    border-radius: 0.5rem;
+    margin: 0 0.5rem;
+}
+
+.ui-check-slide {
+    width: 0.9rem;
+    height: 0.9rem;
+    background-color: #317CEC;
+    border-radius: 50%;
+    transform: translate(-0.975rem, 0);
+    transition: transform 0.25s;
+}
+
+.ui-check-slide:hover {
+    background-color: #285FB0;
+}
+
+.ui-check-slide[selected=true] {
+    transform: translate(0.925rem, 0);
+}
+
 .ui-slider-btn {
     width: 1.25rem;
     height: 1.25rem;
@@ -336,6 +445,17 @@ label, input, select, option {
 .ui-slider-btn img {
     width: 0.75rem;
     height: 0.75rem;
+}
+
+.sim-group {
+    border: solid 1px #3A3A3A;
+    border-top: none;
+    padding: 0.5rem;
+    margin: 1rem 0;
+}
+
+.sim-group-clear {
+    padding: 0 0.5rem;
 }
 
 .last {
