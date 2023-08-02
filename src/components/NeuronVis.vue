@@ -6,7 +6,7 @@ import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { VertexBuffer } from '@babylonjs/core/Meshes/buffer';
 import { SolidParticleSystem } from '@babylonjs/core/Particles/solidParticleSystem';
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
-import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
+import { CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
@@ -375,33 +375,6 @@ export default {
         let ground = CreateGround('ground1', { width: 30, height: 30, subdivisions: 2 }, this.scene);
         ground.material = grid_mat;
 
-        /*
-        // Pop-up info box
-        let info_texture = new DynamicTexture('info-texture', {width: 512, height: 1024}, this.scene, true);
-        var info_texture_ctx = info_texture.getContext();
-        console.log(info_texture_ctx);
-        info_texture_ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
-        info_texture_ctx.fillRect(0, 0, 512, 1024)
-        info_texture.drawText('Testing', 10, 102, 'normal 92px sans-serif', '#000000', null);
-        let info_material = new StandardMaterial('info-material', this.scene);
-        info_material.diffuseTexture = info_texture;
-        info_material.specularColor = new Color3(0, 0, 0);
-        info_material.emissiveColor = new Color3(1, 1, 1);
-        info_material.backFaceCulling = false;
-
-        let info_plane = CreatePlane('info-plane', {width: 15, height: 30}, this.scene);
-        info_plane.billboardMode = Mesh.BILLBOARDMODE_ALL;
-        info_plane.material = info_material;
-        info_plane.scaling = new Vector3(0.1, 0.1, 0.1);
-        */
-
-        // Create colormap textures for neuron visualization
-        // this.colormaps.area = new Texture('/images/areas_cmap.png', this.scene, true, false, Texture.NEAREST_SAMPLINGMODE);
-        // this.colormaps.low_high = new Texture('/images/lowhigh_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
-        // this.colormaps.low_high2 = new Texture('/images/lowhigh2_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
-        // this.colormaps.divergent = new Texture('/images/divergent_cmap.png', this.scene, true, false, Texture.BILINEAR_SAMPLINGMODE);
-
-
         // Create custom point cloud shader material
         let ptcloud_mat = imposterSpheres.CreateImposterSphereShaderMaterial(this.scene);
         ptcloud_mat.setFloat('point_size', 0.15);
@@ -498,27 +471,48 @@ export default {
             this.brain_center = point_cloud.getBoundingInfo().boundingBox.center;
             ptcloud_mat.setVector3('cloud_center', this.brain_center);
 
-            // TODO: show area centroids for Stimulus and Disable cases
+            // Area boundaries for Stimulus and Disable cases
             //  - Stimulus: areas 8, 30, 34
             //  - Disable: areas 5, 8
-            let sphere_regions = [5, 8, 30, 34];
-            let spheres = {};
-            let spheres_mat = new StandardMaterial('spheres_mat');
-            spheres_mat.emissiveColor = new Color3(1.0, 1.0, 1.0);
-            spheres_mat.wireframe = true;
-            sphere_regions.forEach((region) => {
-                let position = neuron_positions[this.area_centroids[region]].scale(0.1);
-                position.applyRotationQuaternionInPlace(rotation_q);
-                position.addInPlace(translation);
-                spheres[region] = CreateSphere('sphere_' + region, {diameter: 0.4, segments: 2});
-                spheres[region].position = position;
-                spheres[region].material = spheres_mat;
-                spheres[region].layerMask = 0;
-            });
+            let area_regions = {
+                '5': [2590, 3170, 3800, 4480, 5210, 5980, 6810, 7670, 8580, 9540, 10530, 11550, 12600,
+                      13700, 13710, 13720, 13730, 13740, 14860, 13750, 13760, 13770, 12690, 12700, 12710,
+                      12720, 12730, 12740, 12750, 11700, 10680, 9690, 8740, 8750, 7840, 6970, 6150, 5370,
+                      4620, 3930, 3290, 2690, 2160, 1670, 1660, 1650, 1640, 2100, 2090, 2600, 2590],
+                '8': [17670, 18870, 20080, 22520, 24990, 28680, 29890, 29880, 29870, 31060, 31050, 31040,
+                      31030, 31020, 31010, 31000, 29780, 29770, 28540, 27310, 26070, 24830, 23590, 23580,
+                      22340, 21110, 19890, 17500, 16330, 15180, 12950, 11880, 10840, 8870, 7940, 7070,
+                      7970, 7980, 8920, 10910, 11960, 13040, 13050, 14160, 15290, 15300, 16470, 16480,
+                      17660, 17670],
+                '30': [3520, 3530, 2930, 2380, 1880, 1440, 730, 460, 250, 100, 10, 70, 180, 360, 610, 900,
+                       1680, 2170, 2700, 3300, 3940, 4630, 5380, 6180, 6190, 7040, 7050, 7060, 6230, 5450,
+                       4710, 4020, 3390, 2810, 2820, 2290, 2300, 2310, 2320, 2880, 2890, 2900, 3510, 3520],
+                '34': [22800, 21580, 20370, 19170, 17980, 16820, 15670, 14540, 13440, 12370, 11330, 10320,
+                       9340, 8400, 7500, 6640, 5820, 5040, 5030, 4300, 4290, 4280, 4270, 4260, 4250, 5730,
+                       7390, 8280, 9220, 11210, 12250, 13330, 14430, 15560, 17890, 19080, 19090, 20310,
+                       20320, 21550, 21560, 22800],
+            }
+            let boundaries = {};
+            let boundary_mat = new StandardMaterial('boundary_mat');
+            boundary_mat.diffuseColor = new Color3(0.0, 0.0, 0.0);
+            boundary_mat.emissiveColor = new Color3(0.2, 1.0, 0.2);
+            for (let region in area_regions) {
+                let boundary_ids = area_regions[region];
+                let points = [];
+                boundary_ids.forEach((id) => {
+                    let position = neuron_positions[id].scale(0.1);
+                    position.applyRotationQuaternionInPlace(rotation_q);
+                    position.addInPlace(translation);
+                    points.push(position);
+                });
+                boundaries[region] = CreateLines('lines_' + region, {points: points});
+                boundaries[region].material = boundary_mat;
+                boundaries[region].layerMask = 0;
+            };
 
             this.views.forEach((view) => {
                 view.setPointCloudMesh(neuron_positions, point_cloud);
-                view.setAreaCenters(spheres);
+                view.setAreaBoundaries(boundaries);
                 view.setNeuronAreas(neuron_areas, new Vector2(0, this.area_colors.length - 1));
             });
 

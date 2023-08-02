@@ -22,6 +22,7 @@ class NeuronView {
         this.neuron_ptcloud = data.neuron_ptcloud;
         this.connections = null;
         this.area_values = null;
+        this.area_boundaries = null;
         this.neuron_property = 'area';
         this.neuron_scalar_tex = null;
         this.neuron_scalar_range = new Vector2(0.0, 1.0);
@@ -97,8 +98,8 @@ class NeuronView {
                                                 Engine.TEXTURETYPE_FLOAT);
     }
 
-    setAreaCenters(spheres) {
-        this.area_centers = spheres;
+    setAreaBoundaries(boundaries) {
+        this.area_boundaries = boundaries;
     }
 
     setNeuronAreas(areas, area_range) {
@@ -119,22 +120,22 @@ class NeuronView {
 
     setSimulation(value) {
         if (value === 'viz-stimulus') {
-            this.area_centers[5].layerMask &= ~this.layer;
-            this.area_centers[8].layerMask |= this.layer;
-            this.area_centers[30].layerMask |= this.layer;
-            this.area_centers[34].layerMask |= this.layer;
+            this.area_boundaries[5].layerMask &= ~this.layer;
+            this.area_boundaries[8].layerMask |= this.layer;
+            this.area_boundaries[30].layerMask |= this.layer;
+            this.area_boundaries[34].layerMask |= this.layer;
         }
         else if (value === 'viz-disable') {
-            this.area_centers[5].layerMask |= this.layer;
-            this.area_centers[8].layerMask |= this.layer;
-            this.area_centers[30].layerMask &= ~this.layer;
-            this.area_centers[34].layerMask &= ~this.layer;
+            this.area_boundaries[5].layerMask |= this.layer;
+            this.area_boundaries[8].layerMask |= this.layer;
+            this.area_boundaries[30].layerMask &= ~this.layer;
+            this.area_boundaries[34].layerMask &= ~this.layer;
         }
         else {
-            this.area_centers[5].layerMask &= ~this.layer;
-            this.area_centers[8].layerMask &= ~this.layer;
-            this.area_centers[30].layerMask &= ~this.layer;
-            this.area_centers[34].layerMask &= ~this.layer;
+            this.area_boundaries[5].layerMask &= ~this.layer;
+            this.area_boundaries[8].layerMask &= ~this.layer;
+            this.area_boundaries[30].layerMask &= ~this.layer;
+            this.area_boundaries[34].layerMask &= ~this.layer;
         }
     }
 
