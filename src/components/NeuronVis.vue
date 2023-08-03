@@ -173,6 +173,13 @@ export default {
             this.views[view].camera.minZ = value;
         },
 
+        setSingleDiff(event) {
+            let view = event.idx;
+            let value = event.data;
+
+            console.log('View ' + view + ': ' + (value ? 'Diff' : 'Single'));
+        },
+
         updateTimestep(event, no_sync) {
             let view = event.idx;
             let value = event.data;
@@ -195,6 +202,13 @@ export default {
             .catch((reason) => { console.error(reason); });
         },
 
+        updateTimestep2(event, no_sync) {
+            let view = event.idx;
+            let value = event.data;
+
+            console.log('updateTimestep2:', view, value);
+        },
+
         updateSimulationSelection(event, no_sync) {
             let view = event.idx;
             let value = event.data;
@@ -210,6 +224,13 @@ export default {
                 this.updateNetworkViz(view, table.connections);
             })
             .catch((reason) => { console.error(reason); });
+        },
+
+        updateSimulationSelection2(event, no_sync) {
+            let view = event.idx;
+            let value = event.data;
+
+            console.log('updateSimulationSelection2:', view, value);
         },
 
         updateNeuronProperty(event) {
@@ -605,7 +626,8 @@ export default {
         <div v-for="row in (view_rows - 1)" class="horizontal-bar" :style="'top: ' + (100 * row / view_rows) + '%;'"></div>
         <UserInterface v-for="i in 8" v-show="i <= num_views" ref="ui" :idx="i - 1" :num_views="num_views" 
             @update-visibility="updateVisibility" @update-near-clip="updateNearClip"
-            @update-timestep="updateTimestep" @update-simulation-selection="updateSimulationSelection"
+            @set-single-diff="setSingleDiff" @update-timestep="updateTimestep" @update-timestep2="updateTimestep2"
+            @update-simulation-selection="updateSimulationSelection" @update-simulation-selection2="updateSimulationSelection2"
             @update-neuron-property="updateNeuronProperty" @use-global-scalar-range="useGlobalScalarRange"
             @displace-neurons="displaceNeurons"/>
         <dialog id="neuron-info-dialog">

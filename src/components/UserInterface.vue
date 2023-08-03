@@ -17,9 +17,11 @@ export default {
             show_diff: false,
             show_tab: 1,
             timestep: 0,
+            timestep2: 0,
             timestep_start: 0,
             timestep_end: 9999,
             selected_simulation: 'viz-no-network',
+            selected_simulation2: 'viz-no-network',
             global_scalar_range: true,
             displace_neurons: false,
             visibility: [
@@ -68,7 +70,8 @@ export default {
             }
         }
     },
-    emits: ['update-visibility', 'update-near-clip', 'update-timestep', 'update-simulation-selection',
+    emits: ['update-visibility', 'update-near-clip', 'set-single-diff', 'update-timestep',
+            'update-timestep2', 'update-simulation-selection', 'update-simulation-selection2',
             'update-neuron-property', 'use-global-scalar-range', 'displace-neurons'],
     methods: {
         getLocationRight() {
@@ -166,8 +169,30 @@ export default {
             }
         },
 
-        updateSimulationStimulus(event) {
+        updateTimestep2(event) {
+             this.$emit('update-timestep2', {idx: this.idx, data: this.timestep2});
+        },
+
+        decrementTimestep2(event) {
+            if (this.timestep2 > this.timestep_start) {
+                this.timestep2--;
+                this.updateTimestep2();
+            }
+        },
+
+        incrementTimestep2(event) {
+            if (this.timestep2 < this.timestep_end) {
+                this.timestep2++;
+                this.updateTimestep2();
+            }
+        },
+
+        updateSimulationSelection(event) {
               this.$emit('update-simulation-selection', {idx: this.idx, data: this.selected_simulation});
+        },
+
+        updateSimulationSelection2(event) {
+              this.$emit('update-simulation-selection2', {idx: this.idx, data: this.selected_simulation2});
         },
 
         updateNeuronProperty(event) {
@@ -184,6 +209,7 @@ export default {
 
         toggleDiffCheckbox(event) {
             this.show_diff = !this.show_diff;
+            this.$emit('set-single-diff', {idx: this.idx, data: this.show_diff});
         },
 
         showDiffTab1(event) {
@@ -255,7 +281,18 @@ export default {
                         <button class="ui-slider-btn" type="button" @click="incrementTimestep"><img src="/images/right-arrow.png" alt="right arrow"/></button>
                         <br/>
                         <label>Simulation:</label><br/>
-                        <select class="ui-element last" v-model="selected_simulation" @change="updateSimulationStimulus">
+                        <select class="ui-element last" v-model="selected_simulation" @change="updateSimulationSelection">
+                            <option v-for="item in simulations" :value="item.name">{{ item.description }}</option>
+                        </select>
+                    </div>
+                    <div v-show="show_diff && show_tab === 2">
+                        <label>Timestep: {{ timestep2 }}</label><br/>
+                        <button class="ui-slider-btn" type="button" @click="decrementTimestep2"><img src="/images/left-arrow.png" alt="left arrow"/></button>
+                        <input class="ui-slider" type="range" :min="timestep_start" :max="timestep_end" v-model="timestep2" @change="updateTimestep2"/>
+                        <button class="ui-slider-btn" type="button" @click="incrementTimestep2"><img src="/images/right-arrow.png" alt="right arrow"/></button>
+                        <br/>
+                        <label>Simulation:</label><br/>
+                        <select class="ui-element last" v-model="selected_simulation2" @change="updateSimulationSelection2">
                             <option v-for="item in simulations" :value="item.name">{{ item.description }}</option>
                         </select>
                     </div>
