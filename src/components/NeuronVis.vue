@@ -64,6 +64,8 @@ export default {
             render_size: {width: 0, height: 0},
             area_colors: uniqueColors,
             area_centroids: areaCentroids,
+            timeline: null,
+            timeline2: null,
             neuron_colliders: [],
             neuron_info: null,
             brain_center: new Vector3(0.0, 0.0, 0.0),
@@ -177,7 +179,15 @@ export default {
             let view = event.idx;
             let value = event.data;
 
-            console.log('View ' + view + ': ' + (value ? 'Diff' : 'Single'));
+            this.state[view].show_diff = value;
+
+            this.views[view].showDiff(value);
+            
+            let property = this.views[view].neuron_property;
+            let show_diff = this.views[view].show_diff;
+            if (property !== 'area' && show_diff) {
+                this.$refs.ui[view].setDiffRange(sim_diff_range);
+            }
         },
 
         updateTimestep(event, no_sync) {
@@ -194,9 +204,9 @@ export default {
             this.timeline.setTimestep(value);
             this.timeline.getData(fetch_connections)
             .then((table) => {
-                this.updateMonitorViz(view, table.neurons);
+                this.updateMonitorViz(view, 1, table.neurons);
                 if (fetch_connections) {
-                    this.updateNetworkViz(view, table.connections);
+                    this.updateNetworkViz(view, 1, table.connections);
                 }
             })
             .catch((reason) => { console.error(reason); });
@@ -206,7 +216,22 @@ export default {
             let view = event.idx;
             let value = event.data;
 
-            console.log('updateTimestep2:', view, value);
+            let old_conn_ts_idx = ~~(this.state[view].timestep2 / 100);
+            let new_conn_ts_idx = ~~(value / 100);
+
+            let fetch_connections = old_conn_ts_idx !== new_conn_ts_idx;
+            this.state[view].timestep2 = value;
+            if (no_sync !== true) this.syncState(view, this.state[view]);
+            
+            this.timeline2.setTimestep(value);
+            this.timeline2.getData(fetch_connections)
+            .then((table) => {
+                this.updateMonitorViz(view, 2, table.neurons);
+                if (fetch_connections) {
+                    this.updateNetworkViz(view, 2, table.connections);
+                }
+            })
+            .catch((reason) => { console.error(reason); });
         },
 
         updateSimulationSelection(event, no_sync) {
@@ -220,8 +245,8 @@ export default {
             this.timeline.setSimulation(value);
             this.timeline.getData(true)
             .then((table) => {
-                this.updateMonitorViz(view, table.neurons);
-                this.updateNetworkViz(view, table.connections);
+                this.updateMonitorViz(view, 1, table.neurons);
+                this.updateNetworkViz(view, 1, table.connections);
             })
             .catch((reason) => { console.error(reason); });
         },
@@ -230,7 +255,16 @@ export default {
             let view = event.idx;
             let value = event.data;
 
-            console.log('updateSimulationSelection2:', view, value);
+            this.state[view].simulation2 = value;
+            if (no_sync !== true) this.syncState(view, this.state[view]);
+
+            this.timeline2.setSimulation(value);
+            this.timeline2.getData(true)
+            .then((table) => {
+                this.updateMonitorViz(view, 2, table.neurons);
+                this.updateNetworkViz(view, 2, table.connections);
+            })
+            .catch((reason) => { console.error(reason); });
         },
 
         updateNeuronProperty(event) {
@@ -241,6 +275,13 @@ export default {
             this.syncState(view, this.state[view]);
 
             this.views[view].setNeuronProperty(value);
+
+            let property = this.views[view].neuron_property;
+            let show_diff = this.views[view].show_diff;
+            if (property !== 'area' && show_diff) {
+                let sim_diff_range = this.views[view].diff_ranges[property];
+                this.$refs.ui[view].setDiffRange(sim_diff_range);
+            }
         },
 
         useGlobalScalarRange(event) {
@@ -274,7 +315,7 @@ export default {
           * XXX - Tommy: This is where you need to inject the code to color the 
           * neuron particles
           */
-        updateMonitorViz(view, table) {
+        updateMonitorViz(view, timeline, table) {
             // console.log(`View: ${view}`);
             // console.log(`Number of rows: ${table.numRows}`);
             // console.log(`Example use: Let's get neuron 50: ${table.get(50)}`);
@@ -305,11 +346,18 @@ export default {
                 }
             };
 
-            this.views[view].updateSimulationData(sim_data, sim_data_ranges);
-            this.$refs.ui[view].setLocalRanges(sim_data_ranges);
+            this.views[view].updateSimulationData(sim_data, sim_data_ranges, timeline);
+            if (timeline === 1) this.$refs.ui[view].setLocalRanges(sim_data_ranges);
+
+            let property = this.views[view].neuron_property;
+            let show_diff = this.views[view].show_diff;
+            if (property !== 'area' && show_diff) {
+                let sim_diff_range = this.views[view].diff_ranges[property];
+                this.$refs.ui[view].setDiffRange(sim_diff_range);
+            }
         },
 
-        updateNetworkViz(view, table) {
+        updateNetworkViz(view, timeline, table) {
             // let conn_data = {};
             // let desired_columns = ['source_id', 'target_id', 'weight'];
             // for (let i = 0; i < table.schema.fields.length; i++) {
@@ -318,7 +366,7 @@ export default {
             //     }
             // }
             // this.views[view].updateConnectionData(conn_data, this.state[view].simulation, this.state[view].timestep);
-            this.views[view].updateConnectionData(table)
+            this.views[view].updateConnectionData(table, timeline)
         },
 
         setRoomId(id) {
@@ -433,8 +481,11 @@ export default {
         for (let i = 0; i < 8; i++) {
             this.views.push(new NeuronView(i, canvas, view_shared_data));
             this.state.push({
+                show_diff: false,
                 simulation: 'viz-no-network',
                 timestep: 0,
+                simulation2: 'viz-no-network',
+                timestep2: 0,
                 neuron_property: 'area'
             });
         }
@@ -589,8 +640,18 @@ export default {
         this.timeline.getData(true)
         .then((table) => {
             for (let v = 0; v < 8; v++) {
-                this.updateMonitorViz(v, table.neurons);
-                this.updateNetworkViz(v, table.connections);
+                this.updateMonitorViz(v, 1, table.neurons);
+                this.updateNetworkViz(v, 1, table.connections);
+            }
+        })
+        .catch((reason) => { console.error(reason); });
+
+        this.timeline2 = new timeline.Timeline();
+        this.timeline2.getData(true)
+        .then((table) => {
+            for (let v = 0; v < 8; v++) {
+                this.updateMonitorViz(v, 2, table.neurons);
+                this.updateNetworkViz(v, 2, table.connections);
             }
         })
         .catch((reason) => { console.error(reason); });

@@ -49,7 +49,8 @@ export default {
                 connected_acons: {name: 'Incoming Connections', min: 0, max: 27},
                 connected_dendrites: {name: 'Outgoing Connections', min: 0, max: 19}
             },
-            neuron_local_ranges: null
+            neuron_local_ranges: null,
+            neuron_diff_range: null
         }
     },
     computed: {
@@ -61,8 +62,8 @@ export default {
             if (this.selected_neuron_prop === 'area') {
                 return BASE_URL + 'images/areas_cmap.png';
             }
-            else if (['current_calcium', 'fired_fraction', 'grown_axons', 'grown_dendrites',
-                      'connected_acons', 'connected_dendrites'].includes(this.selected_neuron_prop)) {
+            else if (!this.show_diff && ['current_calcium', 'fired_fraction', 'grown_axons', 'grown_dendrites',
+                                         'connected_acons', 'connected_dendrites'].includes(this.selected_neuron_prop)) {
                 return BASE_URL + 'images/lowhigh2_cmap.png';
             }
             else {
@@ -90,7 +91,10 @@ export default {
 
         colormapLegendMin() {
             let cmap_min = this.neuron_properties[this.selected_neuron_prop].min;
-            if (!this.global_scalar_range) {
+            if (this.selected_neuron_prop !== 'area' && this.show_diff && this.neuron_diff_range != null) {
+                cmap_min = this.neuron_diff_range.min;
+            }
+            else if (!this.global_scalar_range) {
                 cmap_min = this.neuron_local_ranges[this.selected_neuron_prop].min;
             }
             return this.formatPropertyRangeValue(cmap_min);
@@ -98,7 +102,10 @@ export default {
 
         colormapLegendMax() {
             let cmap_max = this.neuron_properties[this.selected_neuron_prop].max;
-            if (!this.global_scalar_range) {
+            if (this.selected_neuron_prop !== 'area' && this.show_diff && this.neuron_diff_range != null) {
+                cmap_max = this.neuron_diff_range.max;
+            }
+            else if (!this.global_scalar_range) {
                 cmap_max = this.neuron_local_ranges[this.selected_neuron_prop].max + 0.000001;
             }
             return this.formatPropertyRangeValue(cmap_max);
@@ -107,6 +114,10 @@ export default {
         formatPropertyRangeValue(value) {
             if (['current_calcium', 'target_calcium'].includes(this.selected_neuron_prop)) {
                 return value.toFixed(3);
+            }
+            else if (this.selected_neuron_prop === 'fired' && this.show_diff) {
+                console.log(value);
+                return value > 0 ? '+1' : '-1';
             }
             else if (this.selected_neuron_prop === 'fired') {
                 return value === 0 ? 'False' : 'True';
@@ -222,6 +233,10 @@ export default {
 
         setLocalRanges(local_ranges) {
             this.neuron_local_ranges = local_ranges;
+        },
+
+        setDiffRange(diff_range) {
+            this.neuron_diff_range = diff_range;
         }
     },
     mounted() {

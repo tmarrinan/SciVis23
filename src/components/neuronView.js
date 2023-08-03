@@ -23,6 +23,7 @@ class NeuronView {
         this.connections = null;
         this.area_values = null;
         this.area_boundaries = null;
+        this.show_diff = false;
         this.neuron_property = 'area';
         this.neuron_scalar_tex = null;
         this.neuron_scalar_range = new Vector2(0.0, 1.0);
@@ -44,7 +45,13 @@ class NeuronView {
         this.colormap = null;
         this.colormaps = data.colormaps;
         this.simulation_data = null;
+        this.simulation_data2 = null;
+        this.connection_data = null;
+        this.connection_data2 = null;
         this.data_ranges = null;
+        this.data_ranges2 = null;
+        this.simulation_diff = {};
+        this.diff_ranges = {};
         this.property_colormaps = {
             current_calcium: 'low_high2',
             target_calcium: 'divergent',
@@ -112,6 +119,20 @@ class NeuronView {
         if (this.neuron_property === 'area') {
             this.setNeuronTexture(this.area_values, this.colormaps.area);
         }
+        else if (this.show_diff) {
+            let range_min = 9.9e12;
+            let range_max = -9.9e12;
+            let diff_scalars = this.simulation_data[this.neuron_property].map((item, index) => {
+                let delta = this.simulation_data2[this.neuron_property][index] - item;
+                if (delta < range_min) range_min = delta;
+                if (delta > range_max) range_max = delta;
+                return delta;
+            });
+            range_max = Math.max(Math.abs(range_min), Math.abs(range_max));
+            this.diff_ranges[this.neuron_property] = {min: -range_max, max: range_max};
+
+            this.setNeuronTexture(diff_scalars, this.colormaps.divergent);
+        }
         else {
             let colormap = this.colormaps[this.property_colormaps[this.neuron_property]];
             this.setNeuronTexture(this.simulation_data[this.neuron_property], colormap);
@@ -156,7 +177,14 @@ class NeuronView {
     }
 
     setNeuronTexture(scalar_values, colormap) {
-        let range = this.use_global_scalar_range ? this.global_scalar_ranges[this.neuron_property] : this.data_ranges[this.neuron_property];
+        let range = this.global_scalar_ranges[this.neuron_property];
+        if (this.show_diff) {
+            range = this.diff_ranges[this.neuron_property];
+        }
+        else if (!this.use_global_scalar_range) {
+            range = this.data_ranges[this.neuron_property];
+        }
+        //let range = this.use_global_scalar_range ? this.global_scalar_ranges[this.neuron_property] : this.data_ranges[this.neuron_property];
         this.neuron_scalar_tex.update(scalar_values);
         this.neuron_scalar_range = new Vector2(range.min, range.max);
         this.colormap = colormap;
@@ -197,6 +225,31 @@ class NeuronView {
         }
     }
 
+    showDiff(flag) {
+        this.show_diff = flag;
+
+        if (this.neuron_property !== 'area') {
+            if (this.show_diff) {
+                let range_min = 9.9e12;
+                let range_max = -9.9e12;
+                let diff_scalars = this.simulation_data[this.neuron_property].map((item, index) => {
+                    let delta = this.simulation_data2[this.neuron_property][index] - item;
+                    if (delta < range_min) range_min = delta;
+                    if (delta > range_max) range_max = delta;
+                    return delta;
+                });
+                range_max = Math.max(Math.abs(range_min), Math.abs(range_max));
+                this.diff_ranges[this.neuron_property] = {min: -range_max, max: range_max};
+
+                this.setNeuronTexture(diff_scalars, this.colormaps.divergent);
+            }
+            else {
+                let colormap = this.colormaps[this.property_colormaps[this.neuron_property]];
+                this.setNeuronTexture(this.simulation_data[this.neuron_property], colormap);
+            }
+        }
+    }
+
     getNeuronInfo(min_id, max_id) {
         let info = {
             area: this.area_values[min_id],
@@ -219,16 +272,45 @@ class NeuronView {
         return info;
     }
 
-    updateSimulationData(sim_data, data_ranges) {
-        this.simulation_data = sim_data;
-        this.data_ranges = data_ranges;
-        this.data_ranges.area = this.global_scalar_ranges.area;
+    updateSimulationData(sim_data, data_ranges, timeline) {
+        if (timeline === 1) {
+            this.simulation_data = sim_data;
+            this.data_ranges = data_ranges;
+            this.data_ranges.area = this.global_scalar_ranges.area;
+        }
+        else {
+            this.simulation_data2 = sim_data;
+            this.data_ranges2 = data_ranges;
+            this.data_ranges2.area = this.global_scalar_ranges.area;
+        }
+        this.diff_ranges.area = this.global_scalar_ranges.area;
+
         if (this.neuron_property !== 'area') {
-            this.setNeuronTexture(this.simulation_data[this.neuron_property], this.colormap);
+            if (this.show_diff) {
+                let range_min = 9.9e12;
+                let range_max = -9.9e12;
+                let diff_scalars = this.simulation_data[this.neuron_property].map((item, index) => {
+                    let delta = this.simulation_data2[this.neuron_property][index] - item;
+                    if (delta < range_min) range_min = delta;
+                    if (delta > range_max) range_max = delta;
+                    return delta;
+                });
+                range_max = Math.max(Math.abs(range_min), Math.abs(range_max));
+                this.diff_ranges[this.neuron_property] = {min: -range_max, max: range_max};
+
+                this.setNeuronTexture(diff_scalars, this.colormaps.divergent);
+            }
+            else {
+                let colormap = this.colormaps[this.property_colormaps[this.neuron_property]];
+                this.setNeuronTexture(this.simulation_data[this.neuron_property], colormap);
+            }
         }
     }
 
-    updateConnectionData(conn_data) {
+    updateConnectionData(conn_data, timeline) {
+        if (timeline === 1) this.connection_data = conn_data;
+        else this.connection_data2 = conn_data;
+
         if (this.connections !== null) this.connections.dispose();
 
         if (conn_data.values.length > 0) {
