@@ -50,7 +50,6 @@ class NeuronView {
         this.connection_data2 = null;
         this.data_ranges = null;
         this.data_ranges2 = null;
-        this.simulation_diff = {};
         this.diff_ranges = {};
         this.property_colormaps = {
             current_calcium: 'low_high2',
@@ -256,19 +255,47 @@ class NeuronView {
             properties: []
         };
         for (let i = min_id; i <= max_id; i++) {
-            let neuron_data = {
-                id: i,
-                current_calcium: this.simulation_data.current_calcium[i],
-                target_calcium: this.simulation_data.target_calcium[i],
-                fired: this.simulation_data.fired[i],
-                fired_fraction: this.simulation_data.fired_fraction[i],
-                grown_axons: this.simulation_data.grown_axons[i],
-                grown_dendrites: this.simulation_data.grown_dendrites[i],
-                connected_acons: this.simulation_data.connected_acons[i],
-                connected_dendrites: this.simulation_data.connected_dendrites[i]
+            let neuron_data = {};
+            if (this.show_diff) {
+                neuron_data.id = i;
+                neuron_data.current_calcium = this.simulation_data2.current_calcium[i] - this.simulation_data.current_calcium[i];
+                neuron_data.target_calcium = this.simulation_data2.target_calcium[i] - this.simulation_data.target_calcium[i];
+                neuron_data.fired = this.simulation_data2.fired[i] - this.simulation_data.fired[i];
+                neuron_data.fired_fraction = this.simulation_data2.fired_fraction[i] - this.simulation_data.fired_fraction[i];
+                neuron_data.grown_axons = this.simulation_data2.grown_axons[i] - this.simulation_data.grown_axons[i];
+                neuron_data.grown_dendrites = this.simulation_data2.grown_dendrites[i] - this.simulation_data.grown_dendrites[i];
+                neuron_data.connected_acons = this.simulation_data2.connected_acons[i] - this.simulation_data.connected_acons[i];
+                neuron_data.connected_dendrites = this.simulation_data2.connected_dendrites[i] - this.simulation_data.connected_dendrites[i];
+            }
+            else {
+                neuron_data.id = i;
+                neuron_data.current_calcium = this.simulation_data.current_calcium[i];
+                neuron_data.target_calcium = this.simulation_data.target_calcium[i];
+                neuron_data.fired = this.simulation_data.fired[i];
+                neuron_data.fired_fraction = this.simulation_data.fired_fraction[i];
+                neuron_data.grown_axons = this.simulation_data.grown_axons[i];
+                neuron_data.grown_dendrites = this.simulation_data.grown_dendrites[i];
+                neuron_data.connected_acons = this.simulation_data.connected_acons[i];
+                neuron_data.connected_dendrites = this.simulation_data.connected_dendrites[i];
             }
             info.properties.push(neuron_data);
         }
+
+        if (this.show_diff) {
+            let range_min = 9.9e12;
+            let range_max = -9.9e12;
+            let diff_scalars = this.simulation_data[this.neuron_property].map((item, index) => {
+                let delta = this.simulation_data2[this.neuron_property][index] - item;
+                if (delta < range_min) range_min = delta;
+                if (delta > range_max) range_max = delta;
+                return delta;
+            });
+            range_max = Math.max(Math.abs(range_min), Math.abs(range_max));
+            this.diff_ranges[this.neuron_property] = {min: -range_max, max: range_max};
+
+            this.setNeuronTexture(diff_scalars, this.colormaps.divergent);
+        }
+
         return info;
     }
 

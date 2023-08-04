@@ -101,6 +101,7 @@ export default {
         <div class="row">
             <div class="col-12 col-4-m col-3-l padding-top-0-25rem">
                 <h1 id="gui-title">Brain Plasticity</h1>
+                <a id="stat-nav" href="./statui.html">Stats</a>
             </div>
             <div class="col-12 col-8-m col-4-l padding-top-1rem padding-top-0-25rem-m">
                 <label class="text-right middle">Views:</label>
@@ -129,8 +130,15 @@ input, select, option, button {
 }
 
 #gui-title {
+    display: inline;
     font-size: 1.2rem;
     font-weight: bold;
+}
+
+#stat-nav, #stat-nav:visited {
+    font-size: 1rem;
+    margin-left: 1.5rem;
+    color: #C2BB2D;
 }
 
 #global-gui {
