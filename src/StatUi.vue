@@ -331,6 +331,7 @@ export default {
             else if (message.type === 'updateState') {
                 //this.updateState(message.data);
                 if (message.hasOwnProperty('data') && message.data !== null) {
+                    console.log(message.data);
                     this.view_idx = message.data.view;
                     this.sim_property = message.data.state.neuron_property;
                     this.timeline.setTimestep(message.data.state.timestep);

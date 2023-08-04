@@ -163,7 +163,7 @@ export default {
         },
 
         updateTimestep(event) {
-             this.$emit('update-timestep', {idx: this.idx, data: this.timestep});
+             this.$emit('update-timestep', {idx: this.idx, data: parseInt(this.timestep)});
         },
 
         decrementTimestep(event) {
@@ -181,7 +181,7 @@ export default {
         },
 
         updateTimestep2(event) {
-             this.$emit('update-timestep2', {idx: this.idx, data: this.timestep2});
+             this.$emit('update-timestep2', {idx: this.idx, data: parseInt(this.timestep2)});
         },
 
         decrementTimestep2(event) {
