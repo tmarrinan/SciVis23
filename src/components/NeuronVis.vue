@@ -186,8 +186,15 @@ export default {
             let property = this.views[view].neuron_property;
             let show_diff = this.views[view].show_diff;
             if (property !== 'area' && show_diff) {
+                let sim_diff_range = this.views[view].diff_ranges[property];
                 this.$refs.ui[view].setDiffRange(sim_diff_range);
             }
+
+            this.timeline.getData(true)
+            .then((table) => {
+                this.updateNetworkViz(view, 1, table.connections);
+            })
+            .catch((reason) => { console.error(reason); });
         },
 
         updateTimestep(event, no_sync) {
@@ -417,7 +424,6 @@ export default {
                     let neuron_1 = 10 * hit;
                     let neuron_2 = neuron_1 + 9;
                     this.neuron_info = this.views[this.active_view].getNeuronInfo(neuron_1, neuron_2);
-                    //alert(JSON.stringify(info, null, 4));
                     document.getElementById('neuron-info-dialog').showModal();
                 }
             }

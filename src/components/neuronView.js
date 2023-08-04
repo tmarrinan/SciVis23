@@ -340,7 +340,89 @@ class NeuronView {
 
         if (this.connections !== null) this.connections.dispose();
 
-        if (conn_data.values.length > 0) {
+        if (this.show_diff && this.connection_data !== null && this.connection_data2 !== null &&
+            (this.connection_data.values.length > 0 || this.connection_data2.values.length > 0)) {
+            let conn1 = {};
+            let conn2 = {};
+            for (let i = 0; i < this.connection_data.values.length; i++) {
+                let src_id = parseInt(this.connection_data.values[i][0]);
+                let dest_id = parseInt(this.connection_data.values[i][1]);
+                conn1[src_id + ':' + dest_id] = {
+                    src: src_id,
+                    dest: dest_id,
+                    count: parseInt(this.connection_data.values[i][2])
+                };
+                conn2[src_id + ':' + dest_id] = {
+                    src: src_id,
+                    dest: dest_id,
+                    count: 0
+                };
+            }
+            for (let i = 0; i < this.connection_data2.values.length; i++) {
+                let src_id = parseInt(this.connection_data2.values[i][0]);
+                let dest_id = parseInt(this.connection_data2.values[i][1]);
+                if (!conn1.hasOwnProperty(src_id + ':' + dest_id)) {
+                    conn1[src_id + ':' + dest_id] = {
+                        src: src_id,
+                        dest: dest_id,
+                        count: 0
+                    };
+                }
+                if (conn2.hasOwnProperty(src_id + ':' + dest_id)) {
+                    conn2[src_id + ':' + dest_id].count = parseInt(this.connection_data2.values[i][2]);
+                }
+                else {
+                    conn2[src_id + ':' + dest_id] = {
+                        src: src_id,
+                        dest: dest_id,
+                        count: parseInt(this.connection_data2.values[i][2])
+                    };
+                }
+            }
+            let paths = [];
+            let radius = [];
+            let color = [];
+            for (let key in conn1) {
+                let src = this.neuron_ptcloud.positions[areaCentroids[conn1[key].src]];
+                let dest = this.neuron_ptcloud.positions[areaCentroids[conn1[key].dest]];
+                let diff = conn2[key].count - conn1[key].count;
+                let col = diff >= 0 ? 0 : 1;
+
+                let to_center = this.brain_center.subtract(src);
+                to_center.normalize();
+                let to_dest = dest.subtract(src);
+                to_dest.normalize();
+                let right = to_center.cross(to_dest);
+                right.normalize();
+
+                paths.push(this.createBezierPath(src.add(right.scale(5.0)), dest.add(right.scale(5.0)), 24));
+                radius.push(0.025 * Math.pow(Math.abs(diff), 0.667));
+                color.push(col);
+            }
+
+            let tube_options = {
+                paths: paths,
+                colors: {
+                    color_list: [
+                        new Color3(0.871, 0.537, 0.129),
+                        new Color3(0.224, 0.055, 0.361)
+                    ],
+                    path_colors: color
+                },
+                radius: radius,
+                tessellation: 6
+            };
+            this.connections = CreateTubeCollection('connections_' + this.id, tube_options, this.scene);
+            this.connections.scaling = new Vector3(0.1, 0.1, 0.1);
+            this.connections.rotation.x = -Math.PI / 2.0;
+            this.connections.position.x = -10.0;
+            this.connections.position.z = 7.5;
+            this.connections.layerMask = this.layer;
+            if (this.visibility_mode === 'neurons') {
+                this.connections.visibility = 0;
+            }
+        }
+        else if (!this.show_diff && conn_data.values.length > 0) {
             let paths = [];
             let radius = [];
             let color = [];
