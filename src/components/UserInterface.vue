@@ -46,8 +46,8 @@ export default {
                 fired_fraction: {name: 'Fired Rate', min: 0.00, max: 0.06},
                 grown_axons: {name: 'Axons', min: 0, max: 27},
                 grown_dendrites: {name: 'Dendrites', min: 0, max: 19},
-                connected_acons: {name: 'Incoming Connections', min: 0, max: 27},
-                connected_dendrites: {name: 'Outgoing Connections', min: 0, max: 19}
+                connected_acons: {name: 'Incoming Synapses', min: 0, max: 27},
+                connected_dendrites: {name: 'Outgoing Synapses', min: 0, max: 19}
             },
             neuron_local_ranges: null,
             neuron_diff_range: null
@@ -123,7 +123,7 @@ export default {
                 return value === 0 ? 'False' : 'True';
             }
             else if (this.selected_neuron_prop === 'fired_fraction') {
-                return value.toFixed(2) + '%';
+                return (100 * value).toFixed(1) + '%';
             }
             else {
                 return parseInt(value);
