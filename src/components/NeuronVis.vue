@@ -156,8 +156,6 @@ export default {
         },
 
         updateState(state) {
-            // TODO: take into account `show_diff`
-            //state.state.timestep = parseInt(state.state.timestep);
             this.state[state.view].show_diff = state.state.show_diff;
             this.state[state.view].neuron_property = state.state.neuron_property;
             this.views[state.view].showDiff(state.state.show_diff);
