@@ -143,8 +143,12 @@ export default {
         },
 
         setUiValues(data) {
+            this.show_diff = data.show_diff;
+            if (!this.show_diff) this.show_tab = 1;
             this.timestep = data.timestep;
+            this.timestep2 = data.timestep2;
             this.selected_simulation = data.simulation;
+            this.selected_simulation2 = data.simulation2;
             this.selected_neuron_prop = data.neuron_property;
         },
 

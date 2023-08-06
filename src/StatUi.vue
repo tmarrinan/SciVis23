@@ -123,10 +123,6 @@ export default {
             }
         },
 
-        updateState(state) {
-            console.log(state);
-        },
-
         generatePlotlyLayout(title, x_axis, y_axis, range) {
             return {
                 paper_bgcolor: 'rgba(0, 0, 0, 0.0)',
@@ -329,9 +325,9 @@ export default {
                 this.joinedRoom(message.type, message.response === 'success');
             }
             else if (message.type === 'updateState') {
-                //this.updateState(message.data);
                 if (message.hasOwnProperty('data') && message.data !== null) {
                     console.log(message.data);
+                    // TODO: take into account `show_diff`
                     this.view_idx = message.data.view;
                     this.sim_property = message.data.state.neuron_property;
                     this.timeline.setTimestep(message.data.state.timestep);

@@ -156,10 +156,21 @@ export default {
         },
 
         updateState(state) {
-            state.state.timestep = parseInt(state.state.timestep);
+            // TODO: take into account `show_diff`
+            //state.state.timestep = parseInt(state.state.timestep);
+            this.views[state.view].showDiff(state.state.show_diff);
             this.views[state.view].setNeuronProperty(state.state.neuron_property);
             this.updateSimulationSelection({idx: state.view, data: state.state.simulation}, true);
             this.updateTimestep({idx: state.view, data: state.state.timestep}, true);
+            if (state.state.show_diff) {
+                this.updateSimulationSelection2({idx: state.view, data: state.state.simulation2}, true);
+                this.updateTimestep2({idx: state.view, data: state.state.timestep2}, true);
+                let property = this.views[state.view].neuron_property;
+                if (property !== 'area') {
+                    let sim_diff_range = this.views[state.view].diff_ranges[property];
+                    this.$refs.ui[state.view].setDiffRange(sim_diff_range);
+                }
+            }
             this.$refs.ui[state.view].setUiValues(state.state);
         },
 
@@ -182,6 +193,7 @@ export default {
             this.state[view].show_diff = value;
 
             this.views[view].showDiff(value);
+            this.syncState(view, this.state[view]);
             
             let property = this.views[view].neuron_property;
             let show_diff = this.views[view].show_diff;
