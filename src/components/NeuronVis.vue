@@ -158,13 +158,15 @@ export default {
         updateState(state) {
             // TODO: take into account `show_diff`
             //state.state.timestep = parseInt(state.state.timestep);
+            this.state[state.view].show_diff = state.state.show_diff;
+            this.state[state.view].neuron_property = state.state.neuron_property;
             this.views[state.view].showDiff(state.state.show_diff);
             this.views[state.view].setNeuronProperty(state.state.neuron_property);
+            this.updateTimestep({idx: state.view, data: state.state.timestep}, true, true);
             this.updateSimulationSelection({idx: state.view, data: state.state.simulation}, true);
-            this.updateTimestep({idx: state.view, data: state.state.timestep}, true);
             if (state.state.show_diff) {
+                this.updateTimestep2({idx: state.view, data: state.state.timestep2}, true, true);
                 this.updateSimulationSelection2({idx: state.view, data: state.state.simulation2}, true);
-                this.updateTimestep2({idx: state.view, data: state.state.timestep2}, true);
                 let property = this.views[state.view].neuron_property;
                 if (property !== 'area') {
                     let sim_diff_range = this.views[state.view].diff_ranges[property];
@@ -193,6 +195,7 @@ export default {
             this.state[view].show_diff = value;
 
             this.views[view].showDiff(value);
+            console.log(this.state[view]);
             this.syncState(view, this.state[view]);
             
             let property = this.views[view].neuron_property;
@@ -209,7 +212,7 @@ export default {
             .catch((reason) => { console.error(reason); });
         },
 
-        updateTimestep(event, no_sync) {
+        updateTimestep(event, no_sync, skip_data) {
             let view = event.idx;
             let value = event.data;
 
@@ -221,17 +224,19 @@ export default {
             if (no_sync !== true) this.syncState(view, this.state[view]);
             
             this.timeline.setTimestep(value);
-            this.timeline.getData(fetch_connections)
-            .then((table) => {
-                this.updateMonitorViz(view, 1, table.neurons);
-                if (fetch_connections) {
-                    this.updateNetworkViz(view, 1, table.connections);
-                }
-            })
-            .catch((reason) => { console.error(reason); });
+            if (!skip_data) {
+                this.timeline.getData(fetch_connections)
+                .then((table) => {
+                    this.updateMonitorViz(view, 1, table.neurons);
+                    if (fetch_connections) {
+                        this.updateNetworkViz(view, 1, table.connections);
+                    }
+                })
+                .catch((reason) => { console.error(reason); });
+            }
         },
 
-        updateTimestep2(event, no_sync) {
+        updateTimestep2(event, no_sync, skip_data) {
             let view = event.idx;
             let value = event.data;
 
@@ -243,14 +248,16 @@ export default {
             if (no_sync !== true) this.syncState(view, this.state[view]);
             
             this.timeline2.setTimestep(value);
-            this.timeline2.getData(fetch_connections)
-            .then((table) => {
-                this.updateMonitorViz(view, 2, table.neurons);
-                if (fetch_connections) {
-                    this.updateNetworkViz(view, 2, table.connections);
-                }
-            })
-            .catch((reason) => { console.error(reason); });
+            if (!skip_data) {
+                this.timeline2.getData(fetch_connections)
+                .then((table) => {
+                    this.updateMonitorViz(view, 2, table.neurons);
+                    if (fetch_connections) {
+                        this.updateNetworkViz(view, 2, table.connections);
+                    }
+                })
+                .catch((reason) => { console.error(reason); });
+            }
         },
 
         updateSimulationSelection(event, no_sync) {
