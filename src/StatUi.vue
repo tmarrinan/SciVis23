@@ -264,18 +264,6 @@ export default {
             layout1.title.text = 'Histogram: ' + this.property_names[this.sim_property];
             Plotly.redraw('histogram');
 
-            // let sub_size = this.neuron_areas.length / 10;
-            // let calcium_sub = new Float32Array(sub_size);
-            // let fired_rate_sub = new Float32Array(sub_size);
-            // let axons_sub = new Float32Array(sub_size);
-            // let dendrites_sub = new Float32Array(sub_size);
-            // for (let i = 0; i < sub_size; i++) {
-            //     let neuron_idx = i * 10;
-            //     calcium_sub[i] = this.sim_data.current_calcium[neuron_idx];
-            //     fired_rate_sub[i] = this.sim_data.fired_fraction[neuron_idx];
-            //     axons_sub[i] = this.sim_data.grown_axons[neuron_idx];
-            //     dendrites_sub[i] = this.sim_data.grown_dendrites[neuron_idx];
-            // }
             data2[0].dimensions[1].values = this.sim_data.current_calcium;
             data2[0].dimensions[2].values = this.sim_data.fired_fraction;
             data2[0].dimensions[3].values = this.sim_data.grown_axons;
