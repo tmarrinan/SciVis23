@@ -221,6 +221,7 @@ export default {
             this.state[view].timestep = value;
             if (no_sync !== true) this.syncState(view, this.state[view]);
             
+            this.timeline.setSimulation(this.$refs.ui[view].selected_simulation);
             this.timeline.setTimestep(value);
             if (!skip_data) {
                 this.timeline.getData(fetch_connections)
@@ -245,6 +246,7 @@ export default {
             this.state[view].timestep2 = value;
             if (no_sync !== true) this.syncState(view, this.state[view]);
             
+            this.timeline2.setSimulation(this.$refs.ui[view].selected_simulation2);
             this.timeline2.setTimestep(value);
             if (!skip_data) {
                 this.timeline2.getData(fetch_connections)
@@ -266,6 +268,7 @@ export default {
             if (no_sync !== true) this.syncState(view, this.state[view]);
 
             this.views[view].setSimulation(value);
+            this.timeline.setTimestep(this.$refs.ui[view].timestep);
             this.timeline.setSimulation(value);
             this.timeline.getData(true)
             .then((table) => {
@@ -282,6 +285,7 @@ export default {
             this.state[view].simulation2 = value;
             if (no_sync !== true) this.syncState(view, this.state[view]);
 
+            this.timeline2.setTimestep(this.$refs.ui[view].timestep2);
             this.timeline2.setSimulation(value);
             this.timeline2.getData(true)
             .then((table) => {
