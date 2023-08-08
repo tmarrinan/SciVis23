@@ -19,6 +19,7 @@ import { WebXRDefaultExperience } from '@babylonjs/core/XR/webXRDefaultExperienc
 import { WebXRFeatureName } from '@babylonjs/core/XR/webXRFeaturesManager';
 import { WebXRControllerMovement } from '@babylonjs/core/XR/features/WebXRControllerMovement';
 import { WebXRMotionControllerTeleportation } from '@babylonjs/core/XR/features/WebXRControllerTeleportation';
+import { WebXRState } from '@babylonjs/core/XR/webXRTypes';
 
 
 import UserInterface from './UserInterface.vue'
@@ -521,9 +522,23 @@ export default {
             floorMeshes: [ground]
         })
         .then((xr) => {
-            const featureManager = xr.baseExperience.featuresManager;
-            featureManager.disableFeature(WebXRMotionControllerTeleportation.Name);
-            const movementFeature = featureManager.enableFeature(WebXRFeatureName.MOVEMENT, 'latest', {
+            xr.baseExperience.onStateChangedObservable.add((xr_state) => {
+                if (xr_state === WebXRState.ENTERING_XR) {
+                    console.log('Entering VR');
+                    const xr_camera = xr.baseExperience.camera;
+                    xr_camera.position = this.views[0].camera.position.clone();
+                    xr_camera.layerMask = 1;
+                    this.views[0].enableXR(xr_camera);
+                }
+                else if (xr_state === WebXRState.NOT_IN_XR) {
+                    console.log('Exited VR');
+                    this.views[0].disableXR();
+                }
+            });
+
+            const feature_manager = xr.baseExperience.featuresManager;
+            feature_manager.disableFeature(WebXRMotionControllerTeleportation.Name);
+            const movement_feature = feature_manager.enableFeature(WebXRFeatureName.MOVEMENT, 'latest', {
                 xrInput: xr.input,
                 // add options here
                 movementOrientationFollowsViewerPose: true, // default true

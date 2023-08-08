@@ -18,6 +18,8 @@ class NeuronView {
         this.scene = data.scene;
         this.camera_settings = data.camera;
         this.camera = null;
+        this.xr_camera = null;
+        this.xr_mode = false;
         this.brain_center = new Vector3(0, 0, 0);
         this.neuron_ptcloud = data.neuron_ptcloud;
         this.connections = null;
@@ -82,6 +84,15 @@ class NeuronView {
         else {
             this.camera.detachControl();
         }
+    }
+
+    enableXR(xr_camera) {
+        this.xr_camera = xr_camera;
+        this.xr_mode = true;
+    }
+
+    disableXR() {
+        this.xr_mode = false;
     }
 
     setCameraView(position, target, up) {
@@ -496,8 +507,9 @@ class NeuronView {
     }
 
     beforeRender() {
-        this.neuron_ptcloud.material.setVector3('camera_position', this.camera.position);
-        this.neuron_ptcloud.material.setVector3('camera_up', this.camera.upVector);
+        let cam = this.xr_mode ? this.xr_camera : this.camera;
+        this.neuron_ptcloud.material.setVector3('camera_position', cam.position);
+        this.neuron_ptcloud.material.setVector3('camera_up', cam.upVector);
         this.neuron_ptcloud.material.setTexture('scalars', this.neuron_scalar_tex);
         this.neuron_ptcloud.material.setVector2('scalar_range', this.neuron_scalar_range);
         this.neuron_ptcloud.material.setTexture('colormap', this.colormap);
