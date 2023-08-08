@@ -193,7 +193,6 @@ export default {
             this.state[view].show_diff = value;
 
             this.views[view].showDiff(value);
-            console.log(this.state[view]);
             this.syncState(view, this.state[view]);
             
             let property = this.views[view].neuron_property;
@@ -535,8 +534,19 @@ export default {
         });
        
         // Download brain position data and create point cloud
-        this.getCSV(BASE_URL + 'data/viz-no-network_positions.csv')
-        .then((neurons) => {
+        let p_neuron_data = this.getCSV(BASE_URL + 'data/viz-no-network_positions.csv');
+        // Download neuron and connection data (dataset 1)
+        this.timeline = new timeline.Timeline();
+        let p_timeline1 = this.timeline.getData(true);
+        // Download neuron and connection data (dataset 2)
+        this.timeline2 = new timeline.Timeline();
+        let p_timeline2 = this.timeline2.getData(true);
+
+        Promise.all([p_neuron_data, p_timeline1, p_timeline2]).then((p_results) => {
+            let neurons = p_results[0];
+            let table1 = p_results[1];
+            let table2 = p_results[2];
+
             console.log(neurons.length + ' points');
             let neuron_positions = new Array(neurons.length);
             let neuron_areas = new Float32Array(neurons.length);
@@ -602,13 +612,8 @@ export default {
                 let boundary_ids = area_regions[region];
                 let points = [];
                 boundary_ids.forEach((id) => {
-                    //let position = neuron_positions[id].scale(0.1);
-                    //position.applyRotationQuaternionInPlace(rotation_q);
-                    //position.addInPlace(translation);
-                    //points.push(position);
                     points.push(neuron_positions[id]);
                 });
-                //boundaries[region] = CreateLines('lines_' + region, {points: points});
                 boundaries[region] = CreateTube('tube_' + region, {path: points, radius: 0.25, tessellation: 4}, this.scene);
                 boundaries[region].material = boundary_mat;
                 boundaries[region].scaling = new Vector3(0.1, 0.1, 0.1);
@@ -618,71 +623,20 @@ export default {
                 boundaries[region].layerMask = 0;
             };
 
-            this.views.forEach((view) => {
+            this.views.forEach((view, idx) => {
                 view.setPointCloudMesh(neuron_positions, point_cloud);
                 view.setAreaBoundaries(boundaries);
                 view.setNeuronAreas(neuron_areas, new Vector2(0, this.area_colors.length - 1));
+
+                this.updateMonitorViz(idx, 1, table1.neurons);
+                this.updateNetworkViz(idx, 1, table1.connections);
+                this.updateMonitorViz(idx, 2, table2.neurons);
+                this.updateNetworkViz(idx, 2, table2.connections);
             });
-
-            /*
-            // BEGIN area centroid - precomputed
-            let sphere = CreateSphere('sphere', {diameter: 4.0, segments: 8});
-            let sps = new SolidParticleSystem('sps', this.scene);
-            sps.addShape(sphere, this.area_centroids.length);
-            sphere.dispose();
-            let mesh = sps.buildMesh();
-            sps.initParticles = () => {
-                sps.particles.forEach((particle, idx) => {
-                    particle.position = neuron_positions[this.area_centroids[idx]];
-                });
-            };
-            sps.computeBoundingBox = true;
-            sps.initParticles();
-            sps.setParticles();
-            mesh.scaling = new Vector3(0.1, 0.1, 0.1);
-            mesh.rotation.x = -Math.PI / 2.0;
-            mesh.position.x = -10.0;
-            mesh.position.z = 7.5;
-            mesh.layerMask = 1;
-            // END area centroid
-            */
-
-            // TEST
-            // setTimeout(() => {
-            //     console.log(conn.getVerticesData(VertexBuffer.UVKind));
-            //     let uvs = [0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5,
-            //                1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5,
-            //                0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5,
-            //                1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5,
-            //                0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5,
-            //                1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5]
-            //     conn.updateVerticesData(VertexBuffer.UVKind, uvs);
-            // }, 3000);
         })
         .catch((err) => {
             console.log(err);
         });
-
-        this.timeline = new timeline.Timeline();
-        this.timeline.getData(true)
-        .then((table) => {
-            for (let v = 0; v < 8; v++) {
-                this.updateMonitorViz(v, 1, table.neurons);
-                this.updateNetworkViz(v, 1, table.connections);
-            }
-        })
-        .catch((reason) => { console.error(reason); });
-
-        this.timeline2 = new timeline.Timeline();
-        this.timeline2.getData(true)
-        .then((table) => {
-            for (let v = 0; v < 8; v++) {
-                this.updateMonitorViz(v, 2, table.neurons);
-                this.updateNetworkViz(v, 2, table.connections);
-            }
-        })
-        .catch((reason) => { console.error(reason); });
-
         
         // Handle animation / shader uniform updates frame and per view (prior to render)
         this.scene.onBeforeRenderObservable.add(() => {
