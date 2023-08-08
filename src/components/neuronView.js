@@ -429,6 +429,9 @@ class NeuronView {
             this.connections.position.x = -10.0;
             this.connections.position.z = 7.5;
             this.connections.layerMask = this.layer;
+            this.connections.freezeWorldMatrix();
+            this.connections.isPickable = false;
+            this.connections.doNotSyncBoundingInfo = true;
             if (this.visibility_mode === 'neurons') {
                 this.connections.visibility = 0;
             }
@@ -476,6 +479,9 @@ class NeuronView {
             this.connections.position.x = -10.0;
             this.connections.position.z = 7.5;
             this.connections.layerMask = this.layer;
+            this.connections.freezeWorldMatrix();
+            this.connections.isPickable = false;
+            this.connections.doNotSyncBoundingInfo = true;
             if (this.visibility_mode === 'neurons') {
                 this.connections.visibility = 0;
             }

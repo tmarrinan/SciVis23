@@ -590,10 +590,12 @@ export default {
             point_cloud.rotation.x = -Math.PI / 2.0;
             point_cloud.position.x = -10.0;
             point_cloud.position.z = 7.5;
+            point_cloud.freezeWorldMatrix();
             point_cloud.isPickable = false;
             
             this.brain_center = point_cloud.getBoundingInfo().boundingBox.center;
             ptcloud_mat.setVector3('cloud_center', this.brain_center);
+            point_cloud.doNoteSyncBoundingInfo = true;
 
             // Area boundaries for Stimulus and Disable cases
             //  - Stimulus: areas 8, 30, 34
